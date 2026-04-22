@@ -1,0 +1,44 @@
+@startuml
+left to right direction
+
+actor "Customer" as customer
+actor "Staff" as staff
+actor "Admin" as admin
+
+admin --|> staff
+
+rectangle "Cinema Booking System" {
+  usecase "Create Account" as UC1
+  usecase "Login" as UC2
+  usecase "Browse Movies" as UC3
+  usecase "Filter Movies" as UC4
+  usecase "View Available Seats" as UC5
+  usecase "Reserve Ticket" as UC6
+  usecase "Cancel Reservation" as UC7
+
+  usecase "Manage Movies" as UC8
+  usecase "Schedule Movies" as UC9
+  usecase "Receive Payment" as UC10
+  usecase "Manage Reservations" as UC11
+  usecase "View Movie Details" as UC12
+
+  usecase "Manage Cinema Rooms" as UC13
+}
+
+customer --> UC1
+customer --> UC2
+customer --> UC3
+customer --> UC4
+customer --> UC5
+customer --> UC6
+customer --> UC7
+
+staff --> UC8
+staff --> UC9
+staff --> UC10
+staff --> UC11
+staff --> UC12
+
+admin --> UC13
+
+@enduml
