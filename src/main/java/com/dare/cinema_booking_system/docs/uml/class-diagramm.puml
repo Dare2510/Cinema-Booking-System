@@ -1,0 +1,101 @@
+@startuml
+
+class Movie {
+  Long id
+  String title
+  int durationMinutes
+  Genre genre
+}
+
+class User {
+  Long id
+  String name
+  String surname
+  String email
+  Role role
+}
+
+class Reservation {
+  Long id
+  Date createdAt
+  ReservationStatus status
+}
+
+class Screening {
+  Long id
+  Date startTime
+  Date endTime
+  double price
+}
+
+class Ticket {
+  Long id
+  Long ticketNumber
+  TicketStatus status
+  Date issuedAt
+}
+
+class CinemaRoom {
+  Long id
+  int roomNumber
+  int capacity
+}
+
+class Payment {
+  Long id
+  double amount
+  PaymentStatus status
+  String paymentMethod
+}
+
+class Seat {
+  Long id
+  int rowNumber
+  int seatNumber
+}
+
+enum Role {
+  ADMIN
+  STAFF
+  CUSTOMER
+}
+
+enum PaymentStatus {
+  PAID
+  UNPAID
+}
+
+enum ReservationStatus {
+  CREATED
+  CONFIRMED
+  CANCELLED
+}
+
+enum TicketStatus {
+  VALID
+  CANCELLED
+  USED
+}
+
+enum Genre {
+  ACTION
+  COMEDY
+  FANTASY
+  MYSTERY
+  SCIENCE_FICTION
+  DRAMA
+}
+
+User "1" --> "*" Reservation
+Reservation "*" --> "1" Screening
+Reservation "1" --> "*" Ticket
+
+Screening "*" --> "1" Movie
+Screening "*" --> "1" CinemaRoom
+
+CinemaRoom "1" --> "*" Seat
+
+Ticket "*" --> "1" Seat
+Reservation "1" --> "0..1" Payment
+
+@enduml
