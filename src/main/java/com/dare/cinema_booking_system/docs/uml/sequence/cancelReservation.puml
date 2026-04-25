@@ -1,0 +1,38 @@
+@startuml
+actor Customer
+participant ReservationController
+participant ReservationService
+participant ReservationRepository
+participant TicketRepository
+
+Customer -> ReservationController : PATCH /reservations/{id}/cancel
+ReservationController -> ReservationService : cancelReservation(id)
+ReservationService -> ReservationRepository : getReservationById(id)
+
+alt reservation found and cancellation valid
+
+    ReservationRepository --> ReservationService: Reservation
+    ReservationService -> ReservationService : validateCancellation()
+    ReservationService -> TicketRepository : List<Ticket> getTicketsByReservationId(id)
+    TicketRepository --> ReservationService : List<Ticket> toCancel
+    ReservationService -> ReservationService : setReservationStatus(canceled)
+    ReservationService -> ReservationService : cancelTickets(List<Ticket> toCancel)
+    ReservationService -> ReservationRepository : save(reservation)
+    ReservationService -> TicketRepository : saveAll(List<Ticket> toCancel)
+    ReservationService --> ReservationController: reservationResponse
+    ReservationController --> Customer : 200
+
+
+else reservation not found - ReservationNotFoundException
+    ReservationRepository --> ReservationService : null
+    ReservationService -> ReservationController : ReservationNotFoundException
+    ReservationController -> Customer : 404
+
+else reservation has cannot be canceled - CancelNotPossibleException
+    ReservationRepository --> ReservationService: Reservation
+    ReservationService -> ReservationService : validateCancellation()
+    ReservationService -> ReservationController : CancelNotPossibleException
+    ReservationController -> Customer : 400
+end
+
+@enduml

@@ -1,0 +1,24 @@
+@startuml
+actor Customer
+participant ReservationController
+participant ReservationService
+participant ScreeningRepository
+participant ReservationRepository
+participant TicketRepository
+
+Customer -> ReservationController : POST /reservations
+ReservationController -> ReservationService : createReservation(request)
+
+ReservationService -> ScreeningRepository : findById(screeningId)
+ScreeningRepository --> ReservationService : Screening
+
+ReservationService -> ReservationService : checkSeatAvailability()
+ReservationService -> ReservationRepository : save(reservation)
+ReservationRepository --> ReservationService : Reservation
+
+ReservationService -> TicketRepository : save(ticket)
+TicketRepository --> ReservationService : Ticket
+
+ReservationService --> ReservationController : reservation created
+ReservationController --> Customer : 201 Created
+@enduml

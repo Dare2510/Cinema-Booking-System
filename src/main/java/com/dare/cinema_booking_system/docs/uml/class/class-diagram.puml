@@ -19,6 +19,9 @@ class Reservation {
   Long id
   Date createdAt
   ReservationStatus status
+  ---
+  confirm()
+  cancel()
 }
 
 class Screening {
@@ -33,6 +36,9 @@ class Ticket {
   Long ticketNumber
   TicketStatus status
   Date issuedAt
+  ---
+  markAsUser()
+  cancel()
 }
 
 class CinemaRoom {
@@ -46,14 +52,26 @@ class Payment {
   double amount
   PaymentStatus status
   String paymentMethod
+  ---
+  markAsPaid()
 }
 
 class Seat {
   Long id
   int rowNumber
   int seatNumber
+
+}
+class ScreeningSeat {
+  Long id
+  ScreeningSeatStatus status
 }
 
+enum ScreeningSeatStatus {
+  FREE
+  RESERVED
+  SOLD
+}
 enum Role {
   ADMIN
   STAFF
@@ -86,12 +104,16 @@ enum Genre {
   DRAMA
 }
 
+
+Seat "1" --> "*" ScreeningSeat
+
 User "1" --> "*" Reservation
 Reservation "*" --> "1" Screening
 Reservation "1" --> "*" Ticket
 
 Screening "*" --> "1" Movie
 Screening "*" --> "1" CinemaRoom
+Screening "1" --> "*" ScreeningSeat
 
 CinemaRoom "1" --> "*" Seat
 
