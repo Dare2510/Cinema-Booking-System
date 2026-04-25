@@ -1,0 +1,33 @@
+@startuml
+actor User
+
+participant AuthController
+participant AuthService
+participant UserRepository
+participant JwtService
+
+User -> AuthController : POST /auth/login (email, password)
+AuthController -> AuthService : login(request)
+AuthService -> UserRepository : findByEmail(email)
+
+alt user found and password valid
+    UserRepository --> AuthService : User
+    AuthService -> AuthService : validatePassword(password)
+    AuthService -> JwtService : generateToken(user)
+    JwtService --> AuthService : JWT
+    AuthService --> AuthController : AuthResponse(JWT)
+    AuthController --> User : 200 + token
+
+else user not found
+    UserRepository --> AuthService : null
+    AuthService --> AuthController : UserNotFoundException
+    AuthController --> User : 401
+
+else password invalid
+    UserRepository --> AuthService : User
+    AuthService -> AuthService : validatePassword(password)
+    AuthService --> AuthController : InvalidCredentialsException
+    AuthController --> User : 401
+end
+
+@enduml

@@ -1,0 +1,87 @@
+@startchen
+
+entity reservations{
+    id <<key>>
+    screenings_id <<FK>>
+    users_id <<FK>>
+}
+
+entity movies{
+    id <<key>>
+    title
+    genre
+    description
+    duration
+}
+
+entity screenings{
+    id <<key>>
+    movies_id <<FK>>
+    cinemaRooms_id <<FK>>
+    startTime
+    endTime
+    price
+}
+
+entity users{
+    id<<key>>
+    name
+    surname
+    email
+    passwordHash
+    role
+}
+
+entity payments{
+    id <<key>>
+    reservation_id <<FK>>
+    amount
+    status
+    paymentMethod
+}
+
+entity cinemaRooms{
+    id<<key>>
+    roomNumber
+    capacity
+
+}
+
+entity tickets{
+    id <<key>>
+    screeningSeats_id <<FK>>
+    reservations_id <<FK>>
+    ticketNumber
+    status
+    issuedAt
+
+}
+entity seats{
+    id <<key>>
+    cinemaRooms_id <<FK>>
+    rowNumber
+    seatNumber
+}
+
+relationship screeningSeats{
+ id <<key>>
+ screenings_id <<FK>>
+ seats_id <<FK>>
+ status
+}
+
+reservations =(n,1)= users
+reservations =1= payments
+reservations =(1,n)= tickets
+
+screenings =(n,1)= cinemaRooms
+screenings =(n,1)= movies
+
+reservations =(n,1)= screenings
+
+cinemaRooms =(1,n)= seats
+seats =(1,n)= screeningSeats
+screenings =(1,n)= screeningSeats
+tickets =(0,1)= screeningSeats
+
+@endchen
