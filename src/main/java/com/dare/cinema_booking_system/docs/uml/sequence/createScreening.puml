@@ -1,0 +1,44 @@
+@startuml
+actor Staff
+
+participant StaffController
+participant StaffService
+participant MoviesRepository
+participant CinemaRoomRepository
+participant ScreeningRepository
+
+Staff -> StaffController : POST /management/screenings
+StaffController -> StaffService : createScreening(request)
+StaffService -> MoviesRepository : getMovieById(id)
+alt screening successful - movie found and room available
+MoviesRepository  --> StaffService : Movie
+StaffService -> CinemaRoomRepository : getCinemaRoomById(id)
+CinemaRoomRepository --> StaffService : CinemaRoom
+StaffService -> StaffService : validateRoomIsAvailable()
+StaffService -> ScreeningRepository : save(screening)
+StaffService -> StaffController: ScreeningResponse
+StaffController -> Staff : 201
+
+else  movie not found
+MoviesRepository --> StaffService : null
+StaffService -> StaffController : MovieNotFoundException
+StaffController -> Staff : 404
+
+else  cinema room not found
+MoviesRepository  --> StaffService : Movie
+StaffService -> MoviesRepository : getMovieById(id)
+CinemaRoomRepository --> StaffService : null
+StaffService -> StaffController : CinemaRoomNotFoundException
+StaffController -> Staff : 404
+
+else  cinema room not available
+MoviesRepository  --> StaffService : Movie
+StaffService -> MoviesRepository : getMovieById(id)
+CinemaRoomRepository --> StaffService : CinemaRoom
+StaffService -> StaffService : validateRoomIsAvailable()
+StaffService -> StaffController : CinemaRoomNotAvailableException
+StaffController -> Staff: 400
+
+end
+
+@enduml
