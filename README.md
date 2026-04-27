@@ -85,10 +85,10 @@ Finished so far:
 * class diagram draft
 * sequence diagrams for core flows
 * ER diagram draft
+* define API endpoints
 
 Next steps:
 
-* define API endpoints
 * create JPA entities
 * design database migrations
 * implement authentication
