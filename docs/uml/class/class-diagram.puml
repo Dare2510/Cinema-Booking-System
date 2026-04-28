@@ -3,7 +3,8 @@
 class Movie {
   Long id
   String title
-  int durationMinutes
+  String description
+  int duration
   Genre genre
 }
 

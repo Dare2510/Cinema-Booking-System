@@ -97,7 +97,3 @@ Next steps:
 ## Project Goal
 
 This project is primarily meant to improve backend design skills, domain modeling, and structured project planning.
-
-## Notes
-
-This project is intentionally developed with a stronger focus on planning and architecture before implementation, in order to avoid unnecessary refactoring and chaotic growth later on.
