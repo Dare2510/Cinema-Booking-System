@@ -1,4 +1,67 @@
 package com.dare.cinema_booking_system.common;
 
+import com.dare.cinema_booking_system.movies.exceptions.MovieByDurationNotFoundException;
+import com.dare.cinema_booking_system.movies.exceptions.MovieByGenreNotFoundException;
+import com.dare.cinema_booking_system.movies.exceptions.MovieNotFoundException;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+
+import java.time.LocalDateTime;
+
+@ControllerAdvice
 public class GlobalExceptionsHandler {
+
+	@ExceptionHandler(MethodArgumentNotValidException.class)
+	public ResponseEntity<ErrorResponse> handleMethodArgumentNotValidException(MethodArgumentNotValidException ex,
+																			   HttpServletRequest request) {
+			ErrorResponse error = new ErrorResponse(
+					HttpStatus.BAD_REQUEST.value(),
+					ex.getAllErrors().get(0).getDefaultMessage(),
+					request.getRequestURI(),
+					LocalDateTime.now()
+					);
+			return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+	}
+
+	@ExceptionHandler(MovieByDurationNotFoundException.class)
+	public ResponseEntity<ErrorResponse> handleMovieByDurationNotFoundException(MovieByDurationNotFoundException ex,
+																				HttpServletRequest request) {
+
+			ErrorResponse error = new ErrorResponse(
+					HttpStatus.NOT_FOUND.value(),
+					ex.getMessage(),
+					request.getRequestURI(),
+					LocalDateTime.now()
+			);
+			return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+	}
+
+	@ExceptionHandler(MovieByGenreNotFoundException.class)
+	public ResponseEntity<ErrorResponse> handleMovieByGenreNotFoundException(MovieByGenreNotFoundException ex,
+																			 HttpServletRequest request) {
+			ErrorResponse error = new ErrorResponse(
+					HttpStatus.NOT_FOUND.value(),
+					ex.getMessage(),
+					request.getRequestURI(),
+					LocalDateTime.now()
+			);
+			return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+	}
+
+	@ExceptionHandler(MovieNotFoundException.class)
+	public ResponseEntity<ErrorResponse> handleMovieNotFoundException(MovieNotFoundException ex,
+																		 HttpServletRequest request) {
+			ErrorResponse error = new ErrorResponse(
+					HttpStatus.NOT_FOUND.value(),
+					ex.getMessage(),
+					request.getRequestURI(),
+					LocalDateTime.now()
+			);
+			return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+
+	}
 }
