@@ -24,5 +24,5 @@ public class MovieEntity {
 	private Genre genre;
 
 	@Column (nullable = false)
-	private Integer duration;
+	private int duration;
 }

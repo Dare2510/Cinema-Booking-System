@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,14 +21,14 @@ public class MoviesController {
 	private final MoviesService  moviesService;
 
 	@GetMapping
-	public ResponseEntity<Page<MoviesResponse>> getPageOfMovies(@PageableDefault(page = 0, size = 10, sort = "GENRE")
-																	 						  Pageable pageable) {
+	public ResponseEntity<Page<MoviesResponse>> getPageOfMovies(@PageableDefault(page = 0, size = 10,
+												sort = "title",direction = Sort.Direction.ASC) Pageable pageable) {
 		return ResponseEntity.ok(moviesService.getPageOfMovies(pageable));
 	}
 
 	@GetMapping("/{id}")
 	public ResponseEntity<MoviesResponse> getMoviesById(@PathVariable Long id) {
-		return ResponseEntity.ok(moviesService.getMoviesById(id));
+		return ResponseEntity.ok(moviesService.findMovieByID(id));
 	}
 
 	@PostMapping
@@ -43,7 +44,6 @@ public class MoviesController {
 	@DeleteMapping("/{id}")
 	public ResponseEntity<Void> deleteMovies(@PathVariable Long id) {
 		moviesService.deleteMovies(id);
-
 		return ResponseEntity.noContent().build();
 	}
 

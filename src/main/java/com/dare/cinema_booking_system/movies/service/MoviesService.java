@@ -10,7 +10,6 @@ import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import tools.jackson.databind.ObjectMapper;
 
 
 @Service
@@ -18,7 +17,6 @@ import tools.jackson.databind.ObjectMapper;
 public class MoviesService {
 
 	private final MoviesRepository moviesRepository;
-	private final ObjectMapper objectMapper;
 	private final ModelMapper modelMapper;
 
 
@@ -27,34 +25,38 @@ public class MoviesService {
 				.map(movies -> modelMapper.map(movies, MoviesResponse.class));
 	}
 
-	public MoviesResponse getMoviesById(Long id) {
-		return  moviesRepository.findById(id)
-				.map(movies -> modelMapper.map(movies, MoviesResponse.class))
-				.orElseThrow(() -> new MovieNotFoundException(id));
+	public MoviesResponse findMovieByID(Long id) {
+		MovieEntity toFind = getMoviesById(id);
+		return getMovieResponse(toFind);
 	}
 
 	public MoviesResponse addMovies(MoviesRequest moviesRequest) {
 		MovieEntity movieEntity = modelMapper.map(moviesRequest, MovieEntity.class);
-
 		movieEntity = moviesRepository.save(movieEntity);
-
-		return modelMapper.map(movieEntity, MoviesResponse.class);
+		return getMovieResponse(movieEntity);
 
 	}
 
 	public MoviesResponse updateMovies(Long id, MoviesRequest moviesRequest) {
-		MovieEntity movieEntity = modelMapper.map(getMoviesById(id), MovieEntity.class);
-
-		moviesRepository.save(movieEntity);
-
-		return modelMapper.map(movieEntity, MoviesResponse.class);
+		MovieEntity toUpdate = getMoviesById(id);
+		modelMapper.map(moviesRequest, toUpdate);
+		moviesRepository.save(toUpdate);
+		return getMovieResponse(toUpdate);
 	}
 
-	public MoviesResponse deleteMovies(Long id) {
-		MovieEntity movieEntity = modelMapper.map(getMoviesById(id), MovieEntity.class);
-
+	public void deleteMovies(Long id) {
+		MovieEntity movieEntity = getMoviesById(id);
 		moviesRepository.delete(movieEntity);
 
+	}
+	//Helper Methods
+
+	public MovieEntity getMoviesById(Long id) {
+		return  moviesRepository.findById(id)
+				.orElseThrow(() -> new MovieNotFoundException(id));
+	}
+
+	public MoviesResponse getMovieResponse(MovieEntity movieEntity) {
 		return modelMapper.map(movieEntity, MoviesResponse.class);
 	}
 }
