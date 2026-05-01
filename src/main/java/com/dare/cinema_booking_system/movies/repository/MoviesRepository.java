@@ -6,11 +6,12 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface MoviesRepository extends JpaRepository<MovieEntity,Long> {
 
-	MovieEntity findById(long Id);
+	Optional<MovieEntity> findById(long Id);
 	List<MovieEntity> findByGenre(Genre genre);
 	List<MovieEntity> findByDurationGreaterThan(int duration);
 

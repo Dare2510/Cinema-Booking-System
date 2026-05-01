@@ -25,4 +25,11 @@ public class MovieEntity {
 
 	@Column (nullable = false)
 	private int duration;
+
+	public MovieEntity(String title, String description, Genre genre, int duration) {
+		this.title = title;
+		this.description = description;
+		this.genre = genre;
+		this.duration = duration;
+	}
 }
