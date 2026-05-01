@@ -11,8 +11,7 @@ import java.util.Optional;
 @Repository
 public interface MoviesRepository extends JpaRepository<MovieEntity,Long> {
 
-	Optional<MovieEntity> findById(long Id);
-	List<MovieEntity> findByGenre(Genre genre);
-	List<MovieEntity> findByDurationGreaterThan(int duration);
+	Optional<List<MovieEntity>> findByGenre(Genre genre);
+	Optional<List<MovieEntity>> findByDurationGreaterThan(int duration);
 
 }

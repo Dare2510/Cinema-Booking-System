@@ -28,7 +28,7 @@ public class MoviesController {
 
 	@GetMapping("/{id}")
 	public ResponseEntity<MoviesResponse> getMoviesById(@PathVariable Long id) {
-		return ResponseEntity.ok(moviesService.findMovieByID(id));
+		return ResponseEntity.ok(moviesService.getMovieResponseById(id));
 	}
 
 	@PostMapping

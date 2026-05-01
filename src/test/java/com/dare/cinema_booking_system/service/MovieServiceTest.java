@@ -73,7 +73,7 @@ public class MovieServiceTest {
 
 	@Test
 	public void findMovieByID_returnsMovieNotFoundException(){
-		assertThatThrownBy( () -> moviesService.findMovieByID(20L))
+		assertThatThrownBy( () -> moviesService.getMovieResponseById(20L))
 				.isInstanceOf(MovieNotFoundException.class)
 				.hasMessage("Could not find movie with id: 20");
 	}
