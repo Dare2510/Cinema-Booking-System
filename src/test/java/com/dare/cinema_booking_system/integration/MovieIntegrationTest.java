@@ -2,6 +2,9 @@ package com.dare.cinema_booking_system.integration;
 
 import com.dare.cinema_booking_system.movies.dto.MovieRequest;
 import com.dare.cinema_booking_system.movies.entity.Genre;
+import com.dare.cinema_booking_system.movies.repository.MovieRepository;
+import com.jayway.jsonpath.JsonPath;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -26,54 +29,67 @@ public class MovieIntegrationTest {
 	@Autowired
 	private ObjectMapper objectMapper;
 
+	@Autowired
+	private MovieRepository movieRepository;
+
+
+	@AfterEach
+	public void tearDown() throws Exception {
+		movieRepository.deleteAll();
+	}
+
+
 	@Test
 	public void createAndGetMovie_whenJsonIsValid_returnIsCreatedAndIsOK() throws Exception {
-		MovieRequest movieRequest = new MovieRequest(
+		MovieRequest request = new MovieRequest(
 				"testTitle", "testDescription", 100, Genre.FANTASY);
 
-		mockMvc.perform(post("/api/movies")
+		String responseJson = mockMvc.perform(post("/api/movies")
 						.contentType(MediaType.APPLICATION_JSON)
-						.content(objectMapper.writeValueAsString(movieRequest)))
-				.andExpect(status().isCreated());
+						.content(objectMapper.writeValueAsString(request)))
+				.andExpect(status().isCreated())
+				.andReturn().getResponse().getContentAsString();
 
-		mockMvc.perform(get("/api/movies/1"))
+		int id = JsonPath.read(responseJson, "$.id");
+
+		mockMvc.perform(get("/api/movies/"+id))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.title").value("testTitle"));
 	}
 
 	@Test
 	public void createMovie_whenJsonIsInvalid_returnBadRequest() throws Exception {
-		MovieRequest movieRequest = new MovieRequest(
-				"", "testDescription", 100, Genre.FANTASY);
+		MovieRequest request = new MovieRequest(
+				" ", "testDescription", 100, Genre.FANTASY);
 
 		mockMvc.perform(post("/api/movies")
 						.contentType(MediaType.APPLICATION_JSON)
-						.content(objectMapper.writeValueAsString(movieRequest)))
+						.content(objectMapper.writeValueAsString(request)))
 				.andExpect(status().isBadRequest())
 				.andExpect(jsonPath("$.message").value("Title is required"));
 	}
 
 	@Test
 	public void getMovie_whenMovieNotExists_returnNotFound() throws Exception {
-		mockMvc.perform(get("/api/movies/1"))
+		mockMvc.perform(get("/api/movies/999"))
 				.andExpect(status().isNotFound())
 				.andExpect(jsonPath("$.message")
-						.value("Could not find movie with id: 1"));
+						.value("Could not find movie with id: 999"));
 	}
 
 	@Test
 	public void getMovieListByGenre_whenMoviesExist_returnIsOK() throws Exception {
-		MovieRequest movieRequest = new MovieRequest(
+		MovieRequest request = new MovieRequest(
 				"testTitle", "testDescription", 100, Genre.FANTASY);
 
 		mockMvc.perform(post("/api/movies")
 						.contentType(MediaType.APPLICATION_JSON)
-						.content(objectMapper.writeValueAsString(movieRequest)))
+						.content(objectMapper.writeValueAsString(request)))
 				.andExpect(status().isCreated());
 
 		mockMvc.perform(get("/api/movies/filter/genre/FANTASY"))
 				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.[0]title").value("testTitle"));
+				.andExpect(jsonPath("$[0].title").value("testTitle"));
 	}
 
 	@Test
@@ -86,12 +102,12 @@ public class MovieIntegrationTest {
 
 	@Test
 	public void getMovieListByDuration_whenMoviesExist_returnIsOK() throws Exception {
-		MovieRequest movieRequest = new MovieRequest(
+		MovieRequest request = new MovieRequest(
 				"testTitle", "testDescription", 100, Genre.FANTASY);
 
 		mockMvc.perform(post("/api/movies")
 						.contentType(MediaType.APPLICATION_JSON)
-						.content(objectMapper.writeValueAsString(movieRequest)))
+						.content(objectMapper.writeValueAsString(request)))
 				.andExpect(status().isCreated());
 
 		mockMvc.perform(get("/api/movies/filter/duration/80"))
@@ -109,19 +125,22 @@ public class MovieIntegrationTest {
 
 	@Test
 	public void updateMovie_whenMoviesExistAndRequestIsValid_returnIsOK() throws Exception {
-		MovieRequest movie = new MovieRequest(
+		MovieRequest request = new MovieRequest(
 				"testTitle", "testDescription", 100, Genre.FANTASY);
 
-		mockMvc.perform(post("/api/movies")
+		String responseJson = mockMvc.perform(post("/api/movies")
 						.contentType(MediaType.APPLICATION_JSON)
-						.content(objectMapper.writeValueAsString(movie)))
-				.andExpect(status().isCreated());
+						.content(objectMapper.writeValueAsString(request)))
+				.andExpect(status().isCreated())
+				.andReturn().getResponse().getContentAsString();
 
-		movie.setTitle("newTitle");
+		int id = JsonPath.read(responseJson, "$.id");
 
-		mockMvc.perform(patch("/api/movies/1")
+		request.setTitle("newTitle");
+
+		mockMvc.perform(patch("/api/movies/" + id)
 						.contentType(MediaType.APPLICATION_JSON)
-						.content(objectMapper.writeValueAsString(movie)))
+						.content(objectMapper.writeValueAsString(request)))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.title").value("newTitle"));
 
@@ -129,15 +148,18 @@ public class MovieIntegrationTest {
 
 	@Test
 	public void deleteMovie_whenMoviesExistAndRequestIsValid_returnNoContent() throws Exception {
-		MovieRequest movie = new MovieRequest(
+		MovieRequest request = new MovieRequest(
 				"testTitle", "testDescription", 100, Genre.FANTASY);
 
-		mockMvc.perform(post("/api/movies")
+		String responseJson = mockMvc.perform(post("/api/movies")
 						.contentType(MediaType.APPLICATION_JSON)
-						.content(objectMapper.writeValueAsString(movie)))
-				.andExpect(status().isCreated());
+						.content(objectMapper.writeValueAsString(request)))
+				.andExpect(status().isCreated())
+				.andReturn().getResponse().getContentAsString();
 
-		mockMvc.perform(delete("/api/movies/1"))
+		int id = JsonPath.read(responseJson, "$.id");
+
+		mockMvc.perform(delete("/api/movies/" + id))
 				.andExpect(status().isNoContent());
 
 	}
