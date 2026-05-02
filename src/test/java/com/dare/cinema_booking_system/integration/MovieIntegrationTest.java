@@ -11,8 +11,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import tools.jackson.databind.ObjectMapper;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -33,8 +32,8 @@ public class MovieIntegrationTest {
 				"testTitle", "testDescription", 100, Genre.FANTASY);
 
 		mockMvc.perform(post("/api/movies")
-				.contentType(MediaType.APPLICATION_JSON)
-				.content(objectMapper.writeValueAsString(movieRequest)))
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(movieRequest)))
 				.andExpect(status().isCreated());
 
 		mockMvc.perform(get("/api/movies/1"))
@@ -51,7 +50,15 @@ public class MovieIntegrationTest {
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(movieRequest)))
 				.andExpect(status().isBadRequest())
-				.andExpect(jsonPath("$.message").value("Title is required"));;
+				.andExpect(jsonPath("$.message").value("Title is required"));
+	}
+
+	@Test
+	public void getMovie_whenMovieNotExists_returnNotFound() throws Exception {
+		mockMvc.perform(get("/api/movies/1"))
+				.andExpect(status().isNotFound())
+				.andExpect(jsonPath("$.message")
+						.value("Could not find movie with id: 1"));
 	}
 
 	@Test
@@ -100,5 +107,51 @@ public class MovieIntegrationTest {
 						.value("No movies with greater than 80 min duration found"));
 	}
 
+	@Test
+	public void updateMovie_whenMoviesExistAndRequestIsValid_returnIsOK() throws Exception {
+		MovieRequest movie = new MovieRequest(
+				"testTitle", "testDescription", 100, Genre.FANTASY);
+
+		mockMvc.perform(post("/api/movies")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(movie)))
+				.andExpect(status().isCreated());
+
+		movie.setTitle("newTitle");
+
+		mockMvc.perform(patch("/api/movies/1")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(movie)))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.title").value("newTitle"));
+
+	}
+
+	@Test
+	public void deleteMovie_whenMoviesExistAndRequestIsValid_returnNoContent() throws Exception {
+		MovieRequest movie = new MovieRequest(
+				"testTitle", "testDescription", 100, Genre.FANTASY);
+
+		mockMvc.perform(post("/api/movies")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(movie)))
+				.andExpect(status().isCreated());
+
+		mockMvc.perform(delete("/api/movies/1"))
+				.andExpect(status().isNoContent());
+
+	}
+
+	@Test
+	public void getPageOfMovies_withPageableDefault_returnIsOK() throws Exception {
+		mockMvc.perform(get("/api/movies")
+						.param("page", "0")
+						.param("size", "10")
+						.param("sort", "title")
+						.param("direction", "ASC"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.content").isArray())
+				.andExpect(jsonPath("$.size").value(10));
+	}
 
 }
