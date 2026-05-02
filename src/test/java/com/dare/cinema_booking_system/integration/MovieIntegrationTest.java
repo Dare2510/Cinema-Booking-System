@@ -143,7 +143,7 @@ public class MovieIntegrationTest {
 	}
 
 	@Test
-	public void getPageOfMovies_withPageableDefault_returnIsOK() throws Exception {
+	public void getPageOfMovies_withPageableDefaults_returnIsOK() throws Exception {
 		mockMvc.perform(get("/api/movies")
 						.param("page", "0")
 						.param("size", "10")
