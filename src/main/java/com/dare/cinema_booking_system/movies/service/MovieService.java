@@ -21,7 +21,7 @@ import java.util.List;
 @Service
 @AllArgsConstructor
 @Slf4j
-public class MoviesService {
+public class MovieService {
 
 	private final MovieRepository movieRepository;
 	private final ModelMapper modelMapper;

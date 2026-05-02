@@ -9,7 +9,7 @@ import com.dare.cinema_booking_system.movies.exceptions.MovieByDurationNotFoundE
 import com.dare.cinema_booking_system.movies.exceptions.MovieByGenreNotFoundException;
 import com.dare.cinema_booking_system.movies.exceptions.MovieNotFoundException;
 import com.dare.cinema_booking_system.movies.repository.MovieRepository;
-import com.dare.cinema_booking_system.movies.service.MoviesService;
+import com.dare.cinema_booking_system.movies.service.MovieService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -40,14 +40,14 @@ public class MovieServiceTest {
 	@Spy
 	private ModelMapper modelMapper;
 	@InjectMocks
-	private MoviesService moviesService;
+	private MovieService movieService;
 
 	@Test
 	public void addMovie_whenSuccessful_returnsMovieResponse(){
 		MovieRequest toAdd = new MovieRequest("testTitle", "testDescription", 99, Genre.COMEDY);
 
 		when(movieRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
-		MovieResponse response = moviesService.addMovies(toAdd);
+		MovieResponse response = movieService.addMovies(toAdd);
 
 		assertEquals(toAdd.title, response.title);
 		assertEquals(toAdd.description, response.description);
@@ -66,7 +66,7 @@ public class MovieServiceTest {
 
 		when(movieRepository.findById(movieId)).thenReturn(Optional.of(toUpdate));
 
-		moviesService.updateMovies(movieId, newInformation);
+		movieService.updateMovies(movieId, newInformation);
 
 		verify(movieRepository,times(1)).findById(movieId);
 		verify(movieRepository,times(1)).save(any());
@@ -77,7 +77,7 @@ public class MovieServiceTest {
 	}
 	@Test
 	public void getMovieEntityById_whenMovieIsNotFound_throwsMovieNotFoundException(){
-		assertThatThrownBy( () -> moviesService.getMovieResponseById(20L))
+		assertThatThrownBy( () -> movieService.getMovieResponseById(20L))
 				.isInstanceOf(MovieNotFoundException.class)
 				.hasMessage("Could not find movie with id: 20");
 	}
@@ -88,7 +88,7 @@ public class MovieServiceTest {
 		Long movieId = toDelete.getId();
 
 		when(movieRepository.findById(movieId)).thenReturn(Optional.of(toDelete));
-		moviesService.deleteMovies(movieId);
+		movieService.deleteMovies(movieId);
 
 		verify(movieRepository,times(1)).findById(movieId);
 		verify(movieRepository,times(1)).delete(toDelete);
@@ -104,7 +104,7 @@ public class MovieServiceTest {
 
 		when(movieRepository.findByDurationGreaterThan(60)).thenReturn(Optional.of(listOfMovies));
 
-		List<MovieResponse> filteredList = moviesService.getListOfByDuration(60);
+		List<MovieResponse> filteredList = movieService.getListOfByDuration(60);
 
 		verify(movieRepository,times(1)).findByDurationGreaterThan(60);
 		assertEquals("testTitle1", filteredList.get(0).title);
@@ -114,7 +114,7 @@ public class MovieServiceTest {
 
 	@Test
 	public void getListOfByDuration_whenNoMoviesWithWantedDurationWereFound_returnsMovieByDurationNotFoundException() {
-		assertThatThrownBy(() -> moviesService.getListOfByDuration(120))
+		assertThatThrownBy(() -> movieService.getListOfByDuration(120))
 				.isInstanceOf(MovieByDurationNotFoundException.class)
 				.hasMessage("No movies with greater than 120 min duration found");
 
@@ -128,7 +128,7 @@ public class MovieServiceTest {
 
 		when(movieRepository.findByGenre(Genre.FANTASY)).thenReturn(Optional.of(listOfMovies));
 
-		List<MovieResponse> filteredList = moviesService.getListOfByGenre(Genre.FANTASY);
+		List<MovieResponse> filteredList = movieService.getListOfByGenre(Genre.FANTASY);
 
 		verify(movieRepository,times(1)).findByGenre(Genre.FANTASY);
 		assertEquals("testTitle1", filteredList.get(0).title);
@@ -138,7 +138,7 @@ public class MovieServiceTest {
 
 	@Test
 	public void getListOfByGenre_whenNoMoviesWithWantedGenreWereFound_throwsMovieByGenreNotFoundException(){
-		assertThatThrownBy(() -> moviesService.getListOfByGenre(Genre.FANTASY))
+		assertThatThrownBy(() -> movieService.getListOfByGenre(Genre.FANTASY))
 				.isInstanceOf(MovieByGenreNotFoundException.class)
 				.hasMessage("No movies with FANTASY as genre were found");
 	}
