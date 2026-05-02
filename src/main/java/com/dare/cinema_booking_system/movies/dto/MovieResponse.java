@@ -7,7 +7,7 @@ import lombok.*;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class MoviesResponse {
+public class MovieResponse {
 
 	public Long id;
 	public String title;

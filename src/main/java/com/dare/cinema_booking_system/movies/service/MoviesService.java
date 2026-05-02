@@ -1,13 +1,13 @@
 package com.dare.cinema_booking_system.movies.service;
 
-import com.dare.cinema_booking_system.movies.dto.MoviesRequest;
-import com.dare.cinema_booking_system.movies.dto.MoviesResponse;
+import com.dare.cinema_booking_system.movies.dto.MovieRequest;
+import com.dare.cinema_booking_system.movies.dto.MovieResponse;
 import com.dare.cinema_booking_system.movies.entity.Genre;
 import com.dare.cinema_booking_system.movies.entity.MovieEntity;
 import com.dare.cinema_booking_system.movies.exceptions.MovieByDurationNotFoundException;
 import com.dare.cinema_booking_system.movies.exceptions.MovieByGenreNotFoundException;
 import com.dare.cinema_booking_system.movies.exceptions.MovieNotFoundException;
-import com.dare.cinema_booking_system.movies.repository.MoviesRepository;
+import com.dare.cinema_booking_system.movies.repository.MovieRepository;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
@@ -23,27 +23,28 @@ import java.util.List;
 @Slf4j
 public class MoviesService {
 
-	private final MoviesRepository moviesRepository;
+	private final MovieRepository movieRepository;
 	private final ModelMapper modelMapper;
 
-	public Page<MoviesResponse> getPageOfMovies(Pageable pageable) {
-		return moviesRepository.findAll(pageable)
+	public Page<MovieResponse> getPageOfMovies(Pageable pageable) {
+		return movieRepository.findAll(pageable)
 				.map(movies ->
 				{
 					log.info("Getting Page of Movies");
-					return modelMapper.map(movies, MoviesResponse.class);
+					return modelMapper.map(movies, MovieResponse.class);
 				});
 	}
 
-	public MoviesResponse getMovieResponseById(Long id) {
+	public MovieResponse getMovieResponseById(Long id) {
 		MovieEntity toFind = getMovieEntityById(id);
 
 		log.info("Found movie with ID {}", toFind.getId());
 		return mappingResponse(toFind);
 	}
 
-	List<MoviesResponse> getListOfByGenre(Genre genre) {
-		List<MovieEntity> listOfMovies = moviesRepository.findByGenre(genre)
+	public List<MovieResponse> getListOfByGenre(Genre genre) {
+		List<MovieEntity> listOfMovies = movieRepository.findByGenre(genre)
+				.filter(list -> !list.isEmpty())
 				.orElseThrow(
 						() -> {
 							log.info("No movies found for genre {}", genre);
@@ -54,8 +55,9 @@ public class MoviesService {
 		return mappingListOfResponses(listOfMovies);
 	}
 
-	List<MoviesResponse> getListOfByDuration(int duration) {
-		List<MovieEntity> listOfMovies = moviesRepository.findByDurationGreaterThan(duration)
+	public List<MovieResponse> getListOfByDuration(int duration) {
+		List<MovieEntity> listOfMovies = movieRepository.findByDurationGreaterThan(duration)
+				.filter(list -> !list.isEmpty())
 				.orElseThrow(
 				() -> {
 					log.warn("No movies found with duration greater than {} min", duration);
@@ -65,20 +67,20 @@ public class MoviesService {
 		return mappingListOfResponses(listOfMovies);
 	}
 
-	public MoviesResponse addMovies(MoviesRequest moviesRequest) {
-		MovieEntity movieEntity = modelMapper.map(moviesRequest, MovieEntity.class);
+	public MovieResponse addMovies(MovieRequest movieRequest) {
+		MovieEntity movieEntity = modelMapper.map(movieRequest, MovieEntity.class);
 
-		movieEntity = moviesRepository.save(movieEntity);
+		movieEntity = movieRepository.save(movieEntity);
 
 		log.info("Added movie with ID {}", movieEntity.getId());
 		return mappingResponse(movieEntity);
 	}
 
-	public MoviesResponse updateMovies(Long id, MoviesRequest moviesRequest) {
+	public MovieResponse updateMovies(Long id, MovieRequest movieRequest) {
 		MovieEntity toUpdate = getMovieEntityById(id);
 
-		modelMapper.map(moviesRequest, toUpdate);
-		moviesRepository.save(toUpdate);
+		modelMapper.map(movieRequest, toUpdate);
+		movieRepository.save(toUpdate);
 
 		log.info("Updated movie with ID {}", toUpdate.getId());
 		return mappingResponse(toUpdate);
@@ -87,26 +89,26 @@ public class MoviesService {
 	public void deleteMovies(Long id) {
 		MovieEntity movieEntity = getMovieEntityById(id);
 
-		moviesRepository.delete(movieEntity);
+		movieRepository.delete(movieEntity);
 		log.info("Deleted movie with ID {}", movieEntity.getId());
 	}
 	//Helper Methods
 
 	public MovieEntity getMovieEntityById(Long id) {
-		return moviesRepository.findById(id)
+		return movieRepository.findById(id)
 				.orElseThrow(() -> {
 					log.error("Movie with ID {} was not found", id);
 					return new MovieNotFoundException(id);
 				});
 	}
 
-	public List<MoviesResponse> mappingListOfResponses(List<MovieEntity> listOfMovies) {
-		return listOfMovies.stream().map(movie -> modelMapper.map(movie,MoviesResponse.class))
+	public List<MovieResponse> mappingListOfResponses(List<MovieEntity> listOfMovies) {
+		return listOfMovies.stream().map(movie -> modelMapper.map(movie, MovieResponse.class))
 				.toList();
 	}
 
-	public MoviesResponse mappingResponse(MovieEntity movieEntity) {
-		return modelMapper.map(movieEntity, MoviesResponse.class);
+	public MovieResponse mappingResponse(MovieEntity movieEntity) {
+		return modelMapper.map(movieEntity, MovieResponse.class);
 	}
 
 

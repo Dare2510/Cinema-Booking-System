@@ -12,7 +12,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @Getter
 @Setter
-public class MoviesRequest {
+public class MovieRequest {
 
 	@NotBlank(message = "Tile is required")
 	@Size(min = 1, max = 100)
