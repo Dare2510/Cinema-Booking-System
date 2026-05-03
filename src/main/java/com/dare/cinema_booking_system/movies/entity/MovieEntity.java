@@ -5,7 +5,7 @@ import lombok.*;
 
 @Entity
 @Table(name = "Movies")
-@Data
+@Getter @Setter
 @NoArgsConstructor
 public class MovieEntity {
 
@@ -13,17 +13,17 @@ public class MovieEntity {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	@Column(nullable = false)
+	@Column(name="title",nullable = false)
 	private String title;
 
-	@Column(nullable = false)
+	@Column(name="description",nullable = false)
 	private String description;
 
 	@Enumerated(EnumType.STRING)
-	@Column(nullable = false)
+	@Column(name= "genre",nullable = false)
 	private Genre genre;
 
-	@Column (nullable = false)
+	@Column (name="duration",nullable = false)
 	private int duration;
 
 	public MovieEntity(String title, String description, Genre genre, int duration) {
