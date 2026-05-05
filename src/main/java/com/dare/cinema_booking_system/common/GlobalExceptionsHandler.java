@@ -3,6 +3,8 @@ package com.dare.cinema_booking_system.common;
 import com.dare.cinema_booking_system.movies.exceptions.MovieByDurationNotFoundException;
 import com.dare.cinema_booking_system.movies.exceptions.MovieByGenreNotFoundException;
 import com.dare.cinema_booking_system.movies.exceptions.MovieNotFoundException;
+import com.dare.cinema_booking_system.rooms.exceptions.CinemaRoomNotFoundException;
+import com.dare.cinema_booking_system.rooms.exceptions.CinemaRoomNumberDuplicateException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -63,5 +65,29 @@ public class GlobalExceptionsHandler {
 			);
 			return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
 
+	}
+
+	@ExceptionHandler(CinemaRoomNotFoundException.class)
+	public ResponseEntity<ErrorResponse> handleCinemaRoomNotFoundException(CinemaRoomNotFoundException ex,
+																		   HttpServletRequest request) {
+		ErrorResponse error = new ErrorResponse(
+				HttpStatus.NOT_FOUND.value(),
+				ex.getMessage(),
+				request.getRequestURI(),
+				LocalDateTime.now()
+		);
+		return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+	}
+
+	@ExceptionHandler(CinemaRoomNumberDuplicateException.class)
+	public ResponseEntity<ErrorResponse> handleCinemaRoomNumberDuplicateException(CinemaRoomNumberDuplicateException ex,
+																				  HttpServletRequest request) {
+		ErrorResponse error = new ErrorResponse(
+				HttpStatus.BAD_REQUEST.value(),
+				ex.getMessage(),
+				request.getRequestURI(),
+				LocalDateTime.now()
+		);
+		return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
 	}
 }

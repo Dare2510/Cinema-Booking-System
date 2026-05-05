@@ -12,7 +12,7 @@ import lombok.Setter;
 public class CinemaRoomRequest {
 
 	@NotNull
-	@Size(min = 1)
+	@Size(min = 1, message = "Set an custom room number, starting with 1")
 	private int roomNumber;
 
 	@NotNull

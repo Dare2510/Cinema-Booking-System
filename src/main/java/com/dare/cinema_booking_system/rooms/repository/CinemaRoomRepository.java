@@ -6,4 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface CinemaRoomRepository extends JpaRepository<CinemaRoomEntity, Long> {
+	boolean existsByRoomNumber(int roomNumber);
 }

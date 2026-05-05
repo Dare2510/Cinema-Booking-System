@@ -35,6 +35,8 @@ public class CinemaRoomEntity {
 
 	public CinemaRoomEntity(int roomNumber,int rows,int rowCapacity,List<SeatEntity> seats) {
 		this.roomNumber = roomNumber;
+		this.rows = rows;
+		this.rowCapacity = rowCapacity;
 		this.capacity = rows*rowCapacity;
 		this.seats = seats;
 	}
