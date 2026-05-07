@@ -48,6 +48,7 @@ public class CinemaRoomService {
 		return cinemaRoomRepository.findAll(pageable).
 				map(entity -> modelMapper.map(entity, CinemaRoomResponse.class));
 	}
+
 	@Transactional
 	public CinemaRoomResponse updateCinemaRoom(CinemaRoomRequest cinemaRoomRequest, Long roomId) {
 		CinemaRoomEntity roomToUpdate = getRoom(roomId);

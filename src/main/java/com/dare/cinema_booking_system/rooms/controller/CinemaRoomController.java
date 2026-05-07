@@ -7,6 +7,8 @@ import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,7 +30,8 @@ public class CinemaRoomController {
 	}
 
 	@GetMapping
-	public ResponseEntity<Page<CinemaRoomResponse>> getPageOfRooms(Pageable pageable){
+	public ResponseEntity<Page<CinemaRoomResponse>> getPageOfRooms(@PageableDefault(page = 0, size = 10,
+			sort = "roomNumber", direction = Sort.Direction.ASC) Pageable pageable){
 		return ResponseEntity.ok().body(cinemaRoomService.getPageOfCinemaRooms(pageable));
 	}
 }
