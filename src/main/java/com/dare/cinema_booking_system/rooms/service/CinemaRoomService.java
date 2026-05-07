@@ -48,7 +48,7 @@ public class CinemaRoomService {
 		return cinemaRoomRepository.findAll(pageable).
 				map(entity -> modelMapper.map(entity, CinemaRoomResponse.class));
 	}
-
+	@Transactional
 	public CinemaRoomResponse updateCinemaRoom(CinemaRoomRequest cinemaRoomRequest, Long roomId) {
 		CinemaRoomEntity roomToUpdate = getRoom(roomId);
 		setterRoomValues(cinemaRoomRequest, roomToUpdate);
@@ -64,7 +64,12 @@ public class CinemaRoomService {
 	}
 
 	private List<SeatEntity> seatsGenerator(CinemaRoomEntity cinemaRoomEntity, List<SeatEntity> seatEntityList) {
-
+		if (!seatEntityList.isEmpty()){
+			List<SeatEntity> createdSeats = seatRepository.findByCinemaRoom(cinemaRoomEntity);
+			seatRepository.deleteAllInBatch(createdSeats);
+			seatRepository.flush();
+			seatEntityList.clear();
+	}
 		for (int i = 1; i <= cinemaRoomEntity.getRows(); i++) {
 			for (int j = 1; j <= cinemaRoomEntity.getRowCapacity(); j++) {
 				SeatEntity newSeatEntity = new SeatEntity();
@@ -73,11 +78,13 @@ public class CinemaRoomService {
 				newSeatEntity.setRowNumber(i);
 				newSeatEntity.setSeatNumber(j);
 				seatEntityList.add(newSeatEntity);
-				seatRepository.save(newSeatEntity);
+
 			}
 		}
+		seatRepository.saveAll(seatEntityList);
 		cinemaRoomRepository.save(cinemaRoomEntity);
 		return seatEntityList;
+
 	}
 
 	private boolean validateRoomNumber(int roomNumber) {
@@ -96,6 +103,8 @@ public class CinemaRoomService {
 		cinemaRoomEntity.setRoomNumber(updatedRoomNumber);
 		cinemaRoomEntity.setRows(updatedNumberOfRows);
 		cinemaRoomEntity.setRowCapacity(updatedRowCapacity);
+		cinemaRoomEntity.setCapacity(updatedRowCapacity*updatedNumberOfRows);
+
 		cinemaRoomRepository.save(cinemaRoomEntity);
 	}
 

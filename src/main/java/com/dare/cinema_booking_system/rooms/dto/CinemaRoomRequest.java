@@ -1,7 +1,8 @@
 package com.dare.cinema_booking_system.rooms.dto;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -12,15 +13,16 @@ import lombok.Setter;
 public class CinemaRoomRequest {
 
 	@NotNull
-	@Size(min = 1, message = "Set an custom room number, starting with 1")
+	@Min(value = 1, message = "Room number must be at least 1 and unique")
 	private int roomNumber;
 
 	@NotNull
-	@Size(min = 10, max = 30, message = "Minimum rows = 10, Maximum rows = 30")
+	@Min(value = 10, message = "Minium number of rows is 10")
+	@Max(value = 30, message = "Maximum number of rows is 50")
 	private int rows;
 
 	@NotNull
-	@Size(min = 10, max = 50, message = "Minimum capacity per row = 10," +
-			" Maximum capacity per row = 30")
+	@Min(value = 10, message = "Capacity per row must be at least 10")
+	@Max(value = 50, message = "Capacity per row cannot be more than 50")
 	private int rowCapacity;
 }

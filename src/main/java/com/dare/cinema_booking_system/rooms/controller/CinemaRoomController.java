@@ -1,15 +1,14 @@
 package com.dare.cinema_booking_system.rooms.controller;
 
-import com.dare.cinema_booking_system.movies.dto.MovieResponse;
 import com.dare.cinema_booking_system.rooms.dto.CinemaRoomRequest;
 import com.dare.cinema_booking_system.rooms.dto.CinemaRoomResponse;
 import com.dare.cinema_booking_system.rooms.service.CinemaRoomService;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/rooms")
@@ -18,8 +17,18 @@ public class CinemaRoomController {
 	private CinemaRoomService cinemaRoomService;
 
 	@PostMapping
-	public ResponseEntity<CinemaRoomResponse> createRoom(@RequestBody CinemaRoomRequest cinemaRoomRequest){
+	public ResponseEntity<CinemaRoomResponse> createRoom(@RequestBody @Valid CinemaRoomRequest cinemaRoomRequest){
 
 		return ResponseEntity.ok().body(cinemaRoomService.createCinemaRoom(cinemaRoomRequest));
+	}
+
+	@PatchMapping("/update/{id}")
+	public ResponseEntity<CinemaRoomResponse> updateRoom(@PathVariable Long id, @RequestBody @Valid CinemaRoomRequest cinemaRoomRequest){
+		return ResponseEntity.ok().body(cinemaRoomService.updateCinemaRoom(cinemaRoomRequest, id));
+	}
+
+	@GetMapping
+	public ResponseEntity<Page<CinemaRoomResponse>> getPageOfRooms(Pageable pageable){
+		return ResponseEntity.ok().body(cinemaRoomService.getPageOfCinemaRooms(pageable));
 	}
 }
