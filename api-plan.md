@@ -28,6 +28,6 @@ Cinema rooms
 GET: /api/rooms                        | get list of rooms
 GET: /api/rooms/{id}                   | get information about a room
 POST: /api/rooms                       | create cinema room
-PATCH: /api/rooms/{id}                 | update room
-DELETE: /api/rooms/{id}                | delete room
+PATCH: /api/update/{id}                 | update room
+DELETE: /api/delete/{id}                | delete room
 

@@ -34,4 +34,10 @@ public class CinemaRoomController {
 			sort = "roomNumber", direction = Sort.Direction.ASC) Pageable pageable){
 		return ResponseEntity.ok().body(cinemaRoomService.getPageOfCinemaRooms(pageable));
 	}
+
+	@DeleteMapping("delete/{id}")
+	public ResponseEntity<Void> deleteRoom(@PathVariable Long id){
+		cinemaRoomService.deleteCinemaRoom(id);
+		return ResponseEntity.noContent().build();
+	}
 }

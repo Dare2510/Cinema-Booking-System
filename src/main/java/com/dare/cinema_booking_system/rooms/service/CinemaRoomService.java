@@ -65,6 +65,14 @@ public class CinemaRoomService {
 
 	}
 
+	@Transactional
+	public void deleteCinemaRoom(Long id){
+		CinemaRoomEntity toDelete = getRoom(id);
+		cinemaRoomRepository.delete(toDelete);
+		log.info("Cinema Room with id {} deleted", id);
+
+	}
+
 	// Helper Methods
 	private CinemaRoomEntity getRoom(Long roomId) {
 		return cinemaRoomRepository.findById(roomId).orElseThrow(()
