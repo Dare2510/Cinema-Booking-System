@@ -58,7 +58,7 @@ public class CinemaRoomService {
 
 	@Transactional
 	public CinemaRoomResponse updateCinemaRoom(CinemaRoomRequest cinemaRoomRequest, Long roomId) {
-		CinemaRoomEntity roomToUpdate = getRoom(roomId);
+		CinemaRoomEntity roomToUpdate = getRoomEntity(roomId);
 		setterRoomValues(cinemaRoomRequest, roomToUpdate);
 		seatsGenerator(roomToUpdate, roomToUpdate.getSeats());
 		return responseMapper(roomToUpdate);
@@ -67,14 +67,21 @@ public class CinemaRoomService {
 
 	@Transactional
 	public void deleteCinemaRoom(Long id){
-		CinemaRoomEntity toDelete = getRoom(id);
+		CinemaRoomEntity toDelete = getRoomEntity(id);
 		cinemaRoomRepository.delete(toDelete);
 		log.info("Cinema Room with id {} deleted", id);
 
 	}
 
+	public CinemaRoomResponse getRoomResponseById(Long id){
+		CinemaRoomEntity roomToUpdate = getRoomEntity(id);
+		return responseMapper(roomToUpdate);
+	}
+
+
 	// Helper Methods
-	private CinemaRoomEntity getRoom(Long roomId) {
+
+	private CinemaRoomEntity getRoomEntity(Long roomId) {
 		return cinemaRoomRepository.findById(roomId).orElseThrow(()
 				-> {
 			log.warn("Room with room number {} does not exist", roomId);
@@ -82,6 +89,7 @@ public class CinemaRoomService {
 
 		});
 	}
+
 
 	private void seatsGenerator(CinemaRoomEntity cinemaRoomEntity, List<SeatEntity> seatEntityList) {
 		if (!seatEntityList.isEmpty()) {

@@ -9,11 +9,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/rooms")
+@RequestMapping("api/rooms")
 @AllArgsConstructor
 public class CinemaRoomController {
 	private CinemaRoomService cinemaRoomService;
@@ -21,7 +22,7 @@ public class CinemaRoomController {
 	@PostMapping
 	public ResponseEntity<CinemaRoomResponse> createRoom(@RequestBody @Valid CinemaRoomRequest cinemaRoomRequest){
 
-		return ResponseEntity.ok().body(cinemaRoomService.createCinemaRoom(cinemaRoomRequest));
+		return ResponseEntity.status(HttpStatus.CREATED).body(cinemaRoomService.createCinemaRoom(cinemaRoomRequest));
 	}
 
 	@PatchMapping("/update/{id}")
@@ -33,6 +34,11 @@ public class CinemaRoomController {
 	public ResponseEntity<Page<CinemaRoomResponse>> getPageOfRooms(@PageableDefault(page = 0, size = 10,
 			sort = "roomNumber", direction = Sort.Direction.ASC) Pageable pageable){
 		return ResponseEntity.ok().body(cinemaRoomService.getPageOfCinemaRooms(pageable));
+	}
+
+	@GetMapping("/{id}")
+	public ResponseEntity<CinemaRoomResponse> getRoomById(@PathVariable Long id){
+		return ResponseEntity.ok(cinemaRoomService.getRoomResponseById(id));
 	}
 
 	@DeleteMapping("delete/{id}")
