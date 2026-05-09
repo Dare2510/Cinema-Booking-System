@@ -1,12 +1,15 @@
 package com.dare.cinema_booking_system.movies.entity;
 
+import com.dare.cinema_booking_system.screenings.entity.ScreeningSeatEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
-@Entity
-@Table(name = "Movies")
+import java.util.List;
+
 @Getter @Setter
 @NoArgsConstructor
+@Entity
+@Table(name = "movies")
 public class MovieEntity {
 
 	@Id
@@ -25,6 +28,10 @@ public class MovieEntity {
 
 	@Column (name="duration",nullable = false)
 	private int duration;
+
+	@OneToMany(mappedBy = "movies", cascade = CascadeType.ALL)
+	private List<ScreeningSeatEntity> screeningSeatEntities;
+
 
 	public MovieEntity(String title, String description, Genre genre, int duration) {
 		this.title = title;

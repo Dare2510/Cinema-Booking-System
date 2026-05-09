@@ -7,11 +7,10 @@ import lombok.Setter;
 
 import java.util.List;
 
-@Entity
-@Table(name="CinemaRoom")
-@Getter
-@Setter
+@Getter @Setter
 @NoArgsConstructor
+@Entity
+@Table(name="cinemaRoom")
 public class CinemaRoomEntity {
 
 	@Id

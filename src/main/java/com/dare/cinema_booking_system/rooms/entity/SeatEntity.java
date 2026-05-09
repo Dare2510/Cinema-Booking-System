@@ -1,15 +1,17 @@
 package com.dare.cinema_booking_system.rooms.entity;
 
+import com.dare.cinema_booking_system.screenings.entity.ScreeningSeatEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@Entity
-@Table(name = "Seats")
-@Getter
-@Setter
+import java.util.List;
+
+@Getter @Setter
 @NoArgsConstructor
+@Entity
+@Table(name = "seats")
 public class SeatEntity {
 
 	@Id
@@ -25,6 +27,9 @@ public class SeatEntity {
 	@ManyToOne
 	@JoinColumn(name = "cinemaRoom_id")
 	private CinemaRoomEntity cinemaRoom;
+
+	@OneToMany(mappedBy = "seats", cascade = CascadeType.ALL)
+	private List<ScreeningSeatEntity>  screeningSeats;
 
 	public SeatEntity(int rowNumber, int seatNumber, CinemaRoomEntity cinemaRoom) {
 		this.rowNumber = rowNumber;
