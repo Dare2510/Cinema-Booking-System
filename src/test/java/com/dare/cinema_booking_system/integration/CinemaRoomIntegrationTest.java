@@ -55,7 +55,7 @@ public class CinemaRoomIntegrationTest {
 
 		mockMvc.perform(get("/api/rooms/" + id))
 				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.id").value(1))
+				.andExpect(jsonPath("$.id").value(id))
 				.andExpect(jsonPath("$.roomNumber").value(1))
 				.andExpect(jsonPath("$.capacity").value(200));
 	}
@@ -97,7 +97,7 @@ public class CinemaRoomIntegrationTest {
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(request)))
 				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.id").value(1))
+				.andExpect(jsonPath("$.id").value(id))
 				.andExpect(jsonPath("$.roomNumber").value(1))
 				.andExpect(jsonPath("$.capacity").value(250));
 
