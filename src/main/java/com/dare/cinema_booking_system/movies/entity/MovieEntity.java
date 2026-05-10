@@ -1,9 +1,11 @@
 package com.dare.cinema_booking_system.movies.entity;
 
 import com.dare.cinema_booking_system.screenings.entity.ScreeningSeatEntity;
+import com.dare.cinema_booking_system.screenings.entity.ScreeningsEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter @Setter
@@ -29,8 +31,8 @@ public class MovieEntity {
 	@Column (name="duration",nullable = false)
 	private int duration;
 
-	@OneToMany(mappedBy = "movies", cascade = CascadeType.ALL)
-	private List<ScreeningSeatEntity> screeningSeatEntities;
+	@OneToMany(mappedBy = "movie", cascade = CascadeType.ALL)
+	private List<ScreeningsEntity> screeningsEntities;
 
 
 	public MovieEntity(String title, String description, Genre genre, int duration) {
@@ -38,5 +40,6 @@ public class MovieEntity {
 		this.description = description;
 		this.genre = genre;
 		this.duration = duration;
+		this.screeningsEntities = new ArrayList<>();
 	}
 }

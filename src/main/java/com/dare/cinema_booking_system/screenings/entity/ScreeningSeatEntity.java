@@ -22,17 +22,16 @@ public class ScreeningSeatEntity {
 
 	@ManyToOne
 	@JoinColumn(name = "seats_id")
-	private SeatEntity seatEntity;
+	private SeatEntity seats;
 
 	@ManyToOne
 	@JoinColumn(name = "screening_id")
 	private ScreeningsEntity screeningsEntity;
 
-	public ScreeningSeatEntity(Long id, ScreeningsEntity screeningsEntity,
-							   SeatEntity seatEntity,ScreeningSeatStatus screeningSeatStatus) {
-		this.id = id;
+	public ScreeningSeatEntity( ScreeningsEntity screeningsEntity,
+							   SeatEntity seats, ScreeningSeatStatus screeningSeatStatus) {
 		this.screeningsEntity = screeningsEntity;
 		this.screeningSeatStatus = screeningSeatStatus;
-		this.seatEntity = seatEntity;
+		this.seats = seats;
 	}
 }

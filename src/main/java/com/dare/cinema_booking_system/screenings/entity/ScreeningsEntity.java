@@ -20,23 +20,27 @@ public class ScreeningsEntity {
 	private Long id;
 
 	@Column(name = "startTime", nullable = false)
-	private Date startTime;
+	private Date startDate;
 
 	@Column(name = "endTime", nullable = false)
-	private Date endTime;
+	private Date endDate;
 
-	@OneToMany(mappedBy = "screening", cascade = CascadeType.ALL)
+	@Enumerated(EnumType.STRING)
+	@Column(name= "time_slot",nullable = false)
+	private TimeSlot timeSlot;
+
+	@OneToMany(mappedBy = "screeningsEntity", cascade = CascadeType.ALL)
 	private List<ScreeningSeatEntity> screeningSeatEntities;
 
 	@ManyToOne
 	@JoinColumn(name="movies_id")
 	private MovieEntity movie;
 
-	public ScreeningsEntity(Long id, Date startTime, Date endTime,
-							List<ScreeningSeatEntity> screeningSeatEntities, MovieEntity movie) {
-		this.id = id;
-		this.startTime = startTime;
-		this.endTime = endTime;
+	public ScreeningsEntity(MovieEntity movie,Date startDate, Date endDate,TimeSlot timeSlot,
+							List<ScreeningSeatEntity> screeningSeatEntities) {
+		this.startDate = startDate;
+		this.endDate = endDate;
+		this.timeSlot = timeSlot;
 		this.screeningSeatEntities = screeningSeatEntities;
 		this.movie = movie;
 	}

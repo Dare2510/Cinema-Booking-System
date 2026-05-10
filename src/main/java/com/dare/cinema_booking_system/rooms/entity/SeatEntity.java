@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter @Setter
@@ -35,5 +36,6 @@ public class SeatEntity {
 		this.rowNumber = rowNumber;
 		this.seatNumber = seatNumber;
 		this.cinemaRoom = cinemaRoom;
+		this.screeningSeats = new ArrayList<>();
 	}
 }
