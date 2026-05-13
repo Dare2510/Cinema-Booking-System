@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -19,11 +21,11 @@ public class ScreeningsEntity {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	@Column(name = "startTime", nullable = false)
-	private Date startDate;
+	@Column(name = "cinema_room_id", nullable = false)
+	private Long cinemaRoomId;
 
-	@Column(name = "endTime", nullable = false)
-	private Date endDate;
+	@Column(name = "screening_date", nullable = false)
+	private LocalDate screeningDate;
 
 	@Enumerated(EnumType.STRING)
 	@Column(name= "time_slot",nullable = false)
@@ -36,12 +38,11 @@ public class ScreeningsEntity {
 	@JoinColumn(name="movies_id")
 	private MovieEntity movie;
 
-	public ScreeningsEntity(MovieEntity movie,Date startDate, Date endDate,TimeSlot timeSlot,
-							List<ScreeningSeatEntity> screeningSeatEntities) {
-		this.startDate = startDate;
-		this.endDate = endDate;
+	public ScreeningsEntity(Long cinemaRoomId,MovieEntity movie,LocalDate screeningDate, TimeSlot timeSlot) {
+		this.cinemaRoomId = cinemaRoomId;
+		this.screeningDate = screeningDate;
 		this.timeSlot = timeSlot;
-		this.screeningSeatEntities = screeningSeatEntities;
+		this.screeningSeatEntities = new ArrayList<>();
 		this.movie = movie;
 	}
 }

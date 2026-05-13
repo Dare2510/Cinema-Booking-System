@@ -28,10 +28,10 @@ public class ScreeningSeatEntity {
 	@JoinColumn(name = "screening_id")
 	private ScreeningsEntity screeningsEntity;
 
-	public ScreeningSeatEntity( ScreeningsEntity screeningsEntity,
-							   SeatEntity seats, ScreeningSeatStatus screeningSeatStatus) {
+	public ScreeningSeatEntity(ScreeningsEntity screeningsEntity,
+							   SeatEntity seats) {
 		this.screeningsEntity = screeningsEntity;
-		this.screeningSeatStatus = screeningSeatStatus;
+		this.screeningSeatStatus = ScreeningSeatStatus.FREE;
 		this.seats = seats;
 	}
 }

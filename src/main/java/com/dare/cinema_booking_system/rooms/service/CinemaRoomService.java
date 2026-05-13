@@ -81,7 +81,7 @@ public class CinemaRoomService {
 
 	// Helper Methods
 
-	private CinemaRoomEntity getRoomEntity(Long roomId) {
+	public CinemaRoomEntity getRoomEntity(Long roomId) {
 		return cinemaRoomRepository.findById(roomId).orElseThrow(()
 				-> {
 			log.warn("Room with room number {} does not exist", roomId);
