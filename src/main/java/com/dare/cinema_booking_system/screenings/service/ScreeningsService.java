@@ -11,6 +11,7 @@ import com.dare.cinema_booking_system.screenings.entity.ScreeningSeatEntity;
 import com.dare.cinema_booking_system.screenings.entity.ScreeningsEntity;
 import com.dare.cinema_booking_system.screenings.entity.TimeSlot;
 import com.dare.cinema_booking_system.screenings.exceptions.ScreeningNotFoundException;
+import com.dare.cinema_booking_system.screenings.exceptions.ScreeningSlotAlreadyBookedException;
 import com.dare.cinema_booking_system.screenings.repository.ScreeningSeatRepository;
 import com.dare.cinema_booking_system.screenings.repository.ScreeningsRepository;
 import lombok.AllArgsConstructor;
@@ -37,11 +38,20 @@ public class ScreeningsService {
 		LocalDate dateForScreening = screeningsRequest.getScreeningDate();
 		TimeSlot  timeSlotForScreening = screeningsRequest.getTimeSlot();
 
+		boolean validateScreeningSpot =validateScreeningSpot(screeningsRequest);
+
+		if(!validateScreeningSpot) {
 		ScreeningsEntity newScreeningEntity = new ScreeningsEntity(roomForScreening.getId(), movieForScreening,dateForScreening,timeSlotForScreening);
 		screeningsRepository.save(newScreeningEntity);
 		createScreeningSeats(roomForScreening, newScreeningEntity);
 
+		log.info("Screening created successfully");
 		return modelMapper.map(newScreeningEntity, ScreeningsResponse.class);
+
+		} else{
+			log.warn("Screening spot not available");
+			throw new ScreeningSlotAlreadyBookedException(roomForScreening.getId(),dateForScreening, timeSlotForScreening);
+		}
 	}
 
 
@@ -60,7 +70,14 @@ public class ScreeningsService {
 		for(SeatEntity seat : seats) {
 			screeningSeats.add(new ScreeningSeatEntity(screeningsEntity, seat));
 		}
+		log.info("Seats for screening with {} id created successfully", screeningsEntity.getId());
 		screeningSeatRepository.saveAll(screeningSeats);
 		return screeningSeats;
+	}
+
+	private boolean validateScreeningSpot(ScreeningsRequest screeningsRequest) {
+		return screeningsRepository.existsByCinemaRoomIdAndScreeningDateAndTimeSlot
+				(screeningsRequest.getRoomId(),screeningsRequest.getScreeningDate(),screeningsRequest.getTimeSlot());
+
 	}
 }

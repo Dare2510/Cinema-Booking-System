@@ -9,7 +9,7 @@ import java.time.LocalDate;
 @Setter
 public class ScreeningsResponse {
 
-	private Long screeningId;
+	private Long id;
 	private Long movieId;
 	private TimeSlot timeSlot;
 	private LocalDate screeningDate;
