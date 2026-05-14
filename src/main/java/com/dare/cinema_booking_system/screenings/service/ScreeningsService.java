@@ -1,5 +1,6 @@
 package com.dare.cinema_booking_system.screenings.service;
 
+import com.dare.cinema_booking_system.movies.dto.MovieResponse;
 import com.dare.cinema_booking_system.movies.entity.MovieEntity;
 import com.dare.cinema_booking_system.movies.service.MovieService;
 import com.dare.cinema_booking_system.rooms.entity.CinemaRoomEntity;
@@ -17,6 +18,8 @@ import com.dare.cinema_booking_system.screenings.repository.ScreeningsRepository
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -31,6 +34,28 @@ public class ScreeningsService {
 	private final MovieService movieService;
 	private final CinemaRoomService cinemaRoomService;
 	private final ModelMapper modelMapper;
+
+	public Page<ScreeningsResponse> getPageOfScreenings(Pageable pageable) {
+		return screeningsRepository.findAll(pageable)
+				.map(screenings ->
+				{
+					log.info("Getting Page of Screenings");
+					return modelMapper.map(screenings, ScreeningsResponse.class);
+				});
+	}
+
+	public ScreeningsResponse getScreeningById(Long id) {
+		ScreeningsEntity screenings = getScreeningEntity(id);
+		log.info("Getting Screening by {} ID", id);
+		return modelMapper.map(screenings, ScreeningsResponse.class);
+
+	}
+
+	public void deleteScreeningById(Long id) {
+		ScreeningsEntity screenings = getScreeningEntity(id);
+		screeningsRepository.delete(screenings);
+		log.info("Deleted Screening with {} ID", id);
+	}
 
 	public ScreeningsResponse createScreenings(ScreeningsRequest screeningsRequest) {
 		MovieEntity movieForScreening = movieService.getMovieEntityById(screeningsRequest.getMovieId());
