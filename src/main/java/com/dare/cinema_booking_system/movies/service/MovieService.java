@@ -68,12 +68,12 @@ public class MovieService {
 	}
 
 	public MovieResponse addMovies(MovieRequest movieRequest) {
-		MovieEntity movieEntity = modelMapper.map(movieRequest, MovieEntity.class);
+		MovieEntity newMovie = modelMapper.map(movieRequest, MovieEntity.class);
 
-		movieEntity = movieRepository.save(movieEntity);
+		newMovie = movieRepository.save(newMovie);
 
-		log.info("Added movie with ID {}", movieEntity.getId());
-		return mappingResponse(movieEntity);
+		log.info("Added movie with ID {}", newMovie.getId());
+		return mappingResponse(newMovie);
 	}
 
 	public MovieResponse updateMovies(Long id, MovieRequest movieRequest) {

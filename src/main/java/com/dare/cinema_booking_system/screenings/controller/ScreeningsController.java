@@ -39,4 +39,9 @@ public class ScreeningsController {
 		screeningsService.deleteScreeningById(id);
 		return ResponseEntity.noContent().build();
 	}
+
+	@PatchMapping("/{id}")
+	public ResponseEntity<ScreeningsResponse> updateScreening(@PathVariable long id, @RequestBody @Valid ScreeningsRequest screeningsRequest) {
+		return ResponseEntity.ok(screeningsService.updateScreenings(id, screeningsRequest));
+	}
 }

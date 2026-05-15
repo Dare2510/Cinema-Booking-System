@@ -3,10 +3,13 @@ package com.dare.cinema_booking_system.common;
 import com.dare.cinema_booking_system.movies.exceptions.MovieByDurationNotFoundException;
 import com.dare.cinema_booking_system.movies.exceptions.MovieByGenreNotFoundException;
 import com.dare.cinema_booking_system.movies.exceptions.MovieNotFoundException;
+import com.dare.cinema_booking_system.movies.exceptions.MovieUpdateNotPossibleException;
+import com.dare.cinema_booking_system.rooms.exceptions.CinemaRoomChangesNotPossibleException;
 import com.dare.cinema_booking_system.rooms.exceptions.CinemaRoomNotFoundException;
 import com.dare.cinema_booking_system.rooms.exceptions.CinemaRoomNumberDuplicateException;
 import com.dare.cinema_booking_system.screenings.exceptions.ScreeningNotFoundException;
 import com.dare.cinema_booking_system.screenings.exceptions.ScreeningSlotAlreadyBookedException;
+import com.dare.cinema_booking_system.screenings.exceptions.ScreeningUpdateNotPossibleException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -108,6 +111,42 @@ public class GlobalExceptionsHandler {
 	@ExceptionHandler(ScreeningSlotAlreadyBookedException.class)
 	public ResponseEntity<ErrorResponse> handleScreeningSlotAlreadyBookedException(ScreeningSlotAlreadyBookedException ex,
 																				   HttpServletRequest request) {
+		ErrorResponse error = new ErrorResponse(
+				HttpStatus.BAD_REQUEST.value(),
+				ex.getMessage(),
+				request.getRequestURI(),
+				LocalDateTime.now()
+		);
+		return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+	}
+
+	@ExceptionHandler(ScreeningUpdateNotPossibleException.class)
+	public ResponseEntity<ErrorResponse> handleScreeningUpdateNotPossibleException(ScreeningUpdateNotPossibleException ex,
+																				   HttpServletRequest request) {
+		ErrorResponse error = new ErrorResponse(
+				HttpStatus.BAD_REQUEST.value(),
+				ex.getMessage(),
+				request.getRequestURI(),
+				LocalDateTime.now()
+	);
+		return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+	}
+
+	@ExceptionHandler(CinemaRoomChangesNotPossibleException.class)
+	public ResponseEntity<ErrorResponse> handleCinemaRoomChangesNotPossibleException(CinemaRoomChangesNotPossibleException ex,
+																					 HttpServletRequest request) {
+		ErrorResponse error = new ErrorResponse(
+				HttpStatus.BAD_REQUEST.value(),
+				ex.getMessage(),
+				request.getRequestURI(),
+				LocalDateTime.now()
+		);
+		return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+	}
+
+	@ExceptionHandler(MovieUpdateNotPossibleException.class)
+	public ResponseEntity<ErrorResponse> handleMovieUpdateNotPossibleException(MovieUpdateNotPossibleException ex,
+																		   HttpServletRequest request) {
 		ErrorResponse error = new ErrorResponse(
 				HttpStatus.BAD_REQUEST.value(),
 				ex.getMessage(),
