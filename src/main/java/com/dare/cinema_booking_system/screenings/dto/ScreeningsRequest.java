@@ -9,6 +9,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 @Getter
 @Setter
@@ -31,4 +32,7 @@ public class ScreeningsRequest {
 	@NotNull(message = "Timeslot is required, available Timeslots are: EVENING,PRIME,NIGHT")
 	private TimeSlot timeSlot;
 
+	@NotNull(message = "Price is required")
+	@Min(1)
+	private BigDecimal price;
 }

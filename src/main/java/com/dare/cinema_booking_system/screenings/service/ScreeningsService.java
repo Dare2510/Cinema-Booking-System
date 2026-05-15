@@ -22,6 +22,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -72,11 +73,12 @@ public class ScreeningsService {
 		CinemaRoomEntity room = cinemaRoomService.getRoomEntity(screeningsRequest.getRoomId());
 		LocalDate date = screeningsRequest.getScreeningDate();
 		TimeSlot  timeSlot = screeningsRequest.getTimeSlot();
+		BigDecimal price = screeningsRequest.getPrice();
 
 		boolean spotReserved = validateScreeningSpot(screeningsRequest);
 
 		if(!spotReserved) {
-			ScreeningsEntity screening = new ScreeningsEntity(room.getId(), movie,date,timeSlot);
+			ScreeningsEntity screening = new ScreeningsEntity(room.getId(), movie,date,timeSlot,price);
 			screeningsRepository.save(screening);
 			createScreeningSeats(room, screening);
 
@@ -95,6 +97,7 @@ public class ScreeningsService {
 		LocalDate requestedDate = screeningsRequest.getScreeningDate();
 		CinemaRoomEntity  requestedRoom = cinemaRoomService.getRoomEntity(screeningsRequest.getRoomId());
 		TimeSlot requestedTime = screeningsRequest.getTimeSlot();
+		BigDecimal price = screeningsRequest.getPrice();
 
 		boolean hasReservation = validateScreeningUpdate(screeningId);
 
@@ -109,6 +112,7 @@ public class ScreeningsService {
 				toUpdate.setTimeSlot(requestedTime);
 				toUpdate.setCinemaRoomId(requestedRoom.getId());
 				toUpdate.setScreeningSeatEntities(newUpdatedScreeningSeats);
+				toUpdate.setPrice(price);
 
 				screeningsRepository.save(toUpdate);
 				log.info("Screening with id {} updated successfully", screeningId);
