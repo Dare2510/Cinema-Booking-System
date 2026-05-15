@@ -24,57 +24,69 @@ public class GlobalExceptionsHandler {
 
 	@ExceptionHandler(MethodArgumentNotValidException.class)
 	public ResponseEntity<ErrorResponse> handleMethodArgumentNotValidException(MethodArgumentNotValidException ex,
-																			   HttpServletRequest request) {
-			ErrorResponse error = new ErrorResponse(
-					HttpStatus.BAD_REQUEST.value(),
-					ex.getAllErrors().get(0).getDefaultMessage(),
-					request.getRequestURI(),
-					LocalDateTime.now()
-					);
-			return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+	                                                                           HttpServletRequest request) {
+		ErrorResponse error = new ErrorResponse(
+				HttpStatus.BAD_REQUEST.value(),
+				ex.getAllErrors().get(0).getDefaultMessage(),
+				request.getRequestURI(),
+				LocalDateTime.now()
+		);
+		return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
 	}
 
 	@ExceptionHandler(MovieByDurationNotFoundException.class)
 	public ResponseEntity<ErrorResponse> handleMovieByDurationNotFoundException(MovieByDurationNotFoundException ex,
-																				HttpServletRequest request) {
+	                                                                            HttpServletRequest request) {
 
-			ErrorResponse error = new ErrorResponse(
-					HttpStatus.NOT_FOUND.value(),
-					ex.getMessage(),
-					request.getRequestURI(),
-					LocalDateTime.now()
-			);
-			return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+		ErrorResponse error = new ErrorResponse(
+				HttpStatus.NOT_FOUND.value(),
+				ex.getMessage(),
+				request.getRequestURI(),
+				LocalDateTime.now()
+		);
+		return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
 	}
 
 	@ExceptionHandler(MovieByGenreNotFoundException.class)
 	public ResponseEntity<ErrorResponse> handleMovieByGenreNotFoundException(MovieByGenreNotFoundException ex,
-																			 HttpServletRequest request) {
-			ErrorResponse error = new ErrorResponse(
-					HttpStatus.NOT_FOUND.value(),
-					ex.getMessage(),
-					request.getRequestURI(),
-					LocalDateTime.now()
-			);
-			return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+	                                                                         HttpServletRequest request) {
+		ErrorResponse error = new ErrorResponse(
+				HttpStatus.NOT_FOUND.value(),
+				ex.getMessage(),
+				request.getRequestURI(),
+				LocalDateTime.now()
+		);
+		return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
 	}
 
 	@ExceptionHandler(MovieNotFoundException.class)
 	public ResponseEntity<ErrorResponse> handleMovieNotFoundException(MovieNotFoundException ex,
-																		 HttpServletRequest request) {
-			ErrorResponse error = new ErrorResponse(
-					HttpStatus.NOT_FOUND.value(),
-					ex.getMessage(),
-					request.getRequestURI(),
-					LocalDateTime.now()
-			);
-			return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+	                                                                  HttpServletRequest request) {
+		ErrorResponse error = new ErrorResponse(
+				HttpStatus.NOT_FOUND.value(),
+				ex.getMessage(),
+				request.getRequestURI(),
+				LocalDateTime.now()
+		);
+		return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
 
+	}
+
+	@ExceptionHandler(MovieUpdateNotPossibleException.class)
+	public ResponseEntity<ErrorResponse> handleMovieUpdateNotPossibleException(MovieUpdateNotPossibleException ex,
+	                                                                           HttpServletRequest request) {
+		ErrorResponse error = new ErrorResponse(
+				HttpStatus.BAD_REQUEST.value(),
+				ex.getMessage(),
+				request.getRequestURI(),
+				LocalDateTime.now()
+		);
+		return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
 	}
 
 	@ExceptionHandler(CinemaRoomNotFoundException.class)
 	public ResponseEntity<ErrorResponse> handleCinemaRoomNotFoundException(CinemaRoomNotFoundException ex,
-																		   HttpServletRequest request) {
+	                                                                       HttpServletRequest request) {
 		ErrorResponse error = new ErrorResponse(
 				HttpStatus.NOT_FOUND.value(),
 				ex.getMessage(),
@@ -86,7 +98,19 @@ public class GlobalExceptionsHandler {
 
 	@ExceptionHandler(CinemaRoomNumberDuplicateException.class)
 	public ResponseEntity<ErrorResponse> handleCinemaRoomNumberDuplicateException(CinemaRoomNumberDuplicateException ex,
-																				  HttpServletRequest request) {
+	                                                                              HttpServletRequest request) {
+		ErrorResponse error = new ErrorResponse(
+				HttpStatus.BAD_REQUEST.value(),
+				ex.getMessage(),
+				request.getRequestURI(),
+				LocalDateTime.now()
+		);
+		return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+	}
+
+	@ExceptionHandler(CinemaRoomChangesNotPossibleException.class)
+	public ResponseEntity<ErrorResponse> handleCinemaRoomChangesNotPossibleException(CinemaRoomChangesNotPossibleException ex,
+	                                                                                 HttpServletRequest request) {
 		ErrorResponse error = new ErrorResponse(
 				HttpStatus.BAD_REQUEST.value(),
 				ex.getMessage(),
@@ -98,7 +122,7 @@ public class GlobalExceptionsHandler {
 
 	@ExceptionHandler(ScreeningNotFoundException.class)
 	public ResponseEntity<ErrorResponse> handleScreeningNotFoundException(ScreeningNotFoundException ex,
-																				HttpServletRequest request) {
+	                                                                      HttpServletRequest request) {
 		ErrorResponse error = new ErrorResponse(
 				HttpStatus.NOT_FOUND.value(),
 				ex.getMessage(),
@@ -110,7 +134,7 @@ public class GlobalExceptionsHandler {
 
 	@ExceptionHandler(ScreeningSlotAlreadyBookedException.class)
 	public ResponseEntity<ErrorResponse> handleScreeningSlotAlreadyBookedException(ScreeningSlotAlreadyBookedException ex,
-																				   HttpServletRequest request) {
+	                                                                               HttpServletRequest request) {
 		ErrorResponse error = new ErrorResponse(
 				HttpStatus.BAD_REQUEST.value(),
 				ex.getMessage(),
@@ -122,31 +146,7 @@ public class GlobalExceptionsHandler {
 
 	@ExceptionHandler(ScreeningUpdateNotPossibleException.class)
 	public ResponseEntity<ErrorResponse> handleScreeningUpdateNotPossibleException(ScreeningUpdateNotPossibleException ex,
-																				   HttpServletRequest request) {
-		ErrorResponse error = new ErrorResponse(
-				HttpStatus.BAD_REQUEST.value(),
-				ex.getMessage(),
-				request.getRequestURI(),
-				LocalDateTime.now()
-	);
-		return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
-	}
-
-	@ExceptionHandler(CinemaRoomChangesNotPossibleException.class)
-	public ResponseEntity<ErrorResponse> handleCinemaRoomChangesNotPossibleException(CinemaRoomChangesNotPossibleException ex,
-																					 HttpServletRequest request) {
-		ErrorResponse error = new ErrorResponse(
-				HttpStatus.BAD_REQUEST.value(),
-				ex.getMessage(),
-				request.getRequestURI(),
-				LocalDateTime.now()
-		);
-		return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
-	}
-
-	@ExceptionHandler(MovieUpdateNotPossibleException.class)
-	public ResponseEntity<ErrorResponse> handleMovieUpdateNotPossibleException(MovieUpdateNotPossibleException ex,
-																		   HttpServletRequest request) {
+	                                                                               HttpServletRequest request) {
 		ErrorResponse error = new ErrorResponse(
 				HttpStatus.BAD_REQUEST.value(),
 				ex.getMessage(),

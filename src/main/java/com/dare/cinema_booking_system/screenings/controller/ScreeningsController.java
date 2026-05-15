@@ -24,9 +24,10 @@ public class ScreeningsController {
 		return ResponseEntity.ok(screeningsService.createScreenings(screeningsRequest));
 
 	}
+
 	@GetMapping
 	public ResponseEntity<Page<ScreeningsResponse>> getPageOfScreenings(@PageableDefault(page = 0, size = 10,
-			sort = "screeningDate", direction = Sort.Direction.ASC)Pageable pageable) {
+			sort = "screeningDate", direction = Sort.Direction.ASC) Pageable pageable) {
 		return ResponseEntity.ok(screeningsService.getPageOfScreenings(pageable));
 	}
 
@@ -34,6 +35,7 @@ public class ScreeningsController {
 	public ResponseEntity<ScreeningsResponse> getScreeningById(@PathVariable long id) {
 		return ResponseEntity.ok(screeningsService.getScreeningById(id));
 	}
+
 	@DeleteMapping("{id}")
 	public ResponseEntity<Void> deleteScreeningById(@PathVariable long id) {
 		screeningsService.deleteScreeningById(id);

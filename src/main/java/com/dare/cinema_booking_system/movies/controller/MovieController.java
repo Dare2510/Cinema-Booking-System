@@ -25,7 +25,7 @@ public class MovieController {
 
 	@GetMapping
 	public ResponseEntity<Page<MovieResponse>> getPageOfMovies(@PageableDefault(page = 0, size = 10,
-												sort = "title",direction = Sort.Direction.ASC) Pageable pageable) {
+			sort = "title", direction = Sort.Direction.ASC) Pageable pageable) {
 		return ResponseEntity.ok(movieService.getPageOfMovies(pageable));
 	}
 

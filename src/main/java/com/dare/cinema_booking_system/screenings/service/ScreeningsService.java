@@ -46,24 +46,24 @@ public class ScreeningsService {
 				});
 	}
 
-	public ScreeningsResponse getScreeningById(Long id) {
-		ScreeningsEntity screening = getScreeningEntity(id);
-		log.info("Getting Screening by {} ID", id);
+	public ScreeningsResponse getScreeningById(Long screeningId) {
+		ScreeningsEntity screening = getScreeningEntity(screeningId);
+		log.info("Getting screening by {} ID", screeningId);
 		return modelMapper.map(screening, ScreeningsResponse.class);
 
 	}
 
-	public void deleteScreeningById(Long id) {
+	public void deleteScreeningById(Long screeningId) {
 
-		boolean reservations = validateScreeningUpdate(id);
+		boolean reservations = validateScreeningUpdate(screeningId);
 
 		if (!reservations) {
-			ScreeningsEntity screenings = getScreeningEntity(id);
-			screeningsRepository.delete(screenings);
-			log.info("Deleted Screening with {} ID", id);
+			ScreeningsEntity screening = getScreeningEntity(screeningId);
+			screeningsRepository.delete(screening);
+			log.info("Deleted screening with {} ID", screeningId);
 
 		} else {
-			throw new ScreeningUpdateNotPossibleException(id);
+			throw new ScreeningUpdateNotPossibleException(screeningId);
 		}
 	}
 
@@ -72,54 +72,55 @@ public class ScreeningsService {
 		MovieEntity movie = movieService.getMovieEntityById(screeningsRequest.getMovieId());
 		CinemaRoomEntity room = cinemaRoomService.getRoomEntity(screeningsRequest.getRoomId());
 		LocalDate date = screeningsRequest.getScreeningDate();
-		TimeSlot  timeSlot = screeningsRequest.getTimeSlot();
+		TimeSlot timeSlot = screeningsRequest.getTimeSlot();
 		BigDecimal price = screeningsRequest.getPrice();
 
 		boolean spotReserved = validateScreeningSpot(screeningsRequest);
 
-		if(!spotReserved) {
-			ScreeningsEntity screening = new ScreeningsEntity(room.getId(), movie,date,timeSlot,price);
+		if (!spotReserved) {
+			ScreeningsEntity screening = new ScreeningsEntity(room.getId(), movie, date, timeSlot, price);
 			screeningsRepository.save(screening);
 			createScreeningSeats(room, screening);
 
-			log.info("Screening created successfully");
+			log.info("Screening with {} id created successfully", screening.getId());
 			return modelMapper.map(screening, ScreeningsResponse.class);
 
-		} else{
-			log.warn("Screening spot not available");
-			throw new ScreeningSlotAlreadyBookedException(room.getId(),date, timeSlot);
+		} else {
+			log.warn("Screening spot on {} at {} in room with id {} is already reserved ", date, timeSlot, room.getId());
+			throw new ScreeningSlotAlreadyBookedException(room.getId(), date, timeSlot);
 		}
 	}
-	public ScreeningsResponse updateScreenings(Long screeningId,ScreeningsRequest screeningsRequest) {
+
+	public ScreeningsResponse updateScreenings(Long screeningId, ScreeningsRequest screeningsRequest) {
 
 		ScreeningsEntity toUpdate = getScreeningEntity(screeningId);
 		MovieEntity requestedMovie = movieService.getMovieEntityById(screeningsRequest.getMovieId());
 		LocalDate requestedDate = screeningsRequest.getScreeningDate();
-		CinemaRoomEntity  requestedRoom = cinemaRoomService.getRoomEntity(screeningsRequest.getRoomId());
+		CinemaRoomEntity requestedRoom = cinemaRoomService.getRoomEntity(screeningsRequest.getRoomId());
 		TimeSlot requestedTime = screeningsRequest.getTimeSlot();
 		BigDecimal price = screeningsRequest.getPrice();
 
 		boolean hasReservation = validateScreeningUpdate(screeningId);
 
-		if(!hasReservation) {
+		if (!hasReservation) {
 			boolean spotIsBooked = validateScreeningSpot(screeningsRequest);
 
-			if(!spotIsBooked) {
+			if (!spotIsBooked) {
 				List<ScreeningSeatEntity> newUpdatedScreeningSeats = createScreeningSeats(requestedRoom, toUpdate);
 
 				toUpdate.setMovie(requestedMovie);
 				toUpdate.setScreeningDate(requestedDate);
 				toUpdate.setTimeSlot(requestedTime);
 				toUpdate.setCinemaRoomId(requestedRoom.getId());
-				toUpdate.setScreeningSeatEntities(newUpdatedScreeningSeats);
+				toUpdate.setScreeningSeats(newUpdatedScreeningSeats);
 				toUpdate.setPrice(price);
 
 				screeningsRepository.save(toUpdate);
-				log.info("Screening with id {} updated successfully", screeningId);
+				log.info("Screening with ID {} updated successfully", screeningId);
 				return modelMapper.map(toUpdate, ScreeningsResponse.class);
 			} else {
-				log.warn("Screening spot not available");
-				throw new ScreeningSlotAlreadyBookedException(requestedRoom.getId(),requestedDate, requestedTime);
+				log.warn("Screening spot on {} at {} in room with ID {} is already reserved", requestedDate, requestedTime, requestedRoom.getId());
+				throw new ScreeningSlotAlreadyBookedException(requestedRoom.getId(), requestedDate, requestedTime);
 			}
 		} else {
 			throw new ScreeningUpdateNotPossibleException(screeningId);
@@ -132,33 +133,33 @@ public class ScreeningsService {
 	private ScreeningsEntity getScreeningEntity(Long screeningId) {
 		return screeningsRepository.findById(screeningId).orElseThrow(
 				() -> {
-					log.info("Screening with {} not found", screeningId);
+					log.info("Screening with ID {} not found", screeningId);
 					return new ScreeningNotFoundException(screeningId);
 				});
 	}
 
-	private List<ScreeningSeatEntity> createScreeningSeats(CinemaRoomEntity cinemaRoom, ScreeningsEntity screeningsEntity) {
+	private List<ScreeningSeatEntity> createScreeningSeats(CinemaRoomEntity cinemaRoom, ScreeningsEntity screening) {
 		List<SeatEntity> cinemaSeats = cinemaRoom.getSeats();
-		List<ScreeningSeatEntity> screeningSeats = screeningsEntity.getScreeningSeatEntities();
+		List<ScreeningSeatEntity> screeningSeats = screening.getScreeningSeats();
 		if (!screeningSeats.isEmpty()) {
-			List<ScreeningSeatEntity> oldScreeningSeats = screeningSeatRepository.getScreeningSeatsByscreeningsEntity(screeningsEntity);
+			List<ScreeningSeatEntity> oldScreeningSeats = screeningSeatRepository.getScreeningSeatsByScreening(screening);
 			screeningSeatRepository.deleteAllInBatch(oldScreeningSeats);
 			screeningSeatRepository.flush();
 			screeningSeats.clear();
 			log.info("Existing screening seats cleared");
 		}
 
-		for(SeatEntity seat : cinemaSeats) {
-			screeningSeats.add(new ScreeningSeatEntity(screeningsEntity, seat));
+		for (SeatEntity cinemaSeat : cinemaSeats) {
+			screeningSeats.add(new ScreeningSeatEntity(screening, cinemaSeat));
 		}
-		log.info("Seats for screening with {} id created successfully", screeningsEntity.getId());
+		log.info("Seats for screening with {} ID created successfully", screening.getId());
 		screeningSeatRepository.saveAll(screeningSeats);
 		return screeningSeats;
 	}
 
 	private boolean validateScreeningSpot(ScreeningsRequest screeningsRequest) {
 		return screeningsRepository.existsByCinemaRoomIdAndScreeningDateAndTimeSlot
-				(screeningsRequest.getRoomId(),screeningsRequest.getScreeningDate(),screeningsRequest.getTimeSlot());
+				(screeningsRequest.getRoomId(), screeningsRequest.getScreeningDate(), screeningsRequest.getTimeSlot());
 
 	}
 

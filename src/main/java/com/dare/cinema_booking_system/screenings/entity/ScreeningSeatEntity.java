@@ -6,15 +6,16 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@Getter @Setter
+@Getter
+@Setter
 @NoArgsConstructor
 @Entity
 @Table(name = "screening_seats")
 public class ScreeningSeatEntity {
 
 	@Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
 
 	@Column(nullable = false)
 	@Enumerated(EnumType.STRING)
@@ -22,16 +23,16 @@ public class ScreeningSeatEntity {
 
 	@ManyToOne
 	@JoinColumn(name = "seats_id")
-	private SeatEntity seats;
+	private SeatEntity cinemaSeats;
 
 	@ManyToOne
 	@JoinColumn(name = "screening_id")
-	private ScreeningsEntity screeningsEntity;
+	private ScreeningsEntity screening;
 
-	public ScreeningSeatEntity(ScreeningsEntity screeningsEntity,
-							   SeatEntity seats) {
-		this.screeningsEntity = screeningsEntity;
+	public ScreeningSeatEntity(ScreeningsEntity screening,
+	                           SeatEntity cinemaSeats) {
+		this.screening = screening;
 		this.screeningSeatStatus = ScreeningSeatStatus.FREE;
-		this.seats = seats;
+		this.cinemaSeats = cinemaSeats;
 	}
 }

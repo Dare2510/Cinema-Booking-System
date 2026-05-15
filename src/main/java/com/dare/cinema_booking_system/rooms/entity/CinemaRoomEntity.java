@@ -7,17 +7,18 @@ import lombok.Setter;
 
 import java.util.List;
 
-@Getter @Setter
+@Getter
+@Setter
 @NoArgsConstructor
 @Entity
-@Table(name="cinemaRoom")
+@Table(name = "cinemaRoom")
 public class CinemaRoomEntity {
 
 	@Id
-	@GeneratedValue(strategy= GenerationType.IDENTITY)
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	@Column(name = "roomNumber",  nullable = false)
+	@Column(name = "roomNumber", nullable = false)
 	private int roomNumber;
 
 	@Column(name = "rows", nullable = false)
@@ -26,17 +27,17 @@ public class CinemaRoomEntity {
 	@Column(name = "rowCapacity", nullable = false)
 	private int rowCapacity;
 
-	@Column(name = "capacity",  nullable = false)
+	@Column(name = "capacity", nullable = false)
 	private int capacity;
 
 	@OneToMany(mappedBy = "cinemaRoom", cascade = CascadeType.ALL)
 	private List<SeatEntity> seats;
 
-	public CinemaRoomEntity(int roomNumber,int rows,int rowCapacity,List<SeatEntity> seats) {
+	public CinemaRoomEntity(int roomNumber, int rows, int rowCapacity, List<SeatEntity> seats) {
 		this.roomNumber = roomNumber;
 		this.rows = rows;
 		this.rowCapacity = rowCapacity;
-		this.capacity = rows*rowCapacity;
+		this.capacity = rows * rowCapacity;
 		this.seats = seats;
 	}
 }

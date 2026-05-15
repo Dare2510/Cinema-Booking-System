@@ -8,11 +8,11 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
-public interface ScreeningSeatRepository extends JpaRepository<ScreeningSeatEntity,Long> {
+public interface ScreeningSeatRepository extends JpaRepository<ScreeningSeatEntity, Long> {
 
-	@Query("SELECT COUNT(s) > 0 FROM ScreeningSeatEntity s WHERE s.screeningsEntity.id = :screeningId AND s.screeningSeatStatus IN " +
+	@Query("SELECT COUNT(s) > 0 FROM ScreeningSeatEntity s WHERE s.screening.id = :screeningId AND s.screeningSeatStatus IN " +
 			"(com.dare.cinema_booking_system.screenings.entity.ScreeningSeatStatus.RESERVED, com.dare.cinema_booking_system.screenings.entity.ScreeningSeatStatus.SOLD)")
 	boolean hasReservedOrSoldSeats(@Param("screeningId") Long screeningId);
 
-	List<ScreeningSeatEntity> getScreeningSeatsByscreeningsEntity(ScreeningsEntity screeningsEntity);
+	List<ScreeningSeatEntity> getScreeningSeatsByScreening(ScreeningsEntity screening);
 }

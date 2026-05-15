@@ -9,13 +9,13 @@ import lombok.Setter;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
-@Getter @Setter
+@Getter
+@Setter
 @NoArgsConstructor
 @Entity
-@Table(name="screening")
+@Table(name = "screening")
 public class ScreeningsEntity {
 
 	@Id
@@ -32,22 +32,22 @@ public class ScreeningsEntity {
 	private BigDecimal price;
 
 	@Enumerated(EnumType.STRING)
-	@Column(name= "time_slot",nullable = false)
+	@Column(name = "time_slot", nullable = false)
 	private TimeSlot timeSlot;
 
-	@OneToMany(mappedBy = "screeningsEntity", cascade = CascadeType.ALL)
-	private List<ScreeningSeatEntity> screeningSeatEntities;
+	@OneToMany(mappedBy = "screening", cascade = CascadeType.ALL)
+	private List<ScreeningSeatEntity> screeningSeats;
 
 	@ManyToOne
-	@JoinColumn(name="movies_id")
+	@JoinColumn(name = "movies_id")
 	private MovieEntity movie;
 
-	public ScreeningsEntity(Long cinemaRoomId,MovieEntity movie,LocalDate screeningDate, TimeSlot timeSlot, BigDecimal price) {
+	public ScreeningsEntity(Long cinemaRoomId, MovieEntity movie, LocalDate screeningDate, TimeSlot timeSlot, BigDecimal price) {
 		this.cinemaRoomId = cinemaRoomId;
 		this.screeningDate = screeningDate;
 		this.timeSlot = timeSlot;
 		this.price = price;
-		this.screeningSeatEntities = new ArrayList<>();
+		this.screeningSeats = new ArrayList<>();
 		this.movie = movie;
 	}
 }

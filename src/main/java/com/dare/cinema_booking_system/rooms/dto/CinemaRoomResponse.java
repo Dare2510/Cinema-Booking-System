@@ -11,7 +11,7 @@ import lombok.Setter;
 @NoArgsConstructor
 public class CinemaRoomResponse {
 
-	private  Long id;
-	private  int roomNumber;
-	private  int capacity;
+	private Long id;
+	private int roomNumber;
+	private int capacity;
 }

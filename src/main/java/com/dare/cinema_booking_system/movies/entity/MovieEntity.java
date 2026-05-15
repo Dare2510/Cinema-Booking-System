@@ -8,7 +8,8 @@ import lombok.*;
 import java.util.ArrayList;
 import java.util.List;
 
-@Getter @Setter
+@Getter
+@Setter
 @NoArgsConstructor
 @Entity
 @Table(name = "movies")
@@ -18,17 +19,17 @@ public class MovieEntity {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	@Column(name="title",nullable = false)
+	@Column(name = "title", nullable = false)
 	private String title;
 
-	@Column(name="description",nullable = false)
+	@Column(name = "description", nullable = false)
 	private String description;
 
 	@Enumerated(EnumType.STRING)
-	@Column(name= "genre",nullable = false)
+	@Column(name = "genre", nullable = false)
 	private Genre genre;
 
-	@Column (name="duration",nullable = false)
+	@Column(name = "duration", nullable = false)
 	private int duration;
 
 	@OneToMany(mappedBy = "movie", cascade = CascadeType.ALL)

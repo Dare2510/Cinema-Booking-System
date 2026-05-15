@@ -20,29 +20,29 @@ public class CinemaRoomController {
 	private CinemaRoomService cinemaRoomService;
 
 	@PostMapping
-	public ResponseEntity<CinemaRoomResponse> createRoom(@RequestBody @Valid CinemaRoomRequest cinemaRoomRequest){
+	public ResponseEntity<CinemaRoomResponse> createRoom(@RequestBody @Valid CinemaRoomRequest cinemaRoomRequest) {
 
 		return ResponseEntity.status(HttpStatus.CREATED).body(cinemaRoomService.createCinemaRoom(cinemaRoomRequest));
 	}
 
 	@PatchMapping("/update/{id}")
-	public ResponseEntity<CinemaRoomResponse> updateRoom(@PathVariable Long id, @RequestBody @Valid CinemaRoomRequest cinemaRoomRequest){
+	public ResponseEntity<CinemaRoomResponse> updateRoom(@PathVariable Long id, @RequestBody @Valid CinemaRoomRequest cinemaRoomRequest) {
 		return ResponseEntity.ok().body(cinemaRoomService.updateCinemaRoom(cinemaRoomRequest, id));
 	}
 
 	@GetMapping
 	public ResponseEntity<Page<CinemaRoomResponse>> getPageOfRooms(@PageableDefault(page = 0, size = 10,
-			sort = "roomNumber", direction = Sort.Direction.ASC) Pageable pageable){
+			sort = "roomNumber", direction = Sort.Direction.ASC) Pageable pageable) {
 		return ResponseEntity.ok().body(cinemaRoomService.getPageOfCinemaRooms(pageable));
 	}
 
 	@GetMapping("/{id}")
-	public ResponseEntity<CinemaRoomResponse> getRoomById(@PathVariable Long id){
+	public ResponseEntity<CinemaRoomResponse> getRoomById(@PathVariable Long id) {
 		return ResponseEntity.ok(cinemaRoomService.getRoomResponseById(id));
 	}
 
 	@DeleteMapping("delete/{id}")
-	public ResponseEntity<Void> deleteRoom(@PathVariable Long id){
+	public ResponseEntity<Void> deleteRoom(@PathVariable Long id) {
 		cinemaRoomService.deleteCinemaRoom(id);
 		return ResponseEntity.noContent().build();
 	}

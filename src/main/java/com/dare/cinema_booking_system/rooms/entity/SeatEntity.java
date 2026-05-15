@@ -9,7 +9,8 @@ import lombok.Setter;
 import java.util.ArrayList;
 import java.util.List;
 
-@Getter @Setter
+@Getter
+@Setter
 @NoArgsConstructor
 @Entity
 @Table(name = "seats")
@@ -19,18 +20,18 @@ public class SeatEntity {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	@Column(name = "rowNumber",nullable = false)
+	@Column(name = "rowNumber", nullable = false)
 	private int rowNumber;
 
-	@Column(name= "seatNumber",nullable = false)
+	@Column(name = "seatNumber", nullable = false)
 	private int seatNumber;
 
 	@ManyToOne
 	@JoinColumn(name = "cinemaRoom_id")
 	private CinemaRoomEntity cinemaRoom;
 
-	@OneToMany(mappedBy = "seats", cascade = CascadeType.ALL)
-	private List<ScreeningSeatEntity>  screeningSeats;
+	@OneToMany(mappedBy = "cinemaSeats", cascade = CascadeType.ALL)
+	private List<ScreeningSeatEntity> screeningSeats;
 
 	public SeatEntity(int rowNumber, int seatNumber, CinemaRoomEntity cinemaRoom) {
 		this.rowNumber = rowNumber;

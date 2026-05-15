@@ -7,6 +7,6 @@ import java.time.LocalDate;
 public class ScreeningSlotAlreadyBookedException extends RuntimeException {
 	public ScreeningSlotAlreadyBookedException(Long roomId, LocalDate screeningDate, TimeSlot timeSlot) {
 
-		super("Screening slot in " +roomId+ " room ID and " +screeningDate+ " and timeslot " + timeSlot +" already booked");
+		super("Screening slot in " + roomId + " room ID and " + screeningDate + " and timeslot " + timeSlot + " already booked");
 	}
 }

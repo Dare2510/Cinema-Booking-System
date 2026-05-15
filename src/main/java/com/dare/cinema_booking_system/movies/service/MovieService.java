@@ -35,8 +35,8 @@ public class MovieService {
 				});
 	}
 
-	public MovieResponse getMovieResponseById(Long id) {
-		MovieEntity toFind = getMovieEntityById(id);
+	public MovieResponse getMovieResponseById(Long movieId) {
+		MovieEntity toFind = getMovieEntityById(movieId);
 
 		log.info("Found movie with ID {}", toFind.getId());
 		return mappingResponse(toFind);
@@ -59,11 +59,11 @@ public class MovieService {
 		List<MovieEntity> listOfMovies = movieRepository.findByDurationGreaterThan(duration)
 				.filter(list -> !list.isEmpty())
 				.orElseThrow(
-				() -> {
-					log.warn("No movies found with duration greater than {} min", duration);
-					return new MovieByDurationNotFoundException(duration);
-				}
-		);
+						() -> {
+							log.warn("No movies found with duration greater than {} min", duration);
+							return new MovieByDurationNotFoundException(duration);
+						}
+				);
 		return mappingListOfResponses(listOfMovies);
 	}
 
@@ -76,8 +76,8 @@ public class MovieService {
 		return mappingResponse(newMovie);
 	}
 
-	public MovieResponse updateMovies(Long id, MovieRequest movieRequest) {
-		MovieEntity toUpdate = getMovieEntityById(id);
+	public MovieResponse updateMovies(Long movieId, MovieRequest movieRequest) {
+		MovieEntity toUpdate = getMovieEntityById(movieId);
 
 		modelMapper.map(movieRequest, toUpdate);
 		movieRepository.save(toUpdate);
@@ -86,19 +86,19 @@ public class MovieService {
 		return mappingResponse(toUpdate);
 	}
 
-	public void deleteMovies(Long id) {
-		MovieEntity movieEntity = getMovieEntityById(id);
+	public void deleteMovies(Long movieId) {
+		MovieEntity movieEntity = getMovieEntityById(movieId);
 
 		movieRepository.delete(movieEntity);
 		log.info("Deleted movie with ID {}", movieEntity.getId());
 	}
 	//Helper Methods
 
-	public MovieEntity getMovieEntityById(Long id) {
-		return movieRepository.findById(id)
+	public MovieEntity getMovieEntityById(Long movieId) {
+		return movieRepository.findById(movieId)
 				.orElseThrow(() -> {
-					log.error("Movie with ID {} was not found", id);
-					return new MovieNotFoundException(id);
+					log.error("Movie with ID {} was not found", movieId);
+					return new MovieNotFoundException(movieId);
 				});
 	}
 

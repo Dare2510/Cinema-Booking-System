@@ -45,7 +45,7 @@ public class CinemaRoomService {
 			return responseMapper(newRoom);
 
 		} else {
-			log.warn("Room number with room number {} already exists", roomNumber);
+			log.warn("Room number {} already exists", roomNumber);
 			throw new CinemaRoomNumberDuplicateException(roomNumber);
 		}
 
@@ -54,9 +54,9 @@ public class CinemaRoomService {
 
 	public Page<CinemaRoomResponse> getPageOfCinemaRooms(Pageable pageable) {
 		return cinemaRoomRepository.findAll(pageable).
-				map(entity ->{
+				map(entity -> {
 					log.info("Getting Page of Cinema Rooms");
-				 	return modelMapper.map(entity, CinemaRoomResponse.class);
+					return modelMapper.map(entity, CinemaRoomResponse.class);
 				});
 	}
 
@@ -68,28 +68,28 @@ public class CinemaRoomService {
 			setterRoomValues(cinemaRoomRequest, toUpdate);
 			seatsGenerator(toUpdate, toUpdate.getSeats());
 			return responseMapper(toUpdate);
-		}else {
-			log.warn("Cinema Room with {} has Screening, updating/deleting not possible", roomId);
+		} else {
+			log.warn("Cinema Room with ID {} has Screening, updating not possible", roomId);
 			throw new CinemaRoomChangesNotPossibleException(roomId);
 		}
 	}
 
 	@Transactional
-	public void deleteCinemaRoom(Long id){
-		CinemaRoomEntity toDelete = getRoomEntity(id);
-		boolean screeningExists = validateScreeningExists(id);
+	public void deleteCinemaRoom(Long roomId) {
+		CinemaRoomEntity toDelete = getRoomEntity(roomId);
+		boolean screeningExists = validateScreeningExists(roomId);
 
 		if (!screeningExists) {
 			cinemaRoomRepository.delete(toDelete);
-			log.info("Cinema Room with id {} deleted", id);
+			log.info("Cinema Room with ID {} deleted", roomId);
 		} else {
-			log.warn("Cinema Room with {} has Screening, updating/deleting not possible", id);
-			throw new CinemaRoomChangesNotPossibleException(id);
+			log.warn("Cinema Room with ID {} has Screening, deleting not possible", roomId);
+			throw new CinemaRoomChangesNotPossibleException(roomId);
 		}
 	}
 
-	public CinemaRoomResponse getRoomResponseById(Long id){
-		CinemaRoomEntity room = getRoomEntity(id);
+	public CinemaRoomResponse getRoomResponseById(Long roomId) {
+		CinemaRoomEntity room = getRoomEntity(roomId);
 		return responseMapper(room);
 	}
 
@@ -99,7 +99,7 @@ public class CinemaRoomService {
 	public CinemaRoomEntity getRoomEntity(Long roomId) {
 		return cinemaRoomRepository.findById(roomId).orElseThrow(()
 				-> {
-			log.warn("Room with room number {} does not exist", roomId);
+			log.warn("Room ID {} does not exist", roomId);
 			return new CinemaRoomNotFoundException(roomId);
 
 		});
@@ -108,11 +108,11 @@ public class CinemaRoomService {
 
 	private void seatsGenerator(CinemaRoomEntity cinemaRoomEntity, List<SeatEntity> seatEntityList) {
 		if (!seatEntityList.isEmpty()) {
-			List<SeatEntity> createdSeats = seatRepository.findByCinemaRoom(cinemaRoomEntity);
-			seatRepository.deleteAllInBatch(createdSeats);
+			List<SeatEntity> oldSeats = seatRepository.findByCinemaRoom(cinemaRoomEntity);
+			seatRepository.deleteAllInBatch(oldSeats);
 			seatRepository.flush();
 			seatEntityList.clear();
-			log.info("Existing seats cleared");
+			log.info("Existing seats for room id {} cleared", cinemaRoomEntity.getId());
 		}
 		for (int i = 1; i <= cinemaRoomEntity.getRows(); i++) {
 			for (int j = 1; j <= cinemaRoomEntity.getRowCapacity(); j++) {
@@ -126,7 +126,7 @@ public class CinemaRoomService {
 			}
 		}
 		seatRepository.saveAll(seatEntityList);
-		log.info("Seats saved successfully");
+		log.info("Seats for room id {} saved successfully", cinemaRoomEntity.getId());
 		cinemaRoomRepository.save(cinemaRoomEntity);
 
 	}
@@ -139,35 +139,35 @@ public class CinemaRoomService {
 		return modelMapper.map(room, CinemaRoomResponse.class);
 	}
 
-	private void setterRoomValues(CinemaRoomRequest cinemaRoomRequest, CinemaRoomEntity cinemaRoomEntity) {
+	private void setterRoomValues(CinemaRoomRequest cinemaRoomRequest, CinemaRoomEntity room) {
 		int updatedRoomNumber = cinemaRoomRequest.getRoomNumber();
 		int updatedNumberOfRows = cinemaRoomRequest.getRows();
 		int updatedRowCapacity = cinemaRoomRequest.getRowCapacity();
 
-		cinemaRoomEntity.setRoomNumber(updatedRoomNumber);
-		cinemaRoomEntity.setRows(updatedNumberOfRows);
-		cinemaRoomEntity.setRowCapacity(updatedRowCapacity);
-		cinemaRoomEntity.setCapacity(updatedRowCapacity * updatedNumberOfRows);
+		room.setRoomNumber(updatedRoomNumber);
+		room.setRows(updatedNumberOfRows);
+		room.setRowCapacity(updatedRowCapacity);
+		room.setCapacity(updatedRowCapacity * updatedNumberOfRows);
 
-		cinemaRoomRepository.save(cinemaRoomEntity);
-		log.info("Room number with room number {} updated", updatedRoomNumber);
+		cinemaRoomRepository.save(room);
+		log.info("Room number {} updated", updatedRoomNumber);
 	}
 
 	private CinemaRoomEntity entityCreator(CinemaRoomRequest cinemaRoomRequest) {
-		List<SeatEntity> listOfSeats = new ArrayList<>();
+		List<SeatEntity> seats = new ArrayList<>();
 		CinemaRoomEntity newRoom = new CinemaRoomEntity(
 				cinemaRoomRequest.getRoomNumber(),
 				cinemaRoomRequest.getRows(),
 				cinemaRoomRequest.getRowCapacity(),
-				listOfSeats
+				seats
 		);
 
 		cinemaRoomRepository.save(newRoom);
-		log.info("Cinema room with {} id created", newRoom.getId());
+		log.info("Cinema room with {} ID created", newRoom.getId());
 		return newRoom;
 	}
 
-	private boolean validateScreeningExists(Long roomId){
+	private boolean validateScreeningExists(Long roomId) {
 
 		return screeningRepository.existsByCinemaRoomId(roomId);
 	}

@@ -11,6 +11,7 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+
 @Getter
 @Setter
 @AllArgsConstructor
@@ -33,6 +34,6 @@ public class ScreeningsRequest {
 	private TimeSlot timeSlot;
 
 	@NotNull(message = "Price is required")
-	@Min(1)
+	@Min(value = 1, message = "Price must be at least 1")
 	private BigDecimal price;
 }
