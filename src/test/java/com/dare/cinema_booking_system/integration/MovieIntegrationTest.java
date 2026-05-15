@@ -52,7 +52,7 @@ public class MovieIntegrationTest {
 
 		int id = JsonPath.read(responseJson, "$.id");
 
-		mockMvc.perform(get("/api/movies/"+id))
+		mockMvc.perform(get("/api/movies/" + id))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.title").value("testTitle"));
 	}

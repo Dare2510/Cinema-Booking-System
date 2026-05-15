@@ -9,7 +9,6 @@ import com.dare.cinema_booking_system.rooms.exceptions.CinemaRoomNotFoundExcepti
 import com.dare.cinema_booking_system.rooms.exceptions.CinemaRoomNumberDuplicateException;
 import com.dare.cinema_booking_system.rooms.repository.CinemaRoomRepository;
 import com.dare.cinema_booking_system.rooms.repository.SeatRepository;
-import com.dare.cinema_booking_system.screenings.entity.ScreeningsEntity;
 import com.dare.cinema_booking_system.screenings.repository.ScreeningsRepository;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;

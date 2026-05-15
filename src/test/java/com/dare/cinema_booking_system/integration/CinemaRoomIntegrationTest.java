@@ -43,11 +43,11 @@ public class CinemaRoomIntegrationTest {
 
 	@Test
 	public void createRoomAndGetRoomById_whenJsonAndRoomNumberAreValid_returns200() throws Exception {
-		CinemaRoomRequest request = new CinemaRoomRequest(1,10,20);
+		CinemaRoomRequest request = new CinemaRoomRequest(1, 10, 20);
 
 		String responseJson = mockMvc.perform(post("/api/rooms")
-				.contentType(MediaType.APPLICATION_JSON)
-				.content(objectMapper.writeValueAsString(request)))
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(request)))
 				.andExpect(status().isCreated())
 				.andReturn().getResponse().getContentAsString();
 
@@ -62,11 +62,11 @@ public class CinemaRoomIntegrationTest {
 
 	@Test
 	public void createRoom_whenJsonValuesAreInvalid_returnsBadRequest() throws Exception {
-		CinemaRoomRequest request = new CinemaRoomRequest(1,5,20);
+		CinemaRoomRequest request = new CinemaRoomRequest(1, 5, 20);
 
 		mockMvc.perform(post("/api/rooms")
-				.contentType(MediaType.APPLICATION_JSON)
-				.content(objectMapper.writeValueAsString(request)))
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(request)))
 				.andExpect(status().isBadRequest())
 				.andExpect(jsonPath("$.message").value("Minium number of rows is 10"));
 
@@ -122,10 +122,10 @@ public class CinemaRoomIntegrationTest {
 	@Test
 	public void getPageOfRooms_withPageableDefaults_returnIsOK() throws Exception {
 		mockMvc.perform(get("/api/rooms")
-				.param("page", "0")
-				.param("size", "10")
-				.param("sort", "roomNumber")
-				.param("direction", "ASC"))
+						.param("page", "0")
+						.param("size", "10")
+						.param("sort", "roomNumber")
+						.param("direction", "ASC"))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.content").isArray())
 				.andExpect(jsonPath("$.size").value(10));

@@ -43,7 +43,7 @@ public class MovieServiceTest {
 	private MovieService movieService;
 
 	@Test
-	public void addMovie_whenSuccessful_returnsMovieResponse(){
+	public void addMovie_whenSuccessful_returnsMovieResponse() {
 		MovieRequest toAdd = new MovieRequest("testTitle", "testDescription", 99, Genre.COMEDY);
 
 		when(movieRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
@@ -53,60 +53,61 @@ public class MovieServiceTest {
 		assertEquals(toAdd.description, response.description);
 		assertEquals(toAdd.genre, response.genre);
 		assertEquals(toAdd.duration, response.duration);
-		verify(movieRepository,times(1)).save(any());
+		verify(movieRepository, times(1)).save(any());
 
 	}
 
 	@Test
-	public void updateMovie_whenMovieIsFound_returnsMovieResponse(){
+	public void updateMovie_whenMovieIsFound_returnsMovieResponse() {
 
 		MovieRequest newInformation = new MovieRequest("newTitle", "newDescription", 99, Genre.COMEDY);
-		MovieEntity toUpdate = new MovieEntity("testTitle", "testDescription", Genre.COMEDY,99);
+		MovieEntity toUpdate = new MovieEntity("testTitle", "testDescription", Genre.COMEDY, 99);
 		Long movieId = toUpdate.getId();
 
 		when(movieRepository.findById(movieId)).thenReturn(Optional.of(toUpdate));
 
 		movieService.updateMovies(movieId, newInformation);
 
-		verify(movieRepository,times(1)).findById(movieId);
-		verify(movieRepository,times(1)).save(any());
+		verify(movieRepository, times(1)).findById(movieId);
+		verify(movieRepository, times(1)).save(any());
 
 		assertEquals("newTitle", toUpdate.getTitle());
 		assertEquals("newDescription", toUpdate.getDescription());
 
 	}
+
 	@Test
-	public void getMovieEntityById_whenMovieIsNotFound_throwsMovieNotFoundException(){
-		assertThatThrownBy( () -> movieService.getMovieResponseById(20L))
+	public void getMovieEntityById_whenMovieIsNotFound_throwsMovieNotFoundException() {
+		assertThatThrownBy(() -> movieService.getMovieResponseById(20L))
 				.isInstanceOf(MovieNotFoundException.class)
 				.hasMessage("Could not find movie with id: 20");
 	}
 
 	@Test
-	public void deleteMovie_whenMovieIsFound_successful(){
-		MovieEntity toDelete = new MovieEntity("testTitle", "testDescription", Genre.COMEDY,99);
+	public void deleteMovie_whenMovieIsFound_successful() {
+		MovieEntity toDelete = new MovieEntity("testTitle", "testDescription", Genre.COMEDY, 99);
 		Long movieId = toDelete.getId();
 
 		when(movieRepository.findById(movieId)).thenReturn(Optional.of(toDelete));
 		movieService.deleteMovies(movieId);
 
-		verify(movieRepository,times(1)).findById(movieId);
-		verify(movieRepository,times(1)).delete(toDelete);
+		verify(movieRepository, times(1)).findById(movieId);
+		verify(movieRepository, times(1)).delete(toDelete);
 
 		assertFalse(movieRepository.existsById(movieId));
 	}
 
 	@Test
-	public void getListOfByDuration_whenMoviesWithWantedDurationExists_returnsListOfMovieResponse(){
+	public void getListOfByDuration_whenMoviesWithWantedDurationExists_returnsListOfMovieResponse() {
 		List<MovieEntity> listOfMovies = new ArrayList<>();
-		listOfMovies.add(new MovieEntity("testTitle1", "testDescription1", Genre.COMEDY,99));
-		listOfMovies.add(new MovieEntity("testTitle2", "testDescription2", Genre.DRAMA,120));
+		listOfMovies.add(new MovieEntity("testTitle1", "testDescription1", Genre.COMEDY, 99));
+		listOfMovies.add(new MovieEntity("testTitle2", "testDescription2", Genre.DRAMA, 120));
 
 		when(movieRepository.findByDurationGreaterThan(60)).thenReturn(Optional.of(listOfMovies));
 
 		List<MovieResponse> filteredList = movieService.getListOfByDuration(60);
 
-		verify(movieRepository,times(1)).findByDurationGreaterThan(60);
+		verify(movieRepository, times(1)).findByDurationGreaterThan(60);
 		assertEquals("testTitle1", filteredList.get(0).title);
 		assertEquals("testTitle2", filteredList.get(1).title);
 
@@ -121,29 +122,27 @@ public class MovieServiceTest {
 	}
 
 	@Test
-	public void getListOfByGenre_whenMoviesWithWantedGenreWereFound_returnsListOfMovieResponse(){
+	public void getListOfByGenre_whenMoviesWithWantedGenreWereFound_returnsListOfMovieResponse() {
 		List<MovieEntity> listOfMovies = new ArrayList<>();
-		listOfMovies.add(new MovieEntity("testTitle1", "testDescription1", Genre.FANTASY,99));
-		listOfMovies.add(new MovieEntity("testTitle2", "testDescription2", Genre.FANTASY,120));
+		listOfMovies.add(new MovieEntity("testTitle1", "testDescription1", Genre.FANTASY, 99));
+		listOfMovies.add(new MovieEntity("testTitle2", "testDescription2", Genre.FANTASY, 120));
 
 		when(movieRepository.findByGenre(Genre.FANTASY)).thenReturn(Optional.of(listOfMovies));
 
 		List<MovieResponse> filteredList = movieService.getListOfByGenre(Genre.FANTASY);
 
-		verify(movieRepository,times(1)).findByGenre(Genre.FANTASY);
+		verify(movieRepository, times(1)).findByGenre(Genre.FANTASY);
 		assertEquals("testTitle1", filteredList.get(0).title);
 		assertEquals("testTitle2", filteredList.get(1).title);
 
 	}
 
 	@Test
-	public void getListOfByGenre_whenNoMoviesWithWantedGenreWereFound_throwsMovieByGenreNotFoundException(){
+	public void getListOfByGenre_whenNoMoviesWithWantedGenreWereFound_throwsMovieByGenreNotFoundException() {
 		assertThatThrownBy(() -> movieService.getListOfByGenre(Genre.FANTASY))
 				.isInstanceOf(MovieByGenreNotFoundException.class)
 				.hasMessage("No movies with FANTASY as genre were found");
 	}
-
-
 
 
 }
