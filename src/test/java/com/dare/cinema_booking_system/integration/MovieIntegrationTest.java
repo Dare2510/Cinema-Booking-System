@@ -117,10 +117,10 @@ public class MovieIntegrationTest {
 
 	@Test
 	public void getMovieListByDuration_whenMoviesNotExist_returnNotFound() throws Exception {
-		mockMvc.perform(get("/api/movies/filter/duration/80"))
+		mockMvc.perform(get("/api/movies/filter/duration/120"))
 				.andExpect(status().isNotFound())
 				.andExpect(jsonPath("$.message")
-						.value("No movies with greater than 80 min duration found"));
+						.value("No movies with greater than 120 min duration found"));
 	}
 
 	@Test
