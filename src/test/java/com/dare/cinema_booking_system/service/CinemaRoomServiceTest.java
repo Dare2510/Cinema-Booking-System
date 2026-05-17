@@ -77,6 +77,8 @@ public class CinemaRoomServiceTest {
 				.isInstanceOf(CinemaRoomNumberDuplicateException.class)
 				.hasMessage("Room number 1 is already in use, please choose another room number");
 
+		verify(cinemaRoomRepository, never()).save(any());
+		verify(seatRepository, never()).saveAll(any());
 	}
 
 	@Test
@@ -86,6 +88,9 @@ public class CinemaRoomServiceTest {
 				.isInstanceOf(CinemaRoomNotFoundException.class)
 				.hasMessage("Cinema Room with ID 1 not found");
 
+		verify(cinemaRoomRepository, never()).save(any());
+		verify(seatRepository, never()).saveAll(any());
+		verify(screeningsRepository, never()).existsByCinemaRoomId(anyLong());
 	}
 
 	@Test
@@ -93,9 +98,11 @@ public class CinemaRoomServiceTest {
 		CinemaRoomRequest roomRequest = new CinemaRoomRequest(1, 20, 25);
 		List<SeatEntity> seatsOld = new ArrayList<>();
 		seatsOld.add(new SeatEntity());
+
 		List<SeatEntity> seatsNew = new ArrayList<>();
 		seatsNew.add(new SeatEntity());
 		seatsNew.add(new SeatEntity());
+
 		Long id = 1L;
 		CinemaRoomEntity oldRoomEntity = new CinemaRoomEntity(1, 10, 20, seatsOld);
 		CinemaRoomEntity newRoomEntity = new CinemaRoomEntity(1, 20, 25, seatsNew);
@@ -134,6 +141,10 @@ public class CinemaRoomServiceTest {
 		)).isInstanceOf(CinemaRoomChangesNotPossibleException.class)
 				.hasMessage("Changes are not possible for cinema room with id 1 screening exits");
 
+		verify(cinemaRoomRepository, never()).save(any());
+		verify(seatRepository, never()).saveAll(any());
+		verify(screeningsRepository, times(1)).existsByCinemaRoomId(anyLong());
+
 	}
 
 	@Test
@@ -159,5 +170,9 @@ public class CinemaRoomServiceTest {
 		assertThatThrownBy(() -> cinemaRoomService.deleteCinemaRoom(1L))
 				.isInstanceOf(CinemaRoomChangesNotPossibleException.class)
 				.hasMessage("Changes are not possible for cinema room with id 1 screening exits");
+
+		verify(cinemaRoomRepository, never()).save(any());
+		verify(seatRepository, never()).saveAll(any());
+		verify(screeningsRepository, times(1)).existsByCinemaRoomId(anyLong());
 	}
 }
