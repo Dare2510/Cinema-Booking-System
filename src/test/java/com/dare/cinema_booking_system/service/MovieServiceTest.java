@@ -81,6 +81,8 @@ public class MovieServiceTest {
 		assertThatThrownBy(() -> movieService.getMovieResponseById(20L))
 				.isInstanceOf(MovieNotFoundException.class)
 				.hasMessage("Could not find movie with id: 20");
+
+		verify(movieRepository, times(1)).findById(anyLong());
 	}
 
 	@Test
@@ -119,6 +121,8 @@ public class MovieServiceTest {
 				.isInstanceOf(MovieByDurationNotFoundException.class)
 				.hasMessage("No movies with greater than 120 min duration found");
 
+		verify(movieRepository, times(1)).findByDurationGreaterThan(120);
+
 	}
 
 	@Test
@@ -142,6 +146,8 @@ public class MovieServiceTest {
 		assertThatThrownBy(() -> movieService.getListOfByGenre(Genre.FANTASY))
 				.isInstanceOf(MovieByGenreNotFoundException.class)
 				.hasMessage("No movies with FANTASY as genre were found");
+
+		verify(movieRepository, times(1)).findByGenre(Genre.FANTASY);
 	}
 
 
