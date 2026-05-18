@@ -185,7 +185,7 @@ public class ScreeningIntegrationTest {
 
 		Long roomId = ((Number)JsonPath.read(roomResponseJson, "$.id")).longValue();
 
-		ScreeningsRequest screening = new ScreeningsRequest(roomId,movieId, LocalDate.now(), TimeSlot.PRIME, BigDecimal.TEN);
+		ScreeningsRequest screening = new ScreeningsRequest(roomId,movieId, LocalDate.now(), TimeSlot.PRIME, BigDecimal.valueOf(15));
 
 		String screeningResponseJson = mockMvc.perform(post("/api/screening")
 						.contentType(MediaType.APPLICATION_JSON)
@@ -200,7 +200,7 @@ public class ScreeningIntegrationTest {
 				.andExpect(jsonPath("$.id").value(screeningId))
 				.andExpect(jsonPath("$.movieId").value(movieId))
 				.andExpect(jsonPath("$.timeSlot").value("PRIME"))
-				.andExpect(jsonPath("$.price").value("10.0"));
+				.andExpect(jsonPath("$.price").value(15.00));
 	}
 
 	@Test
@@ -277,7 +277,7 @@ public class ScreeningIntegrationTest {
 				.andExpect(jsonPath("$.id").value(screeningId))
 				.andExpect(jsonPath("$.movieId").value(movieId))
 				.andExpect(jsonPath("$.timeSlot").value("EVENING"))
-				.andExpect(jsonPath("$.price").value("15"));
+				.andExpect(jsonPath("$.price").value(15.00));
 	}
 
 

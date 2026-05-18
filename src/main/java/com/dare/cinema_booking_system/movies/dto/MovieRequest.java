@@ -24,7 +24,7 @@ public class MovieRequest {
 
 	@NotNull
 	@Min(value = 30, message = "Duration must be at least 30 min")
-	public int duration;
+	public Integer duration;
 
 	@NotNull(message = "Genre is required, Available genres : ACTION,COMEDY,FANTASY,MYSTERY,SCIENCE_FICTION,DRAMA")
 	public Genre genre;

@@ -35,7 +35,7 @@ public class MovieController {
 	}
 
 	@GetMapping("/filter/duration/{duration}")
-	public ResponseEntity<List<MovieResponse>> getMoviesByDuration(@PathVariable int duration) {
+	public ResponseEntity<List<MovieResponse>> getMoviesByDuration(@PathVariable Integer duration) {
 		return ResponseEntity.ok(movieService.getListOfByDuration(duration));
 	}
 

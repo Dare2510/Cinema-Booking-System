@@ -32,18 +32,18 @@ public class ScreeningsController {
 	}
 
 	@GetMapping("/{id}")
-	public ResponseEntity<ScreeningsResponse> getScreeningById(@PathVariable long id) {
+	public ResponseEntity<ScreeningsResponse> getScreeningById(@PathVariable Long id) {
 		return ResponseEntity.ok(screeningsService.getScreeningById(id));
 	}
 
 	@DeleteMapping("{id}")
-	public ResponseEntity<Void> deleteScreeningById(@PathVariable long id) {
+	public ResponseEntity<Void> deleteScreeningById(@PathVariable Long id) {
 		screeningsService.deleteScreeningById(id);
 		return ResponseEntity.noContent().build();
 	}
 
 	@PatchMapping("/{id}")
-	public ResponseEntity<ScreeningsResponse> updateScreening(@PathVariable long id, @RequestBody @Valid ScreeningsRequest screeningsRequest) {
+	public ResponseEntity<ScreeningsResponse> updateScreening(@PathVariable Long id, @RequestBody @Valid ScreeningsRequest screeningsRequest) {
 		return ResponseEntity.ok(screeningsService.updateScreenings(id, screeningsRequest));
 	}
 }
