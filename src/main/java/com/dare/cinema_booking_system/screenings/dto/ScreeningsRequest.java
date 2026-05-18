@@ -2,6 +2,7 @@ package com.dare.cinema_booking_system.screenings.dto;
 
 import com.dare.cinema_booking_system.screenings.entity.TimeSlot;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PastOrPresent;
@@ -26,7 +27,7 @@ public class ScreeningsRequest {
 	private Long movieId;
 
 	@NotNull(message = "Screening date is required")
-	@PastOrPresent(message = "Screening date must be in the future")
+	@FutureOrPresent(message = "Screening date must be in the present or future")
 	@JsonFormat(pattern = "yyyy-MM-dd")
 	private LocalDate screeningDate;
 
