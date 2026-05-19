@@ -56,14 +56,7 @@ public class CinemaRoomIntegrationTest {
 	@Test
 	public void createRoomAndGetRoomById_whenJsonAndRoomNumberAreValid_returns200() throws Exception {
 		CinemaRoomRequest request = new CinemaRoomRequest(1, 10, 20);
-
-		String responseJson = mockMvc.perform(post("/api/rooms")
-						.contentType(MediaType.APPLICATION_JSON)
-						.content(objectMapper.writeValueAsString(request)))
-				.andExpect(status().isCreated())
-				.andReturn().getResponse().getContentAsString();
-
-		int id = JsonPath.read(responseJson, "$.id");
+		Long id = getCinemaId(request);
 
 		mockMvc.perform(get("/api/rooms/" + id))
 				.andExpect(status().isOk())
@@ -94,14 +87,7 @@ public class CinemaRoomIntegrationTest {
 	@Test
 	public void createRoomAndUpdateRoom_whenJsonAndRoomNumberAreValidAndNoScreeningExists_returns200() throws Exception {
 		CinemaRoomRequest request = new CinemaRoomRequest(1, 10, 20);
-
-		String responseJson = mockMvc.perform(post("/api/rooms")
-						.contentType(MediaType.APPLICATION_JSON)
-						.content(objectMapper.writeValueAsString(request)))
-				.andExpect(status().isCreated())
-				.andReturn().getResponse().getContentAsString();
-
-		int id = JsonPath.read(responseJson, "$.id");
+		Long id = getCinemaId(request);
 
 		request.setRowCapacity(25);
 
@@ -119,22 +105,10 @@ public class CinemaRoomIntegrationTest {
 	public void createRoomMovieScreeningUpdateRoom_whenJsonAndRoomNumberAreValidAndScreeningExists_returnsBadRequest() throws Exception {
 		CinemaRoomRequest request = new CinemaRoomRequest(1, 10, 20);
 
-		String roomResponseJson = mockMvc.perform(post("/api/rooms")
-						.contentType(MediaType.APPLICATION_JSON)
-						.content(objectMapper.writeValueAsString(request)))
-				.andExpect(status().isCreated())
-				.andReturn().getResponse().getContentAsString();
-
-		Long roomId = ((Number) JsonPath.read(roomResponseJson, "$.id")).longValue();
+		Long roomId = getCinemaId(request);
 
 		MovieRequest movieRequest = new MovieRequest("TestTitle", "TestDescription", 90, Genre.FANTASY);
-
-		String movieResponseJson = mockMvc.perform(post("/api/movies")
-						.contentType(MediaType.APPLICATION_JSON)
-						.content(objectMapper.writeValueAsString(movieRequest)))
-				.andReturn().getResponse().getContentAsString();
-
-		Long movieId = ((Number) JsonPath.read(movieResponseJson, "$.id")).longValue();
+		Long movieId = getMovieId(movieRequest);
 
 		ScreeningsRequest screeningsRequest = new ScreeningsRequest(roomId, movieId, LocalDate.now(), TimeSlot.PRIME, BigDecimal.valueOf(5));
 
@@ -157,14 +131,7 @@ public class CinemaRoomIntegrationTest {
 	@Test
 	public void createRoomAndDeleteRoom_whenRoomExistsButNoScreeningExists_returnsNoContent() throws Exception {
 		CinemaRoomRequest request = new CinemaRoomRequest(1, 10, 20);
-
-		String responseJson = mockMvc.perform(post("/api/rooms")
-						.contentType(MediaType.APPLICATION_JSON)
-						.content(objectMapper.writeValueAsString(request)))
-				.andExpect(status().isCreated())
-				.andReturn().getResponse().getContentAsString();
-
-		int id = JsonPath.read(responseJson, "$.id");
+		Long id = getCinemaId(request);
 
 		mockMvc.perform(delete("/api/rooms/delete/" + id))
 				.andExpect(status().isNoContent());
@@ -181,6 +148,29 @@ public class CinemaRoomIntegrationTest {
 				.andExpect(jsonPath("$.content").isArray())
 				.andExpect(jsonPath("$.size").value(10));
 
+	}
+
+	//Helper Method
+
+	private Long getCinemaId(CinemaRoomRequest cinemaRoomRequest) throws Exception {
+
+		String roomResponseJson = mockMvc.perform(post("/api/rooms")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(cinemaRoomRequest)))
+				.andExpect(status().isCreated())
+				.andReturn().getResponse().getContentAsString();
+
+		return ((Number) JsonPath.read(roomResponseJson, "$.id")).longValue();
+	}
+
+	private Long getMovieId(MovieRequest movieRequest) throws Exception {
+		String responseJson = mockMvc.perform(post("/api/movies")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(movieRequest)))
+				.andExpect(status().isCreated())
+				.andReturn().getResponse().getContentAsString();
+
+		return ((Number)JsonPath.read(responseJson, "$.id")).longValue();
 	}
 
 }

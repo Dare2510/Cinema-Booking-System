@@ -38,19 +38,12 @@ public class MovieIntegrationTest {
 		movieRepository.deleteAll();
 	}
 
-
 	@Test
 	public void createAndGetMovie_whenJsonIsValid_returnIsCreatedAndIsOK() throws Exception {
 		MovieRequest request = new MovieRequest(
 				"testTitle", "testDescription", 100, Genre.FANTASY);
 
-		String responseJson = mockMvc.perform(post("/api/movies")
-						.contentType(MediaType.APPLICATION_JSON)
-						.content(objectMapper.writeValueAsString(request)))
-				.andExpect(status().isCreated())
-				.andReturn().getResponse().getContentAsString();
-
-		int id = JsonPath.read(responseJson, "$.id");
+		Long id = getMovieId(request);
 
 		mockMvc.perform(get("/api/movies/" + id))
 				.andExpect(status().isOk())
@@ -128,13 +121,7 @@ public class MovieIntegrationTest {
 		MovieRequest request = new MovieRequest(
 				"testTitle", "testDescription", 100, Genre.FANTASY);
 
-		String responseJson = mockMvc.perform(post("/api/movies")
-						.contentType(MediaType.APPLICATION_JSON)
-						.content(objectMapper.writeValueAsString(request)))
-				.andExpect(status().isCreated())
-				.andReturn().getResponse().getContentAsString();
-
-		int id = JsonPath.read(responseJson, "$.id");
+		Long id = getMovieId(request);
 
 		request.setTitle("newTitle");
 
@@ -151,13 +138,7 @@ public class MovieIntegrationTest {
 		MovieRequest request = new MovieRequest(
 				"testTitle", "testDescription", 100, Genre.FANTASY);
 
-		String responseJson = mockMvc.perform(post("/api/movies")
-						.contentType(MediaType.APPLICATION_JSON)
-						.content(objectMapper.writeValueAsString(request)))
-				.andExpect(status().isCreated())
-				.andReturn().getResponse().getContentAsString();
-
-		int id = JsonPath.read(responseJson, "$.id");
+		Long id = getMovieId(request);
 
 		mockMvc.perform(delete("/api/movies/" + id))
 				.andExpect(status().isNoContent());
@@ -174,6 +155,18 @@ public class MovieIntegrationTest {
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.content").isArray())
 				.andExpect(jsonPath("$.size").value(10));
+	}
+
+	//Helper Method
+
+	private Long getMovieId(MovieRequest movieRequest) throws Exception {
+		String responseJson = mockMvc.perform(post("/api/movies")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(movieRequest)))
+				.andExpect(status().isCreated())
+				.andReturn().getResponse().getContentAsString();
+
+		return ((Number)JsonPath.read(responseJson, "$.id")).longValue();
 	}
 
 }

@@ -59,21 +59,9 @@ public class ScreeningIntegrationTest {
 		MovieRequest movie = new MovieRequest("testTitle", "testDescription", 120, Genre.FANTASY);
 		CinemaRoomRequest room = new CinemaRoomRequest(5,10,20);
 
-		String movieResponseJson = mockMvc.perform(post("/api/movies")
-						.contentType(MediaType.APPLICATION_JSON)
-						.content(objectMapper.writeValueAsString(movie)))
-				.andExpect(status().isCreated())
-				.andReturn().getResponse().getContentAsString();
 
-		Long movieId = ((Number)JsonPath.read(movieResponseJson, "$.id")).longValue();
-
-		String roomResponseJson = mockMvc.perform(post("/api/rooms")
-						.contentType(MediaType.APPLICATION_JSON)
-						.content(objectMapper.writeValueAsString(room)))
-				.andExpect(status().isCreated())
-				.andReturn().getResponse().getContentAsString();
-
-		Long roomId = ((Number)JsonPath.read(roomResponseJson, "$.id")).longValue();
+		Long movieId = getMovieId(movie);
+		Long roomId = getCinemaId(room);
 
 		ScreeningsRequest screening = new ScreeningsRequest(roomId,movieId, LocalDate.now(), TimeSlot.PRIME, BigDecimal.TEN);
 
@@ -89,14 +77,7 @@ public class ScreeningIntegrationTest {
 	@Test
 	public void createScreening_whenMovieDoesNotExist_returnsIsNotFound() throws Exception {
 		CinemaRoomRequest room = new CinemaRoomRequest(5,10,20);
-
-		String roomResponseJson = mockMvc.perform(post("/api/rooms")
-						.contentType(MediaType.APPLICATION_JSON)
-						.content(objectMapper.writeValueAsString(room)))
-				.andExpect(status().isCreated())
-				.andReturn().getResponse().getContentAsString();
-
-		Long roomId = ((Number)JsonPath.read(roomResponseJson, "$.id")).longValue();
+		Long roomId = getCinemaId(room);
 
 		ScreeningsRequest screening = new ScreeningsRequest(roomId,99L, LocalDate.now(), TimeSlot.PRIME, BigDecimal.TEN);
 
@@ -111,14 +92,7 @@ public class ScreeningIntegrationTest {
 	@Test
 	public void createScreening_whenRoomDoesNotExist_returnsIsNotFound() throws Exception {
 		MovieRequest movie = new MovieRequest("testTitle", "testDescription", 120, Genre.FANTASY);
-
-		String movieResponseJson = mockMvc.perform(post("/api/movies")
-						.contentType(MediaType.APPLICATION_JSON)
-						.content(objectMapper.writeValueAsString(movie)))
-				.andExpect(status().isCreated())
-				.andReturn().getResponse().getContentAsString();
-
-		Long movieId = ((Number) JsonPath.read(movieResponseJson, "$.id")).longValue();
+		Long movieId = getMovieId(movie);
 
 		ScreeningsRequest screening = new ScreeningsRequest(9L, movieId, LocalDate.now(), TimeSlot.PRIME, BigDecimal.TEN);
 
@@ -155,9 +129,6 @@ public class ScreeningIntegrationTest {
 
 	@Test
 	public void getScreeningById_whenScreeningDoesNotExist_returnsNotFound() throws Exception {
-		ScreeningsRequest screening = new ScreeningsRequest
-				(50L, 51L, LocalDate.of(2020,10,25), TimeSlot.PRIME, BigDecimal.TEN);
-
 		mockMvc.perform(get("/api/screening/"+1000))
 				.andExpect(status().isNotFound())
 				.andExpect(jsonPath("$.message").value("Screening with id "+1000+" not found"));
@@ -169,31 +140,11 @@ public class ScreeningIntegrationTest {
 		MovieRequest movie = new MovieRequest("testTitle", "testDescription", 120, Genre.FANTASY);
 		CinemaRoomRequest room = new CinemaRoomRequest(5,10,20);
 
-		String movieResponseJson = mockMvc.perform(post("/api/movies")
-						.contentType(MediaType.APPLICATION_JSON)
-						.content(objectMapper.writeValueAsString(movie)))
-				.andExpect(status().isCreated())
-				.andReturn().getResponse().getContentAsString();
-
-		Long movieId = ((Number)JsonPath.read(movieResponseJson, "$.id")).longValue();
-
-		String roomResponseJson = mockMvc.perform(post("/api/rooms")
-						.contentType(MediaType.APPLICATION_JSON)
-						.content(objectMapper.writeValueAsString(room)))
-				.andExpect(status().isCreated())
-				.andReturn().getResponse().getContentAsString();
-
-		Long roomId = ((Number)JsonPath.read(roomResponseJson, "$.id")).longValue();
+		Long movieId = getMovieId(movie);
+		Long roomId = getCinemaId(room);
 
 		ScreeningsRequest screening = new ScreeningsRequest(roomId,movieId, LocalDate.now(), TimeSlot.PRIME, BigDecimal.valueOf(15));
-
-		String screeningResponseJson = mockMvc.perform(post("/api/screening")
-						.contentType(MediaType.APPLICATION_JSON)
-						.content(objectMapper.writeValueAsString(screening)))
-				.andExpect(status().isOk())
-				.andReturn().getResponse().getContentAsString();
-
-		Long screeningId = ((Number)JsonPath.read(screeningResponseJson, "$.id")).longValue();
+		Long screeningId = getScreeningId(screening);
 
 		mockMvc.perform(get("/api/screening/"+screeningId))
 				.andExpect(status().isOk())
@@ -208,31 +159,11 @@ public class ScreeningIntegrationTest {
 		MovieRequest movie = new MovieRequest("testTitle", "testDescription", 120, Genre.FANTASY);
 		CinemaRoomRequest room = new CinemaRoomRequest(5,10,20);
 
-		String movieResponseJson = mockMvc.perform(post("/api/movies")
-						.contentType(MediaType.APPLICATION_JSON)
-						.content(objectMapper.writeValueAsString(movie)))
-				.andExpect(status().isCreated())
-				.andReturn().getResponse().getContentAsString();
-
-		Long movieId = ((Number)JsonPath.read(movieResponseJson, "$.id")).longValue();
-
-		String roomResponseJson = mockMvc.perform(post("/api/rooms")
-						.contentType(MediaType.APPLICATION_JSON)
-						.content(objectMapper.writeValueAsString(room)))
-				.andExpect(status().isCreated())
-				.andReturn().getResponse().getContentAsString();
-
-		Long roomId = ((Number)JsonPath.read(roomResponseJson, "$.id")).longValue();
+		Long movieId = getMovieId(movie);
+		Long roomId = getCinemaId(room);
 
 		ScreeningsRequest screening = new ScreeningsRequest(roomId,movieId, LocalDate.now(), TimeSlot.PRIME, BigDecimal.TEN);
-
-		String screeningResponseJson = mockMvc.perform(post("/api/screening")
-						.contentType(MediaType.APPLICATION_JSON)
-						.content(objectMapper.writeValueAsString(screening)))
-				.andExpect(status().isOk())
-				.andReturn().getResponse().getContentAsString();
-
-		Long screeningId = ((Number)JsonPath.read(screeningResponseJson, "$.id")).longValue();
+		Long screeningId = getScreeningId(screening);
 
 		mockMvc.perform(delete("/api/screening/"+screeningId))
 				.andExpect(status().isNoContent());
@@ -243,31 +174,12 @@ public class ScreeningIntegrationTest {
 		MovieRequest movie = new MovieRequest("testTitle", "testDescription", 120, Genre.FANTASY);
 		CinemaRoomRequest room = new CinemaRoomRequest(5,10,20);
 
-		String movieResponseJson = mockMvc.perform(post("/api/movies")
-						.contentType(MediaType.APPLICATION_JSON)
-						.content(objectMapper.writeValueAsString(movie)))
-				.andExpect(status().isCreated())
-				.andReturn().getResponse().getContentAsString();
-
-		Long movieId = ((Number)JsonPath.read(movieResponseJson, "$.id")).longValue();
-
-		String roomResponseJson = mockMvc.perform(post("/api/rooms")
-						.contentType(MediaType.APPLICATION_JSON)
-						.content(objectMapper.writeValueAsString(room)))
-				.andExpect(status().isCreated())
-				.andReturn().getResponse().getContentAsString();
-
-		Long roomId = ((Number)JsonPath.read(roomResponseJson, "$.id")).longValue();
+		Long movieId = getMovieId(movie);
+		Long roomId = getCinemaId(room);
 
 		ScreeningsRequest screening = new ScreeningsRequest(roomId,movieId, LocalDate.now(), TimeSlot.PRIME, BigDecimal.TEN);
 
-		String screeningResponseJson = mockMvc.perform(post("/api/screening")
-						.contentType(MediaType.APPLICATION_JSON)
-						.content(objectMapper.writeValueAsString(screening)))
-				.andExpect(status().isOk())
-				.andReturn().getResponse().getContentAsString();
-
-		Long screeningId = ((Number)JsonPath.read(screeningResponseJson, "$.id")).longValue();
+		Long screeningId = getScreeningId(screening);
 		ScreeningsRequest update = new ScreeningsRequest(roomId,movieId, LocalDate.now(), TimeSlot.EVENING, BigDecimal.valueOf(15));
 
 		mockMvc.perform(patch("/api/screening/"+screeningId)
@@ -278,6 +190,41 @@ public class ScreeningIntegrationTest {
 				.andExpect(jsonPath("$.movieId").value(movieId))
 				.andExpect(jsonPath("$.timeSlot").value("EVENING"))
 				.andExpect(jsonPath("$.price").value(15.00));
+	}
+
+	//Helper Methods
+
+	private Long getScreeningId(ScreeningsRequest  screeningsRequest) throws Exception {
+
+		String screeningResponseJson = mockMvc.perform(post("/api/screening")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(screeningsRequest)))
+				.andExpect(status().isOk())
+				.andReturn().getResponse().getContentAsString();
+
+		return ((Number)JsonPath.read(screeningResponseJson, "$.id")).longValue();
+	}
+
+	private Long getMovieId(MovieRequest movieRequest) throws Exception {
+
+		String movieResponseJson = mockMvc.perform(post("/api/movies")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(movieRequest)))
+				.andExpect(status().isCreated())
+				.andReturn().getResponse().getContentAsString();
+
+		return  ((Number)JsonPath.read(movieResponseJson, "$.id")).longValue();
+	}
+
+	private Long getCinemaId(CinemaRoomRequest cinemaRoomRequest) throws Exception {
+
+		String roomResponseJson = mockMvc.perform(post("/api/rooms")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(cinemaRoomRequest)))
+				.andExpect(status().isCreated())
+				.andReturn().getResponse().getContentAsString();
+
+		return  ((Number)JsonPath.read(roomResponseJson, "$.id")).longValue();
 	}
 
 
