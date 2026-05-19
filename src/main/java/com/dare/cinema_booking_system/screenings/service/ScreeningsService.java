@@ -94,36 +94,39 @@ public class ScreeningsService {
 	public ScreeningsResponse updateScreenings(Long screeningId, ScreeningsRequest screeningsRequest) {
 
 		ScreeningsEntity toUpdate = getScreeningEntity(screeningId);
-		MovieEntity requestedMovie = movieService.getMovieEntityById(screeningsRequest.getMovieId());
-		LocalDate requestedDate = screeningsRequest.getScreeningDate();
-		CinemaRoomEntity requestedRoom = cinemaRoomService.getRoomEntity(screeningsRequest.getRoomId());
-		TimeSlot requestedTime = screeningsRequest.getTimeSlot();
-		BigDecimal price = screeningsRequest.getPrice();
+//		MovieEntity requestedMovie = movieService.getMovieEntityById(screeningsRequest.getMovieId());
+//		LocalDate requestedDate = screeningsRequest.getScreeningDate();
+//		CinemaRoomEntity requestedRoom = cinemaRoomService.getRoomEntity(screeningsRequest.getRoomId());
+//		TimeSlot requestedTime = screeningsRequest.getTimeSlot();
+//		BigDecimal price = screeningsRequest.getPrice();
+//		List<ScreeningSeatEntity> newUpdatedScreeningSeats = createScreeningSeats(requestedRoom, toUpdate);
 
 		boolean hasReservation = validateScreeningUpdate(screeningId);
+		boolean sameSpot = isSameSpot(toUpdate,screeningsRequest);
 
-		if (!hasReservation) {
-			boolean spotIsBooked = validateScreeningSpot(screeningsRequest);
+		if(sameSpot && !hasReservation) {
 
-			if (!spotIsBooked) {
-				List<ScreeningSeatEntity> newUpdatedScreeningSeats = createScreeningSeats(requestedRoom, toUpdate);
-
-				toUpdate.setMovie(requestedMovie);
-				toUpdate.setScreeningDate(requestedDate);
-				toUpdate.setTimeSlot(requestedTime);
-				toUpdate.setCinemaRoomId(requestedRoom.getId());
-				toUpdate.setScreeningSeats(newUpdatedScreeningSeats);
-				toUpdate.setPrice(price);
-
-				screeningsRepository.save(toUpdate);
-				log.info("Screening with ID {} updated successfully", screeningId);
-				return modelMapper.map(toUpdate, ScreeningsResponse.class);
-			} else {
-				log.warn("Screening spot on {} at {} in room with ID {} is already reserved", requestedDate, requestedTime, requestedRoom.getId());
-				throw new ScreeningSlotAlreadyBookedException(requestedRoom.getId(), requestedDate, requestedTime);
-			}
+			return setterForUpdate(toUpdate, screeningsRequest);
 		} else {
-			throw new ScreeningUpdateNotPossibleException(screeningId);
+
+			if (!hasReservation) {
+				boolean spotIsBooked = validateScreeningSpot(screeningsRequest);
+
+				if (!spotIsBooked) {
+					return setterForUpdate(toUpdate, screeningsRequest);
+
+				} else {
+					LocalDate requestedDate = screeningsRequest.getScreeningDate();
+					CinemaRoomEntity requestedRoom = cinemaRoomService.getRoomEntity(screeningsRequest.getRoomId());
+					TimeSlot requestedTime = screeningsRequest.getTimeSlot();
+
+					log.warn("Screening spot on {} at {} in room with ID {} is already reserved",
+							requestedDate,requestedTime,requestedRoom);
+					throw new ScreeningSlotAlreadyBookedException(requestedRoom.getId(), requestedDate, requestedTime);
+				}
+			} else {
+				throw new ScreeningUpdateNotPossibleException(screeningId);
+			}
 		}
 
 
@@ -165,6 +168,34 @@ public class ScreeningsService {
 
 	private boolean validateScreeningUpdate(Long screeningId) {
 		return screeningSeatRepository.hasReservedOrSoldSeats(screeningId);
+	}
+
+	private boolean isSameSpot(ScreeningsEntity screeningEntity, ScreeningsRequest screeningsRequest) {
+		return screeningEntity.getScreeningDate().equals(screeningsRequest.getScreeningDate())
+				&& screeningEntity.getTimeSlot().equals(screeningsRequest.getTimeSlot())
+				&& screeningEntity.getCinemaRoomId().equals(screeningsRequest.getRoomId());
+
+	}
+
+	private ScreeningsResponse setterForUpdate(ScreeningsEntity toUpdate, ScreeningsRequest screeningsRequest) {
+
+		MovieEntity requestedMovie = movieService.getMovieEntityById(screeningsRequest.getMovieId());
+		LocalDate requestedDate = screeningsRequest.getScreeningDate();
+		CinemaRoomEntity requestedRoom = cinemaRoomService.getRoomEntity(screeningsRequest.getRoomId());
+		TimeSlot requestedTime = screeningsRequest.getTimeSlot();
+		BigDecimal price = screeningsRequest.getPrice();
+		List<ScreeningSeatEntity> newUpdatedScreeningSeats = createScreeningSeats(requestedRoom, toUpdate);
+
+		toUpdate.setMovie(requestedMovie);
+		toUpdate.setScreeningDate(requestedDate);
+		toUpdate.setTimeSlot(requestedTime);
+		toUpdate.setCinemaRoomId(requestedRoom.getId());
+		toUpdate.setScreeningSeats(newUpdatedScreeningSeats);
+		toUpdate.setPrice(price);
+
+		screeningsRepository.save(toUpdate);
+			log.info("Screening with ID {} updated successfully", toUpdate.getId());
+		return modelMapper.map(toUpdate, ScreeningsResponse.class);
 	}
 
 }

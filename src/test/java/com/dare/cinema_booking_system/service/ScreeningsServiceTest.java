@@ -205,12 +205,6 @@ public class ScreeningsServiceTest {
 		when(screeningsRepository.findById(screeningToUpdate.getId()))
 				.thenReturn(Optional.of(screeningToUpdate));
 
-		when(movieService.getMovieEntityById(updatedMovie.getId()))
-				.thenReturn(updatedMovie);
-
-		when(cinemaRoomService.getRoomEntity(room.getId()))
-				.thenReturn(room);
-
 		when(screeningSeatRepository.hasReservedOrSoldSeats(screeningToUpdate.getId()))
 				.thenReturn(true);
 
@@ -219,8 +213,8 @@ public class ScreeningsServiceTest {
 				.hasMessage("Screening with id 1 cannot be updated");
 
 		verify(screeningsRepository).findById(screeningToUpdate.getId());
-		verify(movieService).getMovieEntityById(updatedMovie.getId());
-		verify(cinemaRoomService).getRoomEntity(room.getId());
+		verify(movieService,never()).getMovieEntityById(updatedMovie.getId());
+		verify(cinemaRoomService, never()).getRoomEntity(room.getId());
 		verify(screeningSeatRepository).hasReservedOrSoldSeats(screeningToUpdate.getId());
 
 		verify(screeningsRepository, never())
@@ -232,7 +226,7 @@ public class ScreeningsServiceTest {
 	}
 
 	@Test
-	public void updateScreening_whenScreeningHasNoReservationAndSpotIsAvailableAndScreeningSeatsExist_returnScreeningResponse() {
+	public void updateScreening_whenScreeningHasNoReservationAndSpotIsSameAndScreeningSeatsExist_returnScreeningResponse() {
 		SeatEntity oldSeat = new SeatEntity();
 		oldSeat.setId(1L);
 
@@ -270,7 +264,7 @@ public class ScreeningsServiceTest {
 		screeningToUpdate.getScreeningSeats().add(existingScreeningSeat);
 
 		ScreeningsRequest request =
-				new ScreeningsRequest(newRoom.getId(), updatedMovie.getId(), date, TimeSlot.EVENING, updatedPrice);
+				new ScreeningsRequest(newRoom.getId(), updatedMovie.getId(), date, TimeSlot.PRIME, updatedPrice);
 
 		when(screeningsRepository.findById(screeningToUpdate.getId()))
 				.thenReturn(Optional.of(screeningToUpdate));
@@ -315,7 +309,7 @@ public class ScreeningsServiceTest {
 
 		assertEquals(updatedMovie.getId(), response.getMovieId());
 		assertEquals(updatedPrice, response.getPrice());
-		assertEquals(TimeSlot.EVENING, response.getTimeSlot());
+		assertEquals(TimeSlot.PRIME, response.getTimeSlot());
 	}
 
 
