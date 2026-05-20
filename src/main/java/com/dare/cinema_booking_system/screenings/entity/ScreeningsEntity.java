@@ -1,6 +1,7 @@
 package com.dare.cinema_booking_system.screenings.entity;
 
 import com.dare.cinema_booking_system.movies.entity.MovieEntity;
+import com.dare.cinema_booking_system.reservations.entity.ReservationEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -42,12 +43,17 @@ public class ScreeningsEntity {
 	@JoinColumn(name = "movies_id")
 	private MovieEntity movie;
 
-	public ScreeningsEntity(Long cinemaRoomId, MovieEntity movie, LocalDate screeningDate, TimeSlot timeSlot, BigDecimal price) {
+	@OneToMany(mappedBy = "screening", cascade = CascadeType.ALL)
+	private List<ReservationEntity> reservation;
+
+	public ScreeningsEntity(Long cinemaRoomId, MovieEntity movie, LocalDate screeningDate, TimeSlot timeSlot,
+							BigDecimal price) {
 		this.cinemaRoomId = cinemaRoomId;
 		this.screeningDate = screeningDate;
 		this.timeSlot = timeSlot;
 		this.price = price;
 		this.screeningSeats = new ArrayList<>();
 		this.movie = movie;
+		this.reservation = new ArrayList<>();
 	}
 }

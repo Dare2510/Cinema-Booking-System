@@ -1,6 +1,6 @@
 package com.dare.cinema_booking_system.reservations.entity;
 
-public enum PaymentStatus {
-	PAID,
-	UNPAID,
+public enum PaymentMethod {
+	ONLINE,
+	ON_SITE
 }

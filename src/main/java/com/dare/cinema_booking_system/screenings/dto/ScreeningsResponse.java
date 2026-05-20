@@ -13,6 +13,7 @@ import java.time.LocalDate;
 public class ScreeningsResponse {
 
 	private Long id;
+	private Long roomId;
 	private Long movieId;
 	private TimeSlot timeSlot;
 	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "0.00")

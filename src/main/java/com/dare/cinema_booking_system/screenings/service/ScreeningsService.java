@@ -94,13 +94,6 @@ public class ScreeningsService {
 	public ScreeningsResponse updateScreenings(Long screeningId, ScreeningsRequest screeningsRequest) {
 
 		ScreeningsEntity toUpdate = getScreeningEntity(screeningId);
-//		MovieEntity requestedMovie = movieService.getMovieEntityById(screeningsRequest.getMovieId());
-//		LocalDate requestedDate = screeningsRequest.getScreeningDate();
-//		CinemaRoomEntity requestedRoom = cinemaRoomService.getRoomEntity(screeningsRequest.getRoomId());
-//		TimeSlot requestedTime = screeningsRequest.getTimeSlot();
-//		BigDecimal price = screeningsRequest.getPrice();
-//		List<ScreeningSeatEntity> newUpdatedScreeningSeats = createScreeningSeats(requestedRoom, toUpdate);
-
 		boolean hasReservation = validateScreeningUpdate(screeningId);
 		boolean sameSpot = isSameSpot(toUpdate,screeningsRequest);
 
