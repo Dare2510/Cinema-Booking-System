@@ -2,13 +2,13 @@ package com.dare.cinema_booking_system.screenings.entity;
 
 import com.dare.cinema_booking_system.rooms.entity.SeatEntity;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
+@Builder
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "screening_seats")
 public class ScreeningSeatEntity {

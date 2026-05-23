@@ -6,7 +6,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
-import java.util.Date;
 
 @Entity
 @Table(name = "tickets")
@@ -19,7 +18,7 @@ public class TicketEntity {
 	private Long id;
 
 	@Column(name = "ticket_number", nullable = false)
-	Long ticketNumber;
+	private Long ticketNumber;
 
 	@Enumerated(EnumType.STRING)
 	@Column(name = "ticket_status", nullable = false)
