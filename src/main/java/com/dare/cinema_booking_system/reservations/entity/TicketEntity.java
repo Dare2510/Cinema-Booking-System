@@ -18,7 +18,7 @@ public class TicketEntity {
 	private Long id;
 
 	@Column(name = "ticket_number", nullable = false)
-	private Long ticketNumber;
+	private String ticketNumber;
 
 	@Enumerated(EnumType.STRING)
 	@Column(name = "ticket_status", nullable = false)
@@ -27,11 +27,12 @@ public class TicketEntity {
 	@Column(name = "date_issued", nullable = false)
 	private LocalDate dateIssued;
 
+
 	@ManyToOne
 	@JoinColumn(name = "reservation_id")
 	private ReservationEntity reservation;
 
-	public TicketEntity(Long ticketNumber, TicketStatus ticketStatus, LocalDate dateIssued, ReservationEntity reservation) {
+	public TicketEntity(String ticketNumber, ReservationEntity reservation) {
 		this.ticketNumber = ticketNumber;
 		this.ticketStatus = TicketStatus.VALID;
 		this.dateIssued = LocalDate.now();

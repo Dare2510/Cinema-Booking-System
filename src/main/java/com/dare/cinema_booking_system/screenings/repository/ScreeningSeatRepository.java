@@ -19,4 +19,13 @@ public interface ScreeningSeatRepository extends JpaRepository<ScreeningSeatEnti
 	@Query("SELECT s FROM ScreeningSeatEntity s WHERE s.screening.id = :screeningId " +
 			"AND s.screeningSeatStatus = com.dare.cinema_booking_system.screenings.entity.ScreeningSeatStatus.FREE")
 	List<ScreeningSeatEntity> getFreeScreeningSeats(@Param("screeningId") Long screeningId);
+
+	@Query("SELECT COUNT(s) = 0 FROM ScreeningSeatEntity s " +
+			"WHERE s.screening.id = :screeningId " +
+			"AND s.id IN :screeningSeatIds " +
+			"AND s.screeningSeatStatus IN (" +
+			"com.dare.cinema_booking_system.screenings.entity.ScreeningSeatStatus.RESERVED, " +
+			"com.dare.cinema_booking_system.screenings.entity.ScreeningSeatStatus.SOLD)")
+	boolean areAllSeatsFree(@Param("screeningId") Long screeningId, @Param("screeningSeatIds") List<Long> screeningSeatIds);
+
 }

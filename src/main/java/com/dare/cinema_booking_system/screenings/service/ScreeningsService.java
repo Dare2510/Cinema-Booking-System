@@ -11,6 +11,7 @@ import com.dare.cinema_booking_system.screenings.entity.ScreeningSeatEntity;
 import com.dare.cinema_booking_system.screenings.entity.ScreeningsEntity;
 import com.dare.cinema_booking_system.screenings.entity.TimeSlot;
 import com.dare.cinema_booking_system.screenings.exceptions.ScreeningNotFoundException;
+import com.dare.cinema_booking_system.screenings.exceptions.ScreeningSeatNotAvailableException;
 import com.dare.cinema_booking_system.screenings.exceptions.ScreeningSlotAlreadyBookedException;
 import com.dare.cinema_booking_system.screenings.exceptions.ScreeningUpdateNotPossibleException;
 import com.dare.cinema_booking_system.screenings.repository.ScreeningSeatRepository;
@@ -126,12 +127,21 @@ public class ScreeningsService {
 	}
 
 	//Helper
-	private ScreeningsEntity getScreeningEntity(Long screeningId) {
+	public ScreeningsEntity getScreeningEntity(Long screeningId) {
 		return screeningsRepository.findById(screeningId).orElseThrow(
 				() -> {
 					log.info("Screening with ID {} not found", screeningId);
 					return new ScreeningNotFoundException(screeningId);
 				});
+	}
+
+	public ScreeningSeatEntity  getScreeningSeatEntity(Long screeningSeatId) {
+		return screeningSeatRepository.findById(screeningSeatId).orElseThrow(
+				() -> {
+					log.info("Screening seat with ID {} not found or not available", screeningSeatId);
+					return new ScreeningSeatNotAvailableException(screeningSeatId);
+				}
+		);
 	}
 
 	private List<ScreeningSeatEntity> createScreeningSeats(CinemaRoomEntity cinemaRoom, ScreeningsEntity screening) {
