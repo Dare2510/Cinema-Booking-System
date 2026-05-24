@@ -1,6 +1,5 @@
 package com.dare.cinema_booking_system.screenings.entity;
 
-import com.dare.cinema_booking_system.reservations.entity.TicketEntity;
 import com.dare.cinema_booking_system.rooms.entity.SeatEntity;
 import jakarta.persistence.*;
 import lombok.*;
