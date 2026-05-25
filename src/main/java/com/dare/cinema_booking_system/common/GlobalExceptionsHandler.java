@@ -4,10 +4,12 @@ import com.dare.cinema_booking_system.movies.exceptions.MovieByDurationNotFoundE
 import com.dare.cinema_booking_system.movies.exceptions.MovieByGenreNotFoundException;
 import com.dare.cinema_booking_system.movies.exceptions.MovieNotFoundException;
 import com.dare.cinema_booking_system.movies.exceptions.MovieUpdateNotPossibleException;
+import com.dare.cinema_booking_system.reservations.exceptions.ReservationNotFoundException;
 import com.dare.cinema_booking_system.rooms.exceptions.CinemaRoomChangesNotPossibleException;
 import com.dare.cinema_booking_system.rooms.exceptions.CinemaRoomNotFoundException;
 import com.dare.cinema_booking_system.rooms.exceptions.CinemaRoomNumberDuplicateException;
 import com.dare.cinema_booking_system.screenings.exceptions.ScreeningNotFoundException;
+import com.dare.cinema_booking_system.screenings.exceptions.ScreeningSeatNotAvailableException;
 import com.dare.cinema_booking_system.screenings.exceptions.ScreeningSlotAlreadyBookedException;
 import com.dare.cinema_booking_system.screenings.exceptions.ScreeningUpdateNotPossibleException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -154,5 +156,29 @@ public class GlobalExceptionsHandler {
 				LocalDateTime.now()
 		);
 		return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+	}
+
+	@ExceptionHandler(ScreeningSeatNotAvailableException.class)
+	public ResponseEntity<ErrorResponse> handleScreeningSeatNotAvailableException(ScreeningSeatNotAvailableException ex,
+																				  HttpServletRequest request) {
+		ErrorResponse error = new ErrorResponse(
+				HttpStatus.BAD_REQUEST.value(),
+				ex.getMessage(),
+				request.getRequestURI(),
+				LocalDateTime.now()
+		);
+		return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+	}
+
+	@ExceptionHandler(ReservationNotFoundException.class)
+	public ResponseEntity<ErrorResponse> handleReservationNotFoundException(ReservationNotFoundException ex,
+																			HttpServletRequest request) {
+		ErrorResponse error = new ErrorResponse(
+				HttpStatus.NOT_FOUND.value(),
+				ex.getMessage(),
+				request.getRequestURI(),
+				LocalDateTime.now()
+		);
+		return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
 	}
 }

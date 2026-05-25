@@ -20,6 +20,8 @@ import com.dare.cinema_booking_system.screenings.repository.ScreeningSeatReposit
 import com.dare.cinema_booking_system.screenings.service.ScreeningsService;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+import lombok.extern.java.Log;
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
@@ -30,6 +32,7 @@ import java.util.UUID;
 
 @Service
 @AllArgsConstructor
+@Slf4j
 public class ReservationsService {
 
 	private final ReservationsRepository reservationsRepository;
@@ -51,55 +54,21 @@ public class ReservationsService {
 		boolean seatsAreFree = screeningSeatRepository.areAllSeatsFree(screeningToReserve.getId(), reservationsRequest.getScreeningSeatId());
 
 		if (seatsAreFree) {
-			ReservationEntity newReservation = new ReservationEntity();
-			newReservation.setScreening(screeningToReserve);
-			reservationsRepository.save(newReservation);
+			ReservationEntity newReservation = reservationSaver();
 
-			int numberOfSeats = reservationsRequest.screeningSeatId.size();
-			BigDecimal pricePerSeat = screeningToReserve.getPrice();
-			BigDecimal finalAmount = pricePerSeat.multiply(BigDecimal.valueOf((double) numberOfSeats));
-			PaymentMethod paymentMethod = reservationsRequest.getPaymentMethod();
+			List<PaymentEntity> payments = paymentCreator(reservationsRequest,screeningToReserve,newReservation);
+			List<TicketEntity> tickets = ticketCreator(newReservation);
+			List<ScreeningSeatEntity> reservedSeats = seatStatusUpdater(reservationsRequest);
+			reservationUpdater(newReservation,payments,tickets,screeningToReserve);
 
-			PaymentEntity reservationPayment = new PaymentEntity(newReservation, finalAmount, paymentMethod);
-			List<PaymentEntity> payments = new ArrayList<>();
-			payments.add(reservationPayment);
-			paymentRepository.saveAll(payments);
+			return responseBuilder(newReservation,tickets,reservedSeats);
 
-			String ticketNumber = UUID.randomUUID().toString();
-			List<ScreeningSeatEntity> listOfReservedSeats = screeningSeatRepository.findAllById(reservationsRequest.getScreeningSeatId());
-
-			List<String> reservedSeats = listOfReservedSeats.stream().
-					map(spot -> "Row: " + spot.getCinemaSeats().getRowNumber() + " - "
-							+ "Seat: " + spot.getCinemaSeats().getSeatNumber()).toList();
-
-			TicketEntity ticket = new TicketEntity(ticketNumber, newReservation);
-
-			listOfReservedSeats.forEach(spot -> spot.setScreeningSeatStatus(ScreeningSeatStatus.RESERVED));
-			screeningSeatRepository.saveAll(listOfReservedSeats);
-
-
-			List<TicketEntity> tickets = new ArrayList<>();
-			tickets.add(ticket);
-			ticketRepository.saveAll(tickets);
-
-			newReservation.setPayments(payments);
-			newReservation.setTickets(tickets);
-			newReservation.setScreening(screeningToReserve);
-			reservationsRepository.save(newReservation);
-
-			return ReservationsResponse.builder()
-					.reservationId(newReservation.getId())
-					.reservedSeats(reservedSeats)
-					.screeningDate(newReservation.getScreening().getScreeningDate())
-					.ticketNumber(ticketNumber)
-					.build();
 		} else {
 			throw new ScreeningSeatNotAvailableException();
 		}
 
 
 	}
-
 
 	//Helper Methods
 	private ReservationEntity getReservationById(Long reservationId) {
@@ -119,6 +88,74 @@ public class ReservationsService {
 						.build()
 				)
 				.toList();
+	}
+
+	private void reservationUpdater(ReservationEntity newReservation, List<PaymentEntity> payments, List<TicketEntity> tickets,ScreeningsEntity screeningToReserve) {
+
+		newReservation.setPayments(payments);
+		newReservation.setTickets(tickets);
+		newReservation.setScreening(screeningToReserve);
+		reservationsRepository.save(newReservation);
+		log.info("Reservation with id {} has been updated", newReservation.getId());
+
+	}
+
+	private ReservationEntity reservationSaver() {
+		ReservationEntity reservationEntity = new ReservationEntity();
+		reservationsRepository.save(reservationEntity);
+		log.info("Reservation with id {} has been created", reservationEntity.getId());
+		return reservationEntity;
+	}
+
+	private List<PaymentEntity> paymentCreator(ReservationsRequest reservationsRequest, ScreeningsEntity screeningToReserve, ReservationEntity newReservation) {
+		int numberOfSeats = reservationsRequest.screeningSeatId.size();
+		BigDecimal pricePerSeat = screeningToReserve.getPrice();
+		BigDecimal finalAmount = pricePerSeat.multiply(BigDecimal.valueOf((double) numberOfSeats));
+		PaymentMethod paymentMethod = reservationsRequest.getPaymentMethod();
+
+		List<PaymentEntity> payments = new ArrayList<>();
+
+		payments.add(new PaymentEntity(newReservation, finalAmount, paymentMethod));
+		paymentRepository.saveAll(payments);
+		log.info("Payment with id {} has been created", payments.get(0).getId());
+
+		return payments;
+
+	}
+
+	private List<TicketEntity> ticketCreator(ReservationEntity newReservation) {
+		String ticketNumber = UUID.randomUUID().toString();
+
+		List<TicketEntity> tickets = new ArrayList<>();
+		tickets.add(new TicketEntity(ticketNumber, newReservation));
+		ticketRepository.saveAll(tickets);
+		log.info("Ticket with id {} has been created", tickets.get(0).getId());
+
+		return tickets;
+	}
+
+	private List<ScreeningSeatEntity> seatStatusUpdater(ReservationsRequest reservationsRequest) {
+		List<ScreeningSeatEntity> listOfReservedSeats = screeningSeatRepository.findAllById(reservationsRequest.getScreeningSeatId());
+
+		listOfReservedSeats.forEach(spot -> spot.setScreeningSeatStatus(ScreeningSeatStatus.RESERVED));
+		screeningSeatRepository.saveAll(listOfReservedSeats);
+		log.info("Seats with id's {} has been updated" , listOfReservedSeats.stream().map(ScreeningSeatEntity::getId).toList());
+
+		return listOfReservedSeats;
+
+	}
+
+	private ReservationsResponse responseBuilder(ReservationEntity newReservation,List<TicketEntity> tickets, List<ScreeningSeatEntity> listOfReservedSeats) {
+		List<String> reservedSeats = listOfReservedSeats.stream().
+				map(spot -> "Row: " + spot.getCinemaSeats().getRowNumber() + " - "
+						+ "Seat: " + spot.getCinemaSeats().getSeatNumber()).toList();
+
+		return ReservationsResponse.builder()
+				.reservationId(newReservation.getId())
+				.reservedSeats(reservedSeats)
+				.screeningDate(newReservation.getScreening().getScreeningDate())
+				.ticketNumber(tickets.get(0).getTicketNumber())
+				.build();
 	}
 
 }
