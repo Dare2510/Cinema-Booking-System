@@ -3,10 +3,7 @@ package com.dare.cinema_booking_system.reservations.service;
 import com.dare.cinema_booking_system.movies.service.MovieService;
 import com.dare.cinema_booking_system.reservations.dto.ReservationsRequest;
 import com.dare.cinema_booking_system.reservations.dto.ReservationsResponse;
-import com.dare.cinema_booking_system.reservations.entity.PaymentEntity;
-import com.dare.cinema_booking_system.reservations.entity.PaymentMethod;
-import com.dare.cinema_booking_system.reservations.entity.ReservationEntity;
-import com.dare.cinema_booking_system.reservations.entity.TicketEntity;
+import com.dare.cinema_booking_system.reservations.entity.*;
 import com.dare.cinema_booking_system.reservations.exceptions.ReservationNotFoundException;
 import com.dare.cinema_booking_system.reservations.repository.PaymentRepository;
 import com.dare.cinema_booking_system.reservations.repository.ReservationsRepository;
@@ -15,17 +12,20 @@ import com.dare.cinema_booking_system.screenings.dto.ScreeningSeatResponse;
 import com.dare.cinema_booking_system.screenings.entity.ScreeningSeatEntity;
 import com.dare.cinema_booking_system.screenings.entity.ScreeningSeatStatus;
 import com.dare.cinema_booking_system.screenings.entity.ScreeningsEntity;
+import com.dare.cinema_booking_system.screenings.entity.TimeSlot;
 import com.dare.cinema_booking_system.screenings.exceptions.ScreeningSeatNotAvailableException;
 import com.dare.cinema_booking_system.screenings.repository.ScreeningSeatRepository;
+import com.dare.cinema_booking_system.screenings.repository.ScreeningsRepository;
 import com.dare.cinema_booking_system.screenings.service.ScreeningsService;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
-import lombok.extern.java.Log;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -42,6 +42,7 @@ public class ReservationsService {
 	private final ScreeningsService screeningsService;
 	private final MovieService movieService;
 	private final ModelMapper modelMapper;
+	private final ScreeningsRepository screeningsRepository;
 
 	public ReservationsResponse findReservationById(Long reservationId) {
 		ReservationEntity reservation = getReservationById(reservationId);
@@ -69,6 +70,42 @@ public class ReservationsService {
 
 
 	}
+
+	public void cancelReservation(Long reservationId) {
+		ReservationEntity toCancel = getReservationById(reservationId);
+		PaymentEntity paymentToCancel = paymentRepository.findByReservation_Id(reservationId);
+		TicketEntity ticketToCancel = ticketRepository.findByReservation_Id(reservationId);
+		List<ScreeningSeatEntity> seatsToCancel = toCancel.getScreening().getScreeningSeats();
+
+		boolean onTime = cancelIsOnTime(toCancel);
+		ReservationStatus currentStatus = toCancel.getReservationStatus();
+		boolean newStatusIsValid = currentStatus.correctStatusOrder(toCancel, ReservationStatus.CANCELLED);
+
+
+			if(onTime &&  newStatusIsValid) {
+				toCancel.setReservationStatus(ReservationStatus.CANCELLED);
+				ticketToCancel.setTicketStatus(TicketStatus.CANCELLED);
+				seatsToCancel.forEach(seat -> {seat.setScreeningSeatStatus(ScreeningSeatStatus.FREE);});
+
+				reservationsRepository.save(toCancel);
+				ticketRepository.save(ticketToCancel);
+				screeningSeatRepository.saveAll(seatsToCancel);
+				switch (currentStatus) {
+					case CREATED:
+						paymentToCancel.setPaymentStatus(PaymentStatus.REFUNDED);
+						paymentRepository.save(paymentToCancel);
+						break;
+					case CONFIRMED:
+						paymentToCancel.setPaymentStatus(PaymentStatus.REFUND_PENDING);
+						paymentRepository.save(paymentToCancel);
+
+				}
+			} else {
+				throw new RuntimeException("Cancel not possible");
+			}
+	}
+
+
 
 	//Helper Methods
 	private ReservationEntity getReservationById(Long reservationId) {
@@ -156,6 +193,18 @@ public class ReservationsService {
 				.screeningDate(newReservation.getScreening().getScreeningDate())
 				.ticketNumber(tickets.get(0).getTicketNumber())
 				.build();
+	}
+
+	private boolean cancelIsOnTime(ReservationEntity reservation) {
+		ScreeningsEntity screeningToCancel = screeningsService.getScreeningEntity(reservation.getId());
+		TimeSlot timeSlot = screeningToCancel.getTimeSlot();
+		LocalDate date = screeningToCancel.getScreeningDate();
+
+		LocalDateTime currentDateTime = LocalDateTime.now();
+
+		int time = (timeSlot==TimeSlot.EVENING_18H)? 18 : (timeSlot==TimeSlot.PRIME_20H) ? 20 : 22;
+		return date.atTime(time, 0).isAfter(currentDateTime.plusMinutes(60));
+
 	}
 
 }

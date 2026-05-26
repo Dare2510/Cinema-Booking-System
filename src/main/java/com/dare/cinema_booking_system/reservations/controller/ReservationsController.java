@@ -27,11 +27,13 @@ public class ReservationsController {
 	public ResponseEntity<ReservationsResponse> getScreeningById(@PathVariable Long screeningId) {
 		return ResponseEntity.ok(reservationsService.findReservationById(screeningId));
 	}
-
-
-
 	@PostMapping
 	public ResponseEntity<ReservationsResponse> createReservations(@RequestBody ReservationsRequest reservationsRequest) {
 		return ResponseEntity.ok(reservationsService.createReservation(reservationsRequest));
+	}
+	@PatchMapping("/cancel/{reservationId}")
+	public ResponseEntity<Void> cancelReservations(@PathVariable Long reservationId) {
+		reservationsService.cancelReservation(reservationId);
+		return ResponseEntity.ok().build();
 	}
 }
