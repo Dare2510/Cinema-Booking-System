@@ -4,6 +4,8 @@ import com.dare.cinema_booking_system.movies.service.MovieService;
 import com.dare.cinema_booking_system.reservations.dto.ReservationsRequest;
 import com.dare.cinema_booking_system.reservations.dto.ReservationsResponse;
 import com.dare.cinema_booking_system.reservations.entity.*;
+import com.dare.cinema_booking_system.reservations.exceptions.ReservationCancelNotOnTimeException;
+import com.dare.cinema_booking_system.reservations.exceptions.ReservationInvalidStatusFlowException;
 import com.dare.cinema_booking_system.reservations.exceptions.ReservationNotFoundException;
 import com.dare.cinema_booking_system.reservations.repository.PaymentRepository;
 import com.dare.cinema_booking_system.reservations.repository.ReservationsRepository;
@@ -70,7 +72,7 @@ public class ReservationsService {
 
 
 	}
-
+	@Transactional
 	public void cancelReservation(Long reservationId) {
 		ReservationEntity toCancel = getReservationById(reservationId);
 		PaymentEntity paymentToCancel = paymentRepository.findByReservation_Id(reservationId);
@@ -100,9 +102,11 @@ public class ReservationsService {
 						paymentRepository.save(paymentToCancel);
 
 				}
-			} else {
-				throw new RuntimeException("Cancel not possible");
-			}
+			} if(!onTime) {
+				throw new ReservationCancelNotOnTimeException(reservationId);
+			} if(!newStatusIsValid) {
+				throw new ReservationInvalidStatusFlowException(reservationId, ReservationStatus.CANCELLED);
+		}
 	}
 
 
