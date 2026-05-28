@@ -4,9 +4,7 @@ import com.dare.cinema_booking_system.movies.exceptions.MovieByDurationNotFoundE
 import com.dare.cinema_booking_system.movies.exceptions.MovieByGenreNotFoundException;
 import com.dare.cinema_booking_system.movies.exceptions.MovieNotFoundException;
 import com.dare.cinema_booking_system.movies.exceptions.MovieUpdateNotPossibleException;
-import com.dare.cinema_booking_system.reservations.exceptions.ReservationCancelNotOnTimeException;
-import com.dare.cinema_booking_system.reservations.exceptions.ReservationInvalidStatusFlowException;
-import com.dare.cinema_booking_system.reservations.exceptions.ReservationNotFoundException;
+import com.dare.cinema_booking_system.reservations.exceptions.*;
 import com.dare.cinema_booking_system.rooms.exceptions.CinemaRoomChangesNotPossibleException;
 import com.dare.cinema_booking_system.rooms.exceptions.CinemaRoomNotFoundException;
 import com.dare.cinema_booking_system.rooms.exceptions.CinemaRoomNumberDuplicateException;
@@ -199,6 +197,30 @@ public class GlobalExceptionsHandler {
 	@ExceptionHandler(ReservationInvalidStatusFlowException.class)
 	public ResponseEntity<ErrorResponse> handleReservationInvalidStatusFlowException(ReservationInvalidStatusFlowException ex,
 																					 HttpServletRequest request) {
+		ErrorResponse error = new ErrorResponse(
+				HttpStatus.BAD_REQUEST.value(),
+				ex.getMessage(),
+				request.getRequestURI(),
+				LocalDateTime.now()
+		);
+		return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+	}
+
+	@ExceptionHandler(ReservationRefundException.class)
+	public ResponseEntity<ErrorResponse> handleReservationRefundException(ReservationRefundException ex,
+																		  HttpServletRequest request) {
+		ErrorResponse error = new ErrorResponse(
+				HttpStatus.BAD_REQUEST.value(),
+				ex.getMessage(),
+				request.getRequestURI(),
+				LocalDateTime.now()
+		);
+		return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+	}
+
+	@ExceptionHandler(ReservationCompletePaymentException.class)
+	public ResponseEntity<ErrorResponse> handleReservationCompletePaymentException(ReservationCompletePaymentException ex,
+																		   HttpServletRequest request) {
 		ErrorResponse error = new ErrorResponse(
 				HttpStatus.BAD_REQUEST.value(),
 				ex.getMessage(),
