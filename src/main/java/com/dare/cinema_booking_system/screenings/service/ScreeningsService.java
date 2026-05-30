@@ -1,9 +1,12 @@
 package com.dare.cinema_booking_system.screenings.service;
 
+import com.dare.cinema_booking_system.movies.dto.MovieResponse;
 import com.dare.cinema_booking_system.movies.entity.MovieEntity;
 import com.dare.cinema_booking_system.movies.service.MovieService;
+import com.dare.cinema_booking_system.rooms.dto.CinemaRoomResponse;
 import com.dare.cinema_booking_system.rooms.entity.CinemaRoomEntity;
 import com.dare.cinema_booking_system.rooms.entity.SeatEntity;
+import com.dare.cinema_booking_system.rooms.repository.CinemaRoomRepository;
 import com.dare.cinema_booking_system.rooms.service.CinemaRoomService;
 import com.dare.cinema_booking_system.screenings.dto.ScreeningsRequest;
 import com.dare.cinema_booking_system.screenings.dto.ScreeningsResponse;
@@ -34,23 +37,23 @@ public class ScreeningsService {
 
 	private final ScreeningsRepository screeningsRepository;
 	private final ScreeningSeatRepository screeningSeatRepository;
+	private final CinemaRoomRepository cinemaRoomRepository;
 	private final MovieService movieService;
 	private final CinemaRoomService cinemaRoomService;
-	private final ModelMapper modelMapper;
 
 	public Page<ScreeningsResponse> getPageOfScreenings(Pageable pageable) {
 		return screeningsRepository.findAll(pageable)
 				.map(screenings ->
 				{
 					log.info("Getting Page of Screenings");
-					return modelMapper.map(screenings, ScreeningsResponse.class);
+					return responseBuilder(screenings);
 				});
 	}
 
 	public ScreeningsResponse getScreeningById(Long screeningId) {
 		ScreeningsEntity screening = getScreeningEntity(screeningId);
 		log.info("Getting screening by {} ID", screeningId);
-		return modelMapper.map(screening, ScreeningsResponse.class);
+		return responseBuilder(screening);
 
 	}
 
@@ -84,7 +87,7 @@ public class ScreeningsService {
 			createScreeningSeats(room, screening);
 
 			log.info("Screening with {} id created successfully", screening.getId());
-			return modelMapper.map(screening, ScreeningsResponse.class);
+			return responseBuilder(screening);
 
 		} else {
 			log.warn("Screening spot on {} at {} in room with id {} is already reserved ", date, timeSlot, room.getId());
@@ -198,7 +201,32 @@ public class ScreeningsService {
 
 		screeningsRepository.save(toUpdate);
 			log.info("Screening with ID {} updated successfully", toUpdate.getId());
-		return modelMapper.map(toUpdate, ScreeningsResponse.class);
+		return responseBuilder(toUpdate);
+	}
+
+	private ScreeningsResponse responseBuilder(ScreeningsEntity screeningEntity) {
+		MovieEntity screeningMovie = screeningEntity.getMovie();
+
+		Long roomId = screeningEntity.getCinemaRoomId();
+		CinemaRoomEntity screeningRoom = cinemaRoomService.getRoomEntity(roomId);
+
+		return ScreeningsResponse.builder()
+				.id(screeningEntity.getId())
+				.screeningDate(screeningEntity.getScreeningDate())
+				.price(screeningEntity.getPrice())
+				.timeSlot(screeningEntity.getTimeSlot())
+				.movieInformation(MovieResponse.builder()
+						.title(screeningMovie.getTitle())
+						.description(screeningMovie.getDescription())
+						.duration(screeningMovie.getDuration())
+						.genre(screeningMovie.getGenre())
+						.build())
+				.cinemaRoomInformation(CinemaRoomResponse.builder()
+						.roomNumber(screeningRoom.getRoomNumber())
+						.capacity(screeningRoom.getCapacity())
+						.build()
+				)
+				.build();
 	}
 
 }

@@ -12,4 +12,6 @@ public interface ScreeningsRepository extends JpaRepository<ScreeningsEntity, Lo
 
 	boolean existsByCinemaRoomId(Long cinemaRoomId);
 
+
+
 }

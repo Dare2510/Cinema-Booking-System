@@ -83,7 +83,7 @@ public class ScreeningsServiceTest {
 
 		verify(screeningsRepository, times(1)).findById(screeningId);
 
-		assertEquals(1L, screeningResponse.getMovieId());
+		assertEquals(1L, screeningResponse.getMovieInformation().getId());
 		assertEquals(TimeSlot.PRIME, screeningResponse.getTimeSlot());
 		assertEquals(BigDecimal.valueOf(5), screeningResponse.getPrice());
 	}
@@ -307,7 +307,7 @@ public class ScreeningsServiceTest {
 		verify(screeningSeatRepository).saveAll(argThat(seats -> seats.iterator().hasNext()));
 		verify(screeningsRepository).save(screeningToUpdate);
 
-		assertEquals(updatedMovie.getId(), response.getMovieId());
+		assertEquals(updatedMovie.getId(), response.getMovieInformation().getId());
 		assertEquals(updatedPrice, response.getPrice());
 		assertEquals(TimeSlot.PRIME, response.getTimeSlot());
 	}

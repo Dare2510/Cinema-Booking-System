@@ -1,12 +1,15 @@
 package com.dare.cinema_booking_system.movies.dto;
 
 import com.dare.cinema_booking_system.movies.entity.Genre;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
 
-@Builder
-@Setter
 @AllArgsConstructor
+@Getter
+@Setter
+@Builder
 @NoArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class MovieResponse {
 
 	public Long id;

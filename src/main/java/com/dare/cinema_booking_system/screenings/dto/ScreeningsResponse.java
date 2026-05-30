@@ -1,20 +1,23 @@
 package com.dare.cinema_booking_system.screenings.dto;
 
+import com.dare.cinema_booking_system.movies.dto.MovieResponse;
+import com.dare.cinema_booking_system.rooms.dto.CinemaRoomResponse;
 import com.dare.cinema_booking_system.screenings.entity.TimeSlot;
 import com.fasterxml.jackson.annotation.JsonFormat;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-@Getter
-@Setter
+@Getter @Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class ScreeningsResponse {
 
 	private Long id;
-	private Long roomId;
-	private Long movieId;
+	private CinemaRoomResponse cinemaRoomInformation;
+	private MovieResponse movieInformation;
 	private TimeSlot timeSlot;
 	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "0.00")
 	private BigDecimal price;

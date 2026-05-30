@@ -1,14 +1,14 @@
 package com.dare.cinema_booking_system.rooms.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.*;
 
+@AllArgsConstructor
 @Getter
 @Setter
-@AllArgsConstructor
+@Builder
 @NoArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class CinemaRoomResponse {
 
 	private Long id;

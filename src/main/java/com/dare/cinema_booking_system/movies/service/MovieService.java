@@ -47,11 +47,11 @@ public class MovieService {
 				.filter(list -> !list.isEmpty())
 				.orElseThrow(
 						() -> {
-							log.info("No movies found for genre {}", genre);
+							log.warn("No movies found for genre {}", genre);
 							return new MovieByGenreNotFoundException(genre);
 						}
 				);
-
+		log.info("Found with genre {} movies", genre);
 		return mappingListOfResponses(listOfMovies);
 	}
 
@@ -97,17 +97,17 @@ public class MovieService {
 	public MovieEntity getMovieEntityById(Long movieId) {
 		return movieRepository.findById(movieId)
 				.orElseThrow(() -> {
-					log.error("Movie with ID {} was not found", movieId);
+					log.warn("Movie with ID {} was not found", movieId);
 					return new MovieNotFoundException(movieId);
 				});
 	}
 
-	public List<MovieResponse> mappingListOfResponses(List<MovieEntity> listOfMovies) {
+	private List<MovieResponse> mappingListOfResponses(List<MovieEntity> listOfMovies) {
 		return listOfMovies.stream().map(movie -> modelMapper.map(movie, MovieResponse.class))
 				.toList();
 	}
 
-	public MovieResponse mappingResponse(MovieEntity movieEntity) {
+	private MovieResponse mappingResponse(MovieEntity movieEntity) {
 		return modelMapper.map(movieEntity, MovieResponse.class);
 	}
 
