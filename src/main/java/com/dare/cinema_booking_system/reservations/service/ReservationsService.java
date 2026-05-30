@@ -253,7 +253,7 @@ public class ReservationsService {
 	}
 
 	private boolean cancelIsOnTime(ReservationEntity reservation) {
-		ScreeningsEntity screeningToCancel = screeningsService.getScreeningEntity(reservation.getId());
+		ScreeningsEntity screeningToCancel = screeningsService.getScreeningEntity(reservation.getScreening().getId());
 		TimeSlot timeSlot = screeningToCancel.getTimeSlot();
 		LocalDate date = screeningToCancel.getScreeningDate();
 

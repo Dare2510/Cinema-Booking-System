@@ -23,9 +23,9 @@ public class ReservationsController {
 		return ResponseEntity.ok(reservationsService.getFreeScreeningSeatsByScreeningId(screeningId));
 	}
 
-	@GetMapping("/{screeningId}")
-	public ResponseEntity<ReservationsResponse> getScreeningById(@PathVariable Long screeningId) {
-		return ResponseEntity.ok(reservationsService.findReservationById(screeningId));
+	@GetMapping("/{reservationId}")
+	public ResponseEntity<ReservationsResponse> getScreeningById(@PathVariable Long reservationId) {
+		return ResponseEntity.ok(reservationsService.findReservationById(reservationId));
 	}
 	@PostMapping
 	public ResponseEntity<ReservationsResponse> createReservations(@RequestBody ReservationsRequest reservationsRequest) {
@@ -34,6 +34,24 @@ public class ReservationsController {
 	@PatchMapping("/cancel/{reservationId}")
 	public ResponseEntity<Void> cancelReservations(@PathVariable Long reservationId) {
 		reservationsService.cancelReservation(reservationId);
+		return ResponseEntity.ok().build();
+	}
+
+	@PatchMapping("/refund/{reservationId}")
+	public ResponseEntity<Void> refundReservations(@PathVariable Long reservationId) {
+		reservationsService.completeRefund(reservationId);
+		return ResponseEntity.ok().build();
+	}
+
+	@PatchMapping("/payment/{reservationId}")
+	public ResponseEntity<Void> completePaymentReservations(@PathVariable Long reservationId) {
+		reservationsService.completePayment(reservationId);
+		return ResponseEntity.ok().build();
+	}
+
+	@PatchMapping("/use/{ticketNumber}")
+	public ResponseEntity<Void> useTicket(@PathVariable String ticketNumber) {
+		reservationsService.setTicketToUsed(ticketNumber);
 		return ResponseEntity.ok().build();
 	}
 }
