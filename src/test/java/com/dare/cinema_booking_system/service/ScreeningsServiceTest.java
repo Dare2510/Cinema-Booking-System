@@ -77,13 +77,13 @@ public class ScreeningsServiceTest {
 		ScreeningsEntity screening = new ScreeningsEntity(testRoom.getId(), testMovie,
 				LocalDate.now(), TimeSlot.PRIME, BigDecimal.valueOf(5));
 		Long screeningId = 1L;
-
+		when(cinemaRoomService.getRoomEntity(1L)).thenReturn(testRoom);
 		when(screeningsRepository.findById(screeningId)).thenReturn(Optional.of(screening));
 		ScreeningsResponse screeningResponse = screeningsService.getScreeningById(screeningId);
 
 		verify(screeningsRepository, times(1)).findById(screeningId);
 
-		assertEquals(1L, screeningResponse.getMovieInformation().getId());
+		assertEquals(testMovie.getTitle(), screeningResponse.getMovieInformation().title);
 		assertEquals(TimeSlot.PRIME, screeningResponse.getTimeSlot());
 		assertEquals(BigDecimal.valueOf(5), screeningResponse.getPrice());
 	}
@@ -292,7 +292,7 @@ public class ScreeningsServiceTest {
 
 		verify(screeningsRepository).findById(screeningToUpdate.getId());
 		verify(movieService).getMovieEntityById(updatedMovie.getId());
-		verify(cinemaRoomService).getRoomEntity(newRoom.getId());
+		verify(cinemaRoomService,times(2)).getRoomEntity(newRoom.getId());
 		verify(screeningSeatRepository).hasReservedOrSoldSeats(screeningToUpdate.getId());
 
 		verify(screeningsRepository).existsByCinemaRoomIdAndScreeningDateAndTimeSlot(
@@ -307,7 +307,7 @@ public class ScreeningsServiceTest {
 		verify(screeningSeatRepository).saveAll(argThat(seats -> seats.iterator().hasNext()));
 		verify(screeningsRepository).save(screeningToUpdate);
 
-		assertEquals(updatedMovie.getId(), response.getMovieInformation().getId());
+		assertEquals(updatedMovie.getTitle(), response.getMovieInformation().title);
 		assertEquals(updatedPrice, response.getPrice());
 		assertEquals(TimeSlot.PRIME, response.getTimeSlot());
 	}

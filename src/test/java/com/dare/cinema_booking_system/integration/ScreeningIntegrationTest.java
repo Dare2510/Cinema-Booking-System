@@ -69,9 +69,16 @@ public class ScreeningIntegrationTest {
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(screening)))
 				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.movieId").value(movieId))
-				.andExpect(jsonPath("$.timeSlot").value("PRIME"))
-				.andExpect(jsonPath("$.price").value("10"));
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.screeningDate").value(String.valueOf(LocalDate.now())))
+				.andExpect(jsonPath("$.price").value(10.00))
+				.andExpect(jsonPath("$.movieInformation.title").value("testTitle"))
+				.andExpect(jsonPath("$.movieInformation.description").value("testDescription"))
+				.andExpect(jsonPath("$.movieInformation.duration").value(120))
+				.andExpect(jsonPath("$.movieInformation.genre").value("FANTASY"))
+				.andExpect(jsonPath("$.cinemaRoomInformation.roomNumber").value(room.getRoomNumber()))
+				.andExpect(jsonPath("$.cinemaRoomInformation.capacity").value(200))
+				.andExpect(jsonPath("$.timeSlot").value("PRIME"));
 	}
 
 	@Test
@@ -136,7 +143,7 @@ public class ScreeningIntegrationTest {
 	}
 
 	@Test
-	public void getScreeningById_whenScreeningDoesExist_returnsNotFound() throws Exception {
+	public void getScreeningById_whenScreeningDoesExist_returnsIsOK() throws Exception {
 		MovieRequest movie = new MovieRequest("testTitle", "testDescription", 120, Genre.FANTASY);
 		CinemaRoomRequest room = new CinemaRoomRequest(5,10,20);
 
@@ -149,9 +156,15 @@ public class ScreeningIntegrationTest {
 		mockMvc.perform(get("/api/screening/"+screeningId))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.id").value(screeningId))
-				.andExpect(jsonPath("$.movieId").value(movieId))
-				.andExpect(jsonPath("$.timeSlot").value("PRIME"))
-				.andExpect(jsonPath("$.price").value(15.00));
+				.andExpect(jsonPath("$.screeningDate").value(String.valueOf(LocalDate.now())))
+				.andExpect(jsonPath("$.price").value(15.00))
+				.andExpect(jsonPath("$.movieInformation.title").value("testTitle"))
+				.andExpect(jsonPath("$.movieInformation.description").value("testDescription"))
+				.andExpect(jsonPath("$.movieInformation.duration").value(120))
+				.andExpect(jsonPath("$.movieInformation.genre").value("FANTASY"))
+				.andExpect(jsonPath("$.cinemaRoomInformation.roomNumber").value(room.getRoomNumber()))
+				.andExpect(jsonPath("$.cinemaRoomInformation.capacity").value(200))
+				.andExpect(jsonPath("$.timeSlot").value("PRIME"));
 	}
 
 	@Test
@@ -187,9 +200,15 @@ public class ScreeningIntegrationTest {
 				.content(objectMapper.writeValueAsString(update)))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.id").value(screeningId))
-				.andExpect(jsonPath("$.movieId").value(movieId))
-				.andExpect(jsonPath("$.timeSlot").value("EVENING"))
-				.andExpect(jsonPath("$.price").value(15.00));
+				.andExpect(jsonPath("$.screeningDate").value(String.valueOf(LocalDate.now())))
+				.andExpect(jsonPath("$.price").value(15.00))
+				.andExpect(jsonPath("$.movieInformation.title").value("testTitle"))
+				.andExpect(jsonPath("$.movieInformation.description").value("testDescription"))
+				.andExpect(jsonPath("$.movieInformation.duration").value(120))
+				.andExpect(jsonPath("$.movieInformation.genre").value("FANTASY"))
+				.andExpect(jsonPath("$.cinemaRoomInformation.roomNumber").value(room.getRoomNumber()))
+				.andExpect(jsonPath("$.cinemaRoomInformation.capacity").value(200))
+				.andExpect(jsonPath("$.timeSlot").value("EVENING"));
 	}
 
 	//Helper Methods

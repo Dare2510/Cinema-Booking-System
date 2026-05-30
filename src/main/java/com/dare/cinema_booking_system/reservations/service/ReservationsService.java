@@ -50,6 +50,8 @@ public class ReservationsService {
 		return modelMapper.map(reservation, ReservationsResponse.class);
 	}
 
+	//todo Page + Expired Tickets!
+
 	@Transactional
 	public ReservationsResponse createReservation(ReservationsRequest reservationsRequest) {
 		ScreeningsEntity screeningToReserve = screeningsService.getScreeningEntity(reservationsRequest.getScreeningId());
