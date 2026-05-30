@@ -1,6 +1,7 @@
 package com.dare.cinema_booking_system.reservations.service;
 
 import com.dare.cinema_booking_system.movies.service.MovieService;
+import com.dare.cinema_booking_system.reservations.dto.PaymentResponse;
 import com.dare.cinema_booking_system.reservations.dto.ReservationsRequest;
 import com.dare.cinema_booking_system.reservations.dto.ReservationsResponse;
 import com.dare.cinema_booking_system.reservations.entity.*;
@@ -65,6 +66,7 @@ public class ReservationsService {
 			return responseBuilder(newReservation, tickets, reservedSeats);
 
 		} else {
+			log.warn("Chosen seats are not free , seats {} ", reservationsRequest.getScreeningSeatId().stream().toList());
 			throw new ScreeningSeatNotAvailableException();
 		}
 
@@ -75,7 +77,7 @@ public class ReservationsService {
 	public void cancelReservation(Long reservationId) {
 		ReservationEntity toCancel = getReservationById(reservationId);
 		PaymentEntity paymentToCancel = paymentRepository.findByReservation_Id(reservationId);
-		TicketEntity ticketToCancel = ticketRepository.findByReservation_Id(reservationId);
+		TicketEntity ticketToCancel = getTicketById(toCancel.getTickets().get(0).getId());
 		List<ScreeningSeatEntity> seatsToCancel = toCancel.getScreening().getScreeningSeats();
 
 		boolean onTime = cancelIsOnTime(toCancel);
@@ -115,24 +117,28 @@ public class ReservationsService {
 	@Transactional
 	public void completeRefund(Long reservationId) {
 		ReservationEntity toRefunds = getReservationById(reservationId);
-		boolean validStatus = toRefunds.getReservationStatus() == ReservationStatus.CANCELLED &&
-				toRefunds.getPayments().get(0).getPaymentStatus() == PaymentStatus.REFUND_PENDING;
+		PaymentStatus currentPaymentStatus = toRefunds.getPayments().get(0).getPaymentStatus();
+		ReservationStatus currentReservationStatus = toRefunds.getReservationStatus();
+		boolean validStatus = currentPaymentStatus.validatorToRefundPayment(currentReservationStatus, currentPaymentStatus);
 
 		if (validStatus) {
 			toRefunds.getPayments().get(0).setPaymentStatus(PaymentStatus.REFUNDED);
 			reservationsRepository.save(toRefunds);
 		} else {
+			log.warn("Reservation with id {} has wrong status, payment status {} ,reservation status {}",
+					reservationId, currentPaymentStatus, currentReservationStatus);
 			throw new ReservationRefundException(reservationId);
 		}
 
 	}
 
 	@Transactional
-	public void completeOnSitePayment(Long reservationId) {
+	public void completePayment(Long reservationId) {
 		ReservationEntity toPay = getReservationById(reservationId);
 		PaymentEntity payment = paymentRepository.findByReservation_Id(reservationId);
-		boolean validStatus = toPay.getReservationStatus() == ReservationStatus.CREATED &&
-				toPay.getPayments().get(0).getPaymentStatus() == PaymentStatus.UNPAID;
+		PaymentStatus currentPaymentStatus = payment.getPaymentStatus();
+		ReservationStatus currentReservationStatus = toPay.getReservationStatus();
+		boolean validStatus = currentPaymentStatus.validatorToCompletePayment(currentReservationStatus,currentPaymentStatus);
 
 		if (validStatus) {
 			toPay.getPayments().get(0).setPaymentStatus(PaymentStatus.PAID);
@@ -140,21 +146,58 @@ public class ReservationsService {
 			reservationsRepository.save(toPay);
 			paymentRepository.save(payment);
 		} else {
+			log.warn("Reservation with id {} has wrong status, payment status {} ,reservation status {}",
+					reservationId, currentPaymentStatus, currentReservationStatus);
 			throw new ReservationCompletePaymentException(reservationId);
 		}
 	}
 
+	public void setTicketToUsed(String ticketNumber) {
+		TicketEntity ticket = getTicketByNumber(ticketNumber);
+		TicketStatus ticketStatus = ticket.getTicketStatus();
+		PaymentStatus paymentStatus = ticket.getReservation().getPayments().get(0).getPaymentStatus();
+		boolean validStatus =  ticketStatus.validatorForUsed(ticketStatus, paymentStatus);
+
+		if (validStatus) {
+			ticket.setTicketStatus(TicketStatus.USED);
+			ticketRepository.save(ticket);
+		}  else {
+			log.warn("{} has wrong status, ticket status: {}, payment status: {} ", ticketNumber, ticketStatus, paymentStatus);
+			throw new TicketUseNotPossibleException(ticketNumber);
+		}
+
+
+	}
 
 	//Helper Methods
 	private ReservationEntity getReservationById(Long reservationId) {
 		return reservationsRepository.findById(reservationId).orElseThrow(
-				() -> new ReservationNotFoundException(reservationId)
+				() -> {
+					log.warn("Could not find reservation with id {}", reservationId);
+					return new ReservationNotFoundException(reservationId);
+				});
+	}
+
+	private TicketEntity getTicketById(Long ticketId) {
+		return ticketRepository.findById(ticketId).orElseThrow(
+				() -> {
+					log.warn("Could not find ticket with id {}", ticketId);
+					return new TicketNotFoundException(ticketId);
+				});
+	}
+
+	private TicketEntity getTicketByNumber(String ticketNumber) {
+		return ticketRepository.findByTicketNumber(ticketNumber).orElseThrow(
+				() -> {
+					log.warn("Could not find ticket with number {}", ticketNumber);
+					return new TicketNotFoundException(ticketNumber);
+				}
 		);
 	}
 
 	public List<ScreeningSeatResponse> getFreeScreeningSeatsByScreeningId(Long screeningId) {
 		List<ScreeningSeatEntity> freeSeats = screeningSeatRepository.getFreeScreeningSeats(screeningId);
-
+		log.info("Get free screening seats with screening id {}", screeningId);
 		return freeSeats.stream()
 				.map(seat -> ScreeningSeatResponse.builder()
 						.screeningSeatsId(seat.getId())
@@ -209,6 +252,18 @@ public class ReservationsService {
 		return tickets;
 	}
 
+	private boolean cancelIsOnTime(ReservationEntity reservation) {
+		ScreeningsEntity screeningToCancel = screeningsService.getScreeningEntity(reservation.getId());
+		TimeSlot timeSlot = screeningToCancel.getTimeSlot();
+		LocalDate date = screeningToCancel.getScreeningDate();
+
+		LocalDateTime currentDateTime = LocalDateTime.now();
+
+		int time = (timeSlot == TimeSlot.EVENING) ? 17 : (timeSlot == TimeSlot.PRIME) ? 20 : 23;
+		return date.atTime(time, 0).isAfter(currentDateTime.plusMinutes(60));
+
+	}
+
 	private List<ScreeningSeatEntity> seatStatusUpdater(ReservationsRequest reservationsRequest) {
 		List<ScreeningSeatEntity> listOfReservedSeats = screeningSeatRepository.findAllById(reservationsRequest.getScreeningSeatId());
 
@@ -225,24 +280,33 @@ public class ReservationsService {
 				map(spot -> "Row: " + spot.getCinemaSeats().getRowNumber() + " - "
 						+ "Seat: " + spot.getCinemaSeats().getSeatNumber()).toList();
 
-		return ReservationsResponse.builder()
-				.reservationId(newReservation.getId())
-				.reservedSeats(reservedSeats)
-				.screeningDate(newReservation.getScreening().getScreeningDate())
-				.ticketNumber(tickets.get(0).getTicketNumber())
-				.build();
+		if (newReservation.getPayments().get(0).getPaymentMethod() == PaymentMethod.ONLINE) {
+			return ReservationsResponse.builder()
+					.reservationId(newReservation.getId())
+					.reservedSeats(reservedSeats)
+					.screeningDate(newReservation.getScreening().getScreeningDate())
+					.ticketNumber(tickets.get(0).getTicketNumber())
+					.paymentResponse(PaymentResponse.builder()
+							.iban("DE75 5121 0800 1245 1261 99")
+							.bankName("Bank of Europe")
+							.paymentReference(newReservation.getTickets().get(0).getTicketNumber())
+							.amount(newReservation.getPayments().get(0).getAmount())
+							.paymentStatus(newReservation.getPayments().get(0).getPaymentStatus()).build()
+					)
+					.build();
+		} else {
+			return ReservationsResponse.builder()
+					.reservationId(newReservation.getId())
+					.reservedSeats(reservedSeats)
+					.screeningDate(newReservation.getScreening().getScreeningDate())
+					.ticketNumber(tickets.get(0).getTicketNumber())
+					.paymentResponse(PaymentResponse.builder()
+							.amount(newReservation.getPayments().get(0).getAmount())
+							.paymentStatus(newReservation.getPayments().get(0).getPaymentStatus()).build())
+							.build();
+		}
 	}
 
-	private boolean cancelIsOnTime(ReservationEntity reservation) {
-		ScreeningsEntity screeningToCancel = screeningsService.getScreeningEntity(reservation.getId());
-		TimeSlot timeSlot = screeningToCancel.getTimeSlot();
-		LocalDate date = screeningToCancel.getScreeningDate();
 
-		LocalDateTime currentDateTime = LocalDateTime.now();
-
-		int time = (timeSlot == TimeSlot.EVENING_18H) ? 18 : (timeSlot == TimeSlot.PRIME_20H) ? 20 : 22;
-		return date.atTime(time, 0).isAfter(currentDateTime.plusMinutes(60));
-
-	}
 
 }

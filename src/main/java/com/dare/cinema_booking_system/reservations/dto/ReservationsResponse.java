@@ -16,6 +16,7 @@ public class ReservationsResponse {
 	public String ticketNumber;
 	public LocalDate screeningDate;
 	public List<String> reservedSeats;
+	public PaymentResponse paymentResponse;
 
 
 

@@ -4,5 +4,13 @@ public enum PaymentStatus {
 	PAID,
 	UNPAID,
 	REFUND_PENDING,
-	REFUNDED
+	REFUNDED;
+
+	public boolean validatorToCompletePayment(ReservationStatus currentStatus, PaymentStatus currentPaymentStatus){
+		return currentStatus == ReservationStatus.CREATED && currentPaymentStatus == PaymentStatus.UNPAID;
+	}
+
+	public boolean validatorToRefundPayment(ReservationStatus currentReservationStatus, PaymentStatus currentPaymentStatus){
+		return currentPaymentStatus == PaymentStatus.REFUND_PENDING && currentReservationStatus == ReservationStatus.CANCELLED;
+	}
 }

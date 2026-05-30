@@ -229,4 +229,28 @@ public class GlobalExceptionsHandler {
 		);
 		return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
 	}
+
+	@ExceptionHandler(TicketNotFoundException.class)
+	public ResponseEntity<ErrorResponse> handleTicketNotFoundException(TicketNotFoundException ex,
+																		   HttpServletRequest request) {
+		ErrorResponse error = new ErrorResponse(
+				HttpStatus.NOT_FOUND.value(),
+				ex.getMessage(),
+				request.getRequestURI(),
+				LocalDateTime.now()
+		);
+		return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+	}
+
+	@ExceptionHandler(TicketUseNotPossibleException.class)
+	public ResponseEntity<ErrorResponse> handleTicketUseNotPossibleException(TicketUseNotPossibleException ex,
+																		   HttpServletRequest request) {
+		ErrorResponse error = new ErrorResponse(
+				HttpStatus.BAD_REQUEST.value(),
+				ex.getMessage(),
+				request.getRequestURI(),
+				LocalDateTime.now()
+		);
+		return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+	}
 }
