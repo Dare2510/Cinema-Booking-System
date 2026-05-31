@@ -20,9 +20,8 @@ public class ReservationsRequest {
 	public Long screeningId;
 
 	@NotNull
-	@Min(value = 1, message = "Screening seat id must be at least 1")
 	@Size(min = 1, message = "At least 1 seat id is required")
-	public List<Long> screeningSeatId;
+	private List<@Min(1) Long> cinemaRoomSeatIds;
 
 	@NotNull(message = "Payment method is required, available ONLINE, ON_SITE")
 	public PaymentMethod paymentMethod;

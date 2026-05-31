@@ -1,6 +1,5 @@
 package com.dare.cinema_booking_system.reservations.service;
 
-import com.dare.cinema_booking_system.movies.service.MovieService;
 import com.dare.cinema_booking_system.reservations.dto.PaymentResponse;
 import com.dare.cinema_booking_system.reservations.dto.ReservationsRequest;
 import com.dare.cinema_booking_system.reservations.dto.ReservationsResponse;
@@ -16,12 +15,13 @@ import com.dare.cinema_booking_system.screenings.entity.ScreeningsEntity;
 import com.dare.cinema_booking_system.screenings.entity.TimeSlot;
 import com.dare.cinema_booking_system.screenings.exceptions.ScreeningSeatNotAvailableException;
 import com.dare.cinema_booking_system.screenings.repository.ScreeningSeatRepository;
-import com.dare.cinema_booking_system.screenings.repository.ScreeningsRepository;
 import com.dare.cinema_booking_system.screenings.service.ScreeningsService;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -30,6 +30,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -41,34 +42,50 @@ public class ReservationsService {
 	private final PaymentRepository paymentRepository;
 	private final TicketRepository ticketRepository;
 	private final ScreeningsService screeningsService;
-	private final MovieService movieService;
 	private final ModelMapper modelMapper;
-	private final ScreeningsRepository screeningsRepository;
 
 	public ReservationsResponse findReservationById(Long reservationId) {
 		ReservationEntity reservation = getReservationById(reservationId);
 		return modelMapper.map(reservation, ReservationsResponse.class);
 	}
 
-	//todo Page + Expired Tickets!
+	 //Expired Tickets!
+
+	public Page<ReservationsResponse> getPageOfReservations(Pageable pageable) {
+		return reservationsRepository.findAll(pageable)
+				.map(reservation -> {
+					log.info("Getting Page of Reservations");
+					return ReservationsResponse.builder()
+							.screeningDate(reservation.getScreening().getScreeningDate())
+							.timeSlot(reservation.getScreening().getTimeSlot())
+							.reservedSeats(reservation.getReservedSeats().stream()
+									.map(seat -> "Row: " + seat.getCinemaSeats().getRowNumber()
+											+ " Seat number: " + seat.getCinemaSeats().getSeatNumber()
+											+ " status: " + seat.getScreeningSeatStatus())
+									.toList())
+							.build();
+
+
+				});
+	}
 
 	@Transactional
 	public ReservationsResponse createReservation(ReservationsRequest reservationsRequest) {
 		ScreeningsEntity screeningToReserve = screeningsService.getScreeningEntity(reservationsRequest.getScreeningId());
-		boolean seatsAreFree = screeningSeatRepository.areAllSeatsFree(screeningToReserve.getId(), reservationsRequest.getScreeningSeatId());
+		boolean seatsAreFree = screeningSeatRepository.areAllCinemaRoomSeatsFree(screeningToReserve.getId(), reservationsRequest.getCinemaRoomSeatIds(),reservationsRequest.getCinemaRoomSeatIds().size());
 
 		if (seatsAreFree) {
 			ReservationEntity newReservation = reservationSaver();
 
-			List<PaymentEntity> payments = paymentCreator(reservationsRequest, screeningToReserve, newReservation);
-			List<TicketEntity> tickets = ticketCreator(newReservation);
-			List<ScreeningSeatEntity> reservedSeats = seatStatusUpdater(reservationsRequest);
-			reservationUpdater(newReservation, payments, tickets, screeningToReserve);
+			PaymentEntity payment = paymentCreator(reservationsRequest, screeningToReserve, newReservation);
+			TicketEntity ticket = ticketCreator(newReservation);
+			List<ScreeningSeatEntity> reservedSeats = seatStatusUpdater(screeningToReserve,reservationsRequest);
+			reservationUpdater(newReservation, payment, ticket, screeningToReserve,reservedSeats);
 
-			return responseBuilder(newReservation, tickets, reservedSeats);
+			return responseBuilder(newReservation, ticket, reservedSeats);
 
 		} else {
-			log.warn("Chosen seats are not free , seats {} ", reservationsRequest.getScreeningSeatId().stream().toList());
+			log.warn("Chosen seats are not free , seats {} ", reservationsRequest.getCinemaRoomSeatIds().stream().toList());
 			throw new ScreeningSeatNotAvailableException();
 		}
 
@@ -79,8 +96,8 @@ public class ReservationsService {
 	public void cancelReservation(Long reservationId) {
 		ReservationEntity toCancel = getReservationById(reservationId);
 		PaymentEntity paymentToCancel = paymentRepository.findByReservation_Id(reservationId);
-		TicketEntity ticketToCancel = getTicketById(toCancel.getTickets().get(0).getId());
-		List<ScreeningSeatEntity> seatsToCancel = toCancel.getScreening().getScreeningSeats();
+		TicketEntity ticketToCancel = getTicketById(toCancel.getTicket().getId());
+		List<ScreeningSeatEntity> seatsToCancel = toCancel.getReservedSeats();
 
 		boolean onTime = cancelIsOnTime(toCancel);
 		ReservationStatus currentStatus = toCancel.getReservationStatus();
@@ -118,14 +135,14 @@ public class ReservationsService {
 
 	@Transactional
 	public void completeRefund(Long reservationId) {
-		ReservationEntity toRefunds = getReservationById(reservationId);
-		PaymentStatus currentPaymentStatus = toRefunds.getPayments().get(0).getPaymentStatus();
-		ReservationStatus currentReservationStatus = toRefunds.getReservationStatus();
+		ReservationEntity toRefund = getReservationById(reservationId);
+		PaymentStatus currentPaymentStatus = toRefund.getPayment().getPaymentStatus();
+		ReservationStatus currentReservationStatus = toRefund.getReservationStatus();
 		boolean validStatus = currentPaymentStatus.validatorToRefundPayment(currentReservationStatus, currentPaymentStatus);
 
 		if (validStatus) {
-			toRefunds.getPayments().get(0).setPaymentStatus(PaymentStatus.REFUNDED);
-			reservationsRepository.save(toRefunds);
+			toRefund.getPayment().setPaymentStatus(PaymentStatus.REFUNDED);
+			reservationsRepository.save(toRefund);
 		} else {
 			log.warn("Reservation with id {} has wrong status, payment status {} ,reservation status {}",
 					reservationId, currentPaymentStatus, currentReservationStatus);
@@ -140,10 +157,10 @@ public class ReservationsService {
 		PaymentEntity payment = paymentRepository.findByReservation_Id(reservationId);
 		PaymentStatus currentPaymentStatus = payment.getPaymentStatus();
 		ReservationStatus currentReservationStatus = toPay.getReservationStatus();
-		boolean validStatus = currentPaymentStatus.validatorToCompletePayment(currentReservationStatus,currentPaymentStatus);
+		boolean validStatus = currentPaymentStatus.validatorToCompletePayment(currentReservationStatus, currentPaymentStatus);
 
 		if (validStatus) {
-			toPay.getPayments().get(0).setPaymentStatus(PaymentStatus.PAID);
+			toPay.getPayment().setPaymentStatus(PaymentStatus.PAID);
 			toPay.setReservationStatus(ReservationStatus.CONFIRMED);
 			reservationsRepository.save(toPay);
 			paymentRepository.save(payment);
@@ -157,13 +174,13 @@ public class ReservationsService {
 	public void setTicketToUsed(String ticketNumber) {
 		TicketEntity ticket = getTicketByNumber(ticketNumber);
 		TicketStatus ticketStatus = ticket.getTicketStatus();
-		PaymentStatus paymentStatus = ticket.getReservation().getPayments().get(0).getPaymentStatus();
-		boolean validStatus =  ticketStatus.validatorForUsed(ticketStatus, paymentStatus);
+		PaymentStatus paymentStatus = ticket.getReservation().getPayment().getPaymentStatus();
+		boolean validStatus = ticketStatus.validatorForUsed(ticketStatus, paymentStatus);
 
 		if (validStatus) {
 			ticket.setTicketStatus(TicketStatus.USED);
 			ticketRepository.save(ticket);
-		}  else {
+		} else {
 			log.warn("{} has wrong status, ticket status: {}, payment status: {} ", ticketNumber, ticketStatus, paymentStatus);
 			throw new TicketUseNotPossibleException(ticketNumber);
 		}
@@ -199,10 +216,11 @@ public class ReservationsService {
 
 	public List<ScreeningSeatResponse> getFreeScreeningSeatsByScreeningId(Long screeningId) {
 		List<ScreeningSeatEntity> freeSeats = screeningSeatRepository.getFreeScreeningSeats(screeningId);
+
 		log.info("Get free screening seats with screening id {}", screeningId);
 		return freeSeats.stream()
 				.map(seat -> ScreeningSeatResponse.builder()
-						.screeningSeatsId(seat.getId())
+						.cinemaRoomSeatId(seat.getCinemaSeats().getId())
 						.seatNumber(seat.getCinemaSeats().getSeatNumber())
 						.rowNumber(seat.getCinemaSeats().getRowNumber())
 						.build()
@@ -210,11 +228,13 @@ public class ReservationsService {
 				.toList();
 	}
 
-	private void reservationUpdater(ReservationEntity newReservation, List<PaymentEntity> payments, List<TicketEntity> tickets, ScreeningsEntity screeningToReserve) {
+	private void reservationUpdater(ReservationEntity newReservation, PaymentEntity payment, TicketEntity ticket,
+									ScreeningsEntity screeningToReserve,List<ScreeningSeatEntity> reservedSeats) {
 
-		newReservation.setPayments(payments);
-		newReservation.setTickets(tickets);
+		newReservation.setPayment(payment);
+		newReservation.setTicket(ticket);
 		newReservation.setScreening(screeningToReserve);
+		newReservation.setReservedSeats(reservedSeats);
 		reservationsRepository.save(newReservation);
 		log.info("Reservation with id {} has been updated", newReservation.getId());
 
@@ -227,31 +247,29 @@ public class ReservationsService {
 		return reservationEntity;
 	}
 
-	private List<PaymentEntity> paymentCreator(ReservationsRequest reservationsRequest, ScreeningsEntity screeningToReserve, ReservationEntity newReservation) {
-		int numberOfSeats = reservationsRequest.screeningSeatId.size();
+	private PaymentEntity paymentCreator(ReservationsRequest reservationsRequest, ScreeningsEntity screeningToReserve, ReservationEntity newReservation) {
+		int numberOfSeats = reservationsRequest.getCinemaRoomSeatIds().size();
 		BigDecimal pricePerSeat = screeningToReserve.getPrice();
 		BigDecimal finalAmount = pricePerSeat.multiply(BigDecimal.valueOf((double) numberOfSeats));
 		PaymentMethod paymentMethod = reservationsRequest.getPaymentMethod();
 
-		List<PaymentEntity> payments = new ArrayList<>();
+		PaymentEntity payments = new PaymentEntity(newReservation, finalAmount, paymentMethod);
 
-		payments.add(new PaymentEntity(newReservation, finalAmount, paymentMethod));
-		paymentRepository.saveAll(payments);
-		log.info("Payment with id {} has been created", payments.get(0).getId());
+		paymentRepository.save(payments);
+		log.info("Payment with id {} has been created", payments.getId());
 
 		return payments;
 
 	}
 
-	private List<TicketEntity> ticketCreator(ReservationEntity newReservation) {
+	private TicketEntity ticketCreator(ReservationEntity newReservation) {
 		String ticketNumber = UUID.randomUUID().toString();
 
-		List<TicketEntity> tickets = new ArrayList<>();
-		tickets.add(new TicketEntity(ticketNumber, newReservation));
-		ticketRepository.saveAll(tickets);
-		log.info("Ticket with id {} has been created", tickets.get(0).getId());
+		TicketEntity ticket = new TicketEntity(ticketNumber, newReservation);
+		ticketRepository.save(ticket);
+		log.info("Ticket with id {} has been created", ticket.getId());
 
-		return tickets;
+		return ticket;
 	}
 
 	private boolean cancelIsOnTime(ReservationEntity reservation) {
@@ -266,36 +284,43 @@ public class ReservationsService {
 
 	}
 
-	private List<ScreeningSeatEntity> seatStatusUpdater(ReservationsRequest reservationsRequest) {
-		List<ScreeningSeatEntity> listOfReservedSeats = screeningSeatRepository.findAllById(reservationsRequest.getScreeningSeatId());
+	private List<ScreeningSeatEntity> seatStatusUpdater(ScreeningsEntity screeningToReserve, ReservationsRequest reservationsRequest) {
+		List<ScreeningSeatEntity> allSeats = screeningSeatRepository.getScreeningSeatsByScreening(screeningToReserve);
+		List<Long> targetSeatIds = reservationsRequest.getCinemaRoomSeatIds();
 
-		listOfReservedSeats.forEach(spot -> spot.setScreeningSeatStatus(ScreeningSeatStatus.RESERVED));
-		screeningSeatRepository.saveAll(listOfReservedSeats);
-		log.info("Seats with id's {} has been updated", listOfReservedSeats.stream().map(ScreeningSeatEntity::getId).toList());
+		List<ScreeningSeatEntity> seatsToReserve = allSeats.stream()
+				.filter(seat -> targetSeatIds.contains(seat.getCinemaSeats().getId()))
+				.collect(Collectors.toCollection(ArrayList::new));
 
-		return listOfReservedSeats;
+		seatsToReserve.forEach(seat -> {seat.setScreeningSeatStatus(ScreeningSeatStatus.RESERVED);});
+
+		screeningSeatRepository.saveAll(seatsToReserve);
+
+		log.info("Seats with id's {} have been updated", targetSeatIds);
+
+		return seatsToReserve;
 
 	}
 
-	private ReservationsResponse responseBuilder(ReservationEntity newReservation, List<TicketEntity> tickets, List<ScreeningSeatEntity> listOfReservedSeats) {
+	private ReservationsResponse responseBuilder(ReservationEntity newReservation, TicketEntity tickets, List<ScreeningSeatEntity> listOfReservedSeats) {
 		List<String> reservedSeats = listOfReservedSeats.stream().
 				map(spot -> "Row: " + spot.getCinemaSeats().getRowNumber() + " - "
 						+ "Seat: " + spot.getCinemaSeats().getSeatNumber()).toList();
 
-		if (newReservation.getPayments().get(0).getPaymentMethod() == PaymentMethod.ONLINE) {
+		if (newReservation.getPayment().getPaymentMethod() == PaymentMethod.ONLINE) {
 			return ReservationsResponse.builder()
 					.reservationId(newReservation.getId())
 					.reservedSeats(reservedSeats)
 					.screeningDate(newReservation.getScreening().getScreeningDate())
-					.ticketNumber(tickets.get(0).getTicketNumber())
+					.ticketNumber(tickets.getTicketNumber())
 					.paymentResponse(PaymentResponse.builder()
 							.paymentInformation("Payment information")
 							.recipient("Cinema-Booking System")
 							.bankName("Bank of Europe")
 							.iban("DE75 5121 0800 1245 1261 99")
-							.paymentReference(newReservation.getTickets().get(0).getTicketNumber())
-							.amount(newReservation.getPayments().get(0).getAmount())
-							.paymentStatus(newReservation.getPayments().get(0).getPaymentStatus()).build()
+							.paymentReference(newReservation.getTicket().getTicketNumber())
+							.amount(newReservation.getPayment().getAmount())
+							.paymentStatus(newReservation.getPayment().getPaymentStatus()).build()
 					)
 					.build();
 		} else {
@@ -303,14 +328,13 @@ public class ReservationsService {
 					.reservationId(newReservation.getId())
 					.reservedSeats(reservedSeats)
 					.screeningDate(newReservation.getScreening().getScreeningDate())
-					.ticketNumber(tickets.get(0).getTicketNumber())
+					.ticketNumber(tickets.getTicketNumber())
 					.paymentResponse(PaymentResponse.builder()
-							.amount(newReservation.getPayments().get(0).getAmount())
-							.paymentStatus(newReservation.getPayments().get(0).getPaymentStatus()).build())
-							.build();
+							.amount(newReservation.getPayment().getAmount())
+							.paymentStatus(newReservation.getPayment().getPaymentStatus()).build())
+					.build();
 		}
 	}
-
 
 
 }

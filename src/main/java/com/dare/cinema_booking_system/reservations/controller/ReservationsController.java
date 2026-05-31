@@ -3,9 +3,15 @@ package com.dare.cinema_booking_system.reservations.controller;
 import com.dare.cinema_booking_system.reservations.dto.ReservationsRequest;
 import com.dare.cinema_booking_system.reservations.dto.ReservationsResponse;
 import com.dare.cinema_booking_system.reservations.service.ReservationsService;
+import com.dare.cinema_booking_system.rooms.dto.CinemaRoomResponse;
 import com.dare.cinema_booking_system.screenings.dto.ScreeningSeatResponse;
 
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,7 +34,7 @@ public class ReservationsController {
 		return ResponseEntity.ok(reservationsService.findReservationById(reservationId));
 	}
 	@PostMapping
-	public ResponseEntity<ReservationsResponse> createReservations(@RequestBody ReservationsRequest reservationsRequest) {
+	public ResponseEntity<ReservationsResponse> createReservations (@Valid @RequestBody ReservationsRequest reservationsRequest) {
 		return ResponseEntity.ok(reservationsService.createReservation(reservationsRequest));
 	}
 	@PatchMapping("/cancel/{reservationId}")
@@ -53,5 +59,11 @@ public class ReservationsController {
 	public ResponseEntity<Void> useTicket(@PathVariable String ticketNumber) {
 		reservationsService.setTicketToUsed(ticketNumber);
 		return ResponseEntity.ok().build();
+	}
+
+	@GetMapping
+	public ResponseEntity<Page<ReservationsResponse>> getPageOfRooms(@PageableDefault(page = 0, size = 10,
+			sort = "reservationStatus", direction = Sort.Direction.ASC) Pageable pageable) {
+		return ResponseEntity.ok().body(reservationsService.getPageOfReservations(pageable));
 	}
 }

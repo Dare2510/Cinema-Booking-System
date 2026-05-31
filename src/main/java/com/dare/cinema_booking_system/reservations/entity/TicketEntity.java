@@ -28,7 +28,7 @@ public class TicketEntity {
 	private LocalDate dateIssued;
 
 
-	@ManyToOne
+	@OneToOne
 	@JoinColumn(name = "reservation_id")
 	private ReservationEntity reservation;
 

@@ -10,5 +10,5 @@ public class ScreeningSeatResponse {
 
 	private Integer seatNumber;
 	private Integer rowNumber;
-	private Long screeningSeatsId;
+	private Long cinemaRoomSeatId;
 }

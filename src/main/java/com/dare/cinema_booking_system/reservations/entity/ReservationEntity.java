@@ -1,11 +1,13 @@
 package com.dare.cinema_booking_system.reservations.entity;
 
+import com.dare.cinema_booking_system.screenings.entity.ScreeningSeatEntity;
 import com.dare.cinema_booking_system.screenings.entity.ScreeningsEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -24,26 +26,36 @@ public class ReservationEntity {
 	@Enumerated(EnumType.STRING)
 	private ReservationStatus reservationStatus;
 
-	@OneToMany(mappedBy = "reservation", cascade = CascadeType.ALL)
-	private List<PaymentEntity> payments;
+	@OneToOne(mappedBy = "reservation", cascade = CascadeType.ALL)
+	private PaymentEntity payment;
 
-	@OneToMany(mappedBy = "reservation", cascade = CascadeType.ALL)
-	private List<TicketEntity> tickets;
+	@OneToOne(mappedBy = "reservation", cascade = CascadeType.ALL)
+	private TicketEntity ticket;
 
 	@ManyToOne
 	@JoinColumn(name = "screening_id")
 	private ScreeningsEntity screening;
 
-	public ReservationEntity(List<PaymentEntity> payments, List<TicketEntity> tickets, ScreeningsEntity screening) {
+	@ManyToMany
+	@JoinTable(
+			name = "reservation_screening_seats",
+			joinColumns = @JoinColumn(name = "reservation_id"),
+			inverseJoinColumns = @JoinColumn(name = "screening_seat_id")
+	)
+	private List<ScreeningSeatEntity> reservedSeats;
+
+	public ReservationEntity(PaymentEntity payment, TicketEntity ticket, ScreeningsEntity screening) {
 		this.createdAt = LocalDateTime.now();
 		this.reservationStatus = ReservationStatus.CREATED;
-		this.payments = payments;
-		this.tickets = tickets;
+		this.payment = payment;
+		this.ticket = ticket;
 		this.screening = screening;
+		this.reservedSeats = new ArrayList<>();
 	}
 
 	public ReservationEntity(){
 		this.createdAt = LocalDateTime.now();
 		this.reservationStatus = ReservationStatus.CREATED;
+		this.reservedSeats = new ArrayList<>();
 	}
 }

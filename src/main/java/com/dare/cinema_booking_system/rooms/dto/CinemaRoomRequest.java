@@ -18,7 +18,7 @@ public class CinemaRoomRequest {
 
 	@NotNull
 	@Min(value = 10, message = "Minium number of rows is 10")
-	@Max(value = 30, message = "Maximum number of rows is 50")
+	@Max(value = 30, message = "Maximum number of rows is 30")
 	private Integer rows;
 
 	@NotNull

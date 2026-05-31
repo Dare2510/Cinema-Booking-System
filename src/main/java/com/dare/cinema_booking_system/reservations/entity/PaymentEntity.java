@@ -28,7 +28,7 @@ public class PaymentEntity {
 	@Column(name = "payment_method", nullable = false)
 	PaymentMethod paymentMethod;
 
-	@ManyToOne
+	@OneToOne
 	@JoinColumn(name = "reservation_id")
 	private ReservationEntity reservation;
 
