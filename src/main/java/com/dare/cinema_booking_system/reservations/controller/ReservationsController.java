@@ -66,4 +66,9 @@ public class ReservationsController {
 			sort = "reservationStatus", direction = Sort.Direction.ASC) Pageable pageable) {
 		return ResponseEntity.ok().body(reservationsService.getPageOfReservations(pageable));
 	}
+	@PatchMapping("/expired")
+	public ResponseEntity<Void> expireTickets(){
+		reservationsService.setStatusOfExpiredTickets();
+		return ResponseEntity.ok().build();
+	}
 }

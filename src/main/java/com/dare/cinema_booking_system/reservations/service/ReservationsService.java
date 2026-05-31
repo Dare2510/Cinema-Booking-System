@@ -27,6 +27,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -49,8 +50,6 @@ public class ReservationsService {
 		return modelMapper.map(reservation, ReservationsResponse.class);
 	}
 
-	 //Expired Tickets!
-
 	public Page<ReservationsResponse> getPageOfReservations(Pageable pageable) {
 		return reservationsRepository.findAll(pageable)
 				.map(reservation -> {
@@ -72,15 +71,15 @@ public class ReservationsService {
 	@Transactional
 	public ReservationsResponse createReservation(ReservationsRequest reservationsRequest) {
 		ScreeningsEntity screeningToReserve = screeningsService.getScreeningEntity(reservationsRequest.getScreeningId());
-		boolean seatsAreFree = screeningSeatRepository.areAllCinemaRoomSeatsFree(screeningToReserve.getId(), reservationsRequest.getCinemaRoomSeatIds(),reservationsRequest.getCinemaRoomSeatIds().size());
+		boolean seatsAreFree = screeningSeatRepository.areAllCinemaRoomSeatsFree(screeningToReserve.getId(), reservationsRequest.getCinemaRoomSeatIds(), reservationsRequest.getCinemaRoomSeatIds().size());
 
 		if (seatsAreFree) {
 			ReservationEntity newReservation = reservationSaver();
 
 			PaymentEntity payment = paymentCreator(reservationsRequest, screeningToReserve, newReservation);
 			TicketEntity ticket = ticketCreator(newReservation);
-			List<ScreeningSeatEntity> reservedSeats = seatStatusUpdater(screeningToReserve,reservationsRequest);
-			reservationUpdater(newReservation, payment, ticket, screeningToReserve,reservedSeats);
+			List<ScreeningSeatEntity> reservedSeats = seatStatusUpdater(screeningToReserve, reservationsRequest);
+			reservationUpdater(newReservation, payment, ticket, screeningToReserve, reservedSeats);
 
 			return responseBuilder(newReservation, ticket, reservedSeats);
 
@@ -188,6 +187,21 @@ public class ReservationsService {
 
 	}
 
+	public void setStatusOfExpiredTickets() {
+		LocalDate dateNow = LocalDate.now();
+		LocalTime timeNow = LocalTime.now();
+
+		List<TicketEntity> expiredTickets = ticketRepository.getExpiredTickets(dateNow, timeNow);
+		if (!expiredTickets.isEmpty()) {
+			expiredTickets.forEach(ticket -> {
+				log.info("Ticket with ID {} has been expired", ticket.getId());
+				ticket.setTicketStatus(TicketStatus.EXPIRED);
+			});
+			ticketRepository.saveAll(expiredTickets);
+		}
+
+	}
+
 	//Helper Methods
 	private ReservationEntity getReservationById(Long reservationId) {
 		return reservationsRepository.findById(reservationId).orElseThrow(
@@ -229,7 +243,7 @@ public class ReservationsService {
 	}
 
 	private void reservationUpdater(ReservationEntity newReservation, PaymentEntity payment, TicketEntity ticket,
-									ScreeningsEntity screeningToReserve,List<ScreeningSeatEntity> reservedSeats) {
+	                                ScreeningsEntity screeningToReserve, List<ScreeningSeatEntity> reservedSeats) {
 
 		newReservation.setPayment(payment);
 		newReservation.setTicket(ticket);
@@ -292,7 +306,9 @@ public class ReservationsService {
 				.filter(seat -> targetSeatIds.contains(seat.getCinemaSeats().getId()))
 				.collect(Collectors.toCollection(ArrayList::new));
 
-		seatsToReserve.forEach(seat -> {seat.setScreeningSeatStatus(ScreeningSeatStatus.RESERVED);});
+		seatsToReserve.forEach(seat -> {
+			seat.setScreeningSeatStatus(ScreeningSeatStatus.RESERVED);
+		});
 
 		screeningSeatRepository.saveAll(seatsToReserve);
 

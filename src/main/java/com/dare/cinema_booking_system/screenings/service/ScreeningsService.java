@@ -83,6 +83,7 @@ public class ScreeningsService {
 
 		if (!spotReserved) {
 			ScreeningsEntity screening = new ScreeningsEntity(room.getId(), movie, date, timeSlot, price);
+			screening.setTimes(timeSlot);
 			screeningsRepository.save(screening);
 			createScreeningSeats(room, screening);
 
@@ -198,6 +199,7 @@ public class ScreeningsService {
 		toUpdate.setCinemaRoomId(requestedRoom.getId());
 		toUpdate.setScreeningSeats(newUpdatedScreeningSeats);
 		toUpdate.setPrice(price);
+		toUpdate.setTimes(requestedTime);
 
 		screeningsRepository.save(toUpdate);
 			log.info("Screening with ID {} updated successfully", toUpdate.getId());

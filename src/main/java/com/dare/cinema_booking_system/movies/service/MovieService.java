@@ -43,28 +43,23 @@ public class MovieService {
 	}
 
 	public List<MovieResponse> getListOfByGenre(Genre genre) {
-		List<MovieEntity> listOfMovies = movieRepository.findByGenre(genre)
-				.filter(list -> !list.isEmpty())
-				.orElseThrow(
-						() -> {
-							log.warn("No movies found for genre {}", genre);
-							return new MovieByGenreNotFoundException(genre);
-						}
-				);
-		log.info("Found with genre {} movies", genre);
-		return mappingListOfResponses(listOfMovies);
+		List<MovieEntity> listOfMovies = movieRepository.findByGenre(genre);
+		if (!listOfMovies.isEmpty()) {
+			return mappingListOfResponses(listOfMovies);
+		} else {
+			log.warn("No movies found for genre {}", genre);
+			throw new MovieByGenreNotFoundException(genre);
+		}
 	}
 
 	public List<MovieResponse> getListOfByDuration(int duration) {
-		List<MovieEntity> listOfMovies = movieRepository.findByDurationGreaterThan(duration)
-				.filter(list -> !list.isEmpty())
-				.orElseThrow(
-						() -> {
-							log.warn("No movies found with duration greater than {} min", duration);
-							return new MovieByDurationNotFoundException(duration);
-						}
-				);
-		return mappingListOfResponses(listOfMovies);
+		List<MovieEntity> listOfMovies = movieRepository.findByDurationGreaterThan(duration);
+			if (!listOfMovies.isEmpty()) {
+				return mappingListOfResponses(listOfMovies);
+			} else {
+				log.warn("No movies found with duration greater than {} min", duration);
+				throw  new MovieByDurationNotFoundException(duration);
+			}
 	}
 
 	public MovieResponse addMovies(MovieRequest movieRequest) {

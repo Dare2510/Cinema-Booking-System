@@ -105,7 +105,7 @@ public class MovieServiceTest {
 		listOfMovies.add(new MovieEntity("testTitle1", "testDescription1", Genre.COMEDY, 99));
 		listOfMovies.add(new MovieEntity("testTitle2", "testDescription2", Genre.DRAMA, 120));
 
-		when(movieRepository.findByDurationGreaterThan(60)).thenReturn(Optional.of(listOfMovies));
+		when(movieRepository.findByDurationGreaterThan(60)).thenReturn(listOfMovies);
 
 		List<MovieResponse> filteredList = movieService.getListOfByDuration(60);
 
@@ -131,7 +131,7 @@ public class MovieServiceTest {
 		listOfMovies.add(new MovieEntity("testTitle1", "testDescription1", Genre.FANTASY, 99));
 		listOfMovies.add(new MovieEntity("testTitle2", "testDescription2", Genre.FANTASY, 120));
 
-		when(movieRepository.findByGenre(Genre.FANTASY)).thenReturn(Optional.of(listOfMovies));
+		when(movieRepository.findByGenre(Genre.FANTASY)).thenReturn(listOfMovies);
 
 		List<MovieResponse> filteredList = movieService.getListOfByGenre(Genre.FANTASY);
 

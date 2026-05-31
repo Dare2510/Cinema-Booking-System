@@ -9,6 +9,7 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -36,6 +37,12 @@ public class ScreeningsEntity {
 	@Column(name = "time_slot", nullable = false)
 	private TimeSlot timeSlot;
 
+	@Column(name = "start_time" , nullable = false)
+	private LocalTime startTime;
+
+	@Column(name = "end_time" , nullable = false)
+	private LocalTime endTime;
+
 	@OneToMany(mappedBy = "screening", cascade = CascadeType.ALL)
 	private List<ScreeningSeatEntity> screeningSeats;
 
@@ -50,10 +57,20 @@ public class ScreeningsEntity {
 							BigDecimal price) {
 		this.cinemaRoomId = cinemaRoomId;
 		this.screeningDate = screeningDate;
-		this.timeSlot = timeSlot;
 		this.price = price;
 		this.screeningSeats = new ArrayList<>();
 		this.movie = movie;
 		this.reservation = new ArrayList<>();
+		this.timeSlot = timeSlot;
+		}
+
+	public void setTimes(TimeSlot timeSlot) {
+		switch (timeSlot) {
+			case EVENING, PRIME, NIGHT -> {
+				startTime = timeSlot.getStartTime();
+				endTime = timeSlot.getEndTime();
+			}
+		}
 	}
+
 }
