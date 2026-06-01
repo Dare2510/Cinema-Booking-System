@@ -6,17 +6,17 @@ import com.dare.cinema_booking_system.movies.service.MovieService;
 import com.dare.cinema_booking_system.rooms.entity.CinemaRoomEntity;
 import com.dare.cinema_booking_system.rooms.entity.SeatEntity;
 import com.dare.cinema_booking_system.rooms.service.CinemaRoomService;
-import com.dare.cinema_booking_system.screenings.dto.ScreeningsRequest;
-import com.dare.cinema_booking_system.screenings.dto.ScreeningsResponse;
+import com.dare.cinema_booking_system.screenings.dto.ScreeningRequest;
+import com.dare.cinema_booking_system.screenings.dto.ScreeningResponse;
 import com.dare.cinema_booking_system.screenings.entity.ScreeningSeatEntity;
-import com.dare.cinema_booking_system.screenings.entity.ScreeningsEntity;
+import com.dare.cinema_booking_system.screenings.entity.ScreeningEntity;
 import com.dare.cinema_booking_system.screenings.entity.TimeSlot;
 import com.dare.cinema_booking_system.screenings.exceptions.ScreeningNotFoundException;
 import com.dare.cinema_booking_system.screenings.exceptions.ScreeningSlotAlreadyBookedException;
 import com.dare.cinema_booking_system.screenings.exceptions.ScreeningUpdateNotPossibleException;
 import com.dare.cinema_booking_system.screenings.repository.ScreeningSeatRepository;
-import com.dare.cinema_booking_system.screenings.repository.ScreeningsRepository;
-import com.dare.cinema_booking_system.screenings.service.ScreeningsService;
+import com.dare.cinema_booking_system.screenings.repository.ScreeningRepository;
+import com.dare.cinema_booking_system.screenings.service.ScreeningService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -42,10 +42,10 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 
 @ActiveProfiles("test")
 @ExtendWith(MockitoExtension.class)
-public class ScreeningsServiceTest {
+public class ScreeningServiceTest {
 
 	@InjectMocks
-	private ScreeningsService screeningsService;
+	private ScreeningService screeningService;
 
 	@Mock
 	private MovieService movieService;
@@ -54,7 +54,7 @@ public class ScreeningsServiceTest {
 	private CinemaRoomService cinemaRoomService;
 
 	@Mock
-	private ScreeningsRepository screeningsRepository;
+	private ScreeningRepository screeningRepository;
 
 	@Mock
 	private ScreeningSeatRepository screeningSeatRepository;
@@ -64,7 +64,7 @@ public class ScreeningsServiceTest {
 
 	@AfterEach
 	public void tearDown() {
-		screeningsRepository.deleteAll();
+		screeningRepository.deleteAll();
 		screeningSeatRepository.deleteAll();
 	}
 
@@ -74,14 +74,14 @@ public class ScreeningsServiceTest {
 		testMovie.setId(1L);
 		CinemaRoomEntity testRoom = new CinemaRoomEntity(1, 10, 20, null);
 		testRoom.setId(1L);
-		ScreeningsEntity screening = new ScreeningsEntity(testRoom.getId(), testMovie,
+		ScreeningEntity screening = new ScreeningEntity(testRoom.getId(), testMovie,
 				LocalDate.now(), TimeSlot.PRIME, BigDecimal.valueOf(5));
 		Long screeningId = 1L;
 		when(cinemaRoomService.getRoomEntity(1L)).thenReturn(testRoom);
-		when(screeningsRepository.findById(screeningId)).thenReturn(Optional.of(screening));
-		ScreeningsResponse screeningResponse = screeningsService.getScreeningById(screeningId);
+		when(screeningRepository.findById(screeningId)).thenReturn(Optional.of(screening));
+		ScreeningResponse screeningResponse = screeningService.getScreeningById(screeningId);
 
-		verify(screeningsRepository, times(1)).findById(screeningId);
+		verify(screeningRepository, times(1)).findById(screeningId);
 
 		assertEquals(testMovie.getTitle(), screeningResponse.getMovieInformation().title);
 		assertEquals(TimeSlot.PRIME, screeningResponse.getTimeSlot());
@@ -91,33 +91,33 @@ public class ScreeningsServiceTest {
 	@Test
 	public void getScreeningById_whenScreeningIsNotFound_returnScreeningNotFoundException() {
 
-		assertThatThrownBy(() -> screeningsService.getScreeningById(1L))
+		assertThatThrownBy(() -> screeningService.getScreeningById(1L))
 				.isInstanceOf(ScreeningNotFoundException.class)
 				.hasMessage("Screening with id 1 not found");
 	}
 
 	@Test
 	public void deleteScreeningById_whenScreeningIsFoundWithoutReservations() {
-		ScreeningsEntity screeningToDelete = new ScreeningsEntity();
+		ScreeningEntity screeningToDelete = new ScreeningEntity();
 		screeningToDelete.setId(1L);
 
 		when(screeningSeatRepository.hasReservedOrSoldSeats(anyLong())).thenReturn(false);
-		when(screeningsRepository.findById(1L)).thenReturn(Optional.of(screeningToDelete));
-		screeningsService.deleteScreeningById(1L);
+		when(screeningRepository.findById(1L)).thenReturn(Optional.of(screeningToDelete));
+		screeningService.deleteScreeningById(1L);
 
 		verify(screeningSeatRepository, times(1)).hasReservedOrSoldSeats(anyLong());
-		verify(screeningsRepository, times(1)).delete(any());
+		verify(screeningRepository, times(1)).delete(any());
 
-		assertFalse(screeningsRepository.existsById(1L));
+		assertFalse(screeningRepository.existsById(1L));
 	}
 
 	@Test
 	public void deleteScreeningById_whenScreeningIsFoundWithReservations_throwsScreeningUpdateNotPossibleException() {
-		ScreeningsEntity screeningToDelete = new ScreeningsEntity();
+		ScreeningEntity screeningToDelete = new ScreeningEntity();
 		screeningToDelete.setId(1L);
 
 		when(screeningSeatRepository.hasReservedOrSoldSeats(anyLong())).thenReturn(true);
-		assertThatThrownBy(() -> screeningsService.deleteScreeningById(1L))
+		assertThatThrownBy(() -> screeningService.deleteScreeningById(1L))
 				.isInstanceOf(ScreeningUpdateNotPossibleException.class)
 				.hasMessage("Screening with id 1 cannot be updated");
 
@@ -138,19 +138,19 @@ public class ScreeningsServiceTest {
 		TimeSlot timeSlot = TimeSlot.PRIME;
 		BigDecimal price = BigDecimal.valueOf(10);
 
-		ScreeningsRequest screeningsRequest =
-				new ScreeningsRequest(room.getId(), movie.getId(), date, timeSlot, price);
+		ScreeningRequest screeningRequest =
+				new ScreeningRequest(room.getId(), movie.getId(), date, timeSlot, price);
 
 
-		when(screeningsRepository.existsByCinemaRoomIdAndScreeningDateAndTimeSlot
+		when(screeningRepository.existsByCinemaRoomIdAndScreeningDateAndTimeSlot
 				(room.getId(), date, timeSlot)).thenReturn(false);
 		when(movieService.getMovieEntityById(1L)).thenReturn(movie);
 		when(cinemaRoomService.getRoomEntity(1L)).thenReturn(room);
 
-		ScreeningsResponse response = screeningsService.createScreenings(screeningsRequest);
+		ScreeningResponse response = screeningService.createScreenings(screeningRequest);
 
-		verify(screeningsRepository, times(1)).save(any(ScreeningsEntity.class));
-		verify(screeningsRepository, times(1)).existsByCinemaRoomIdAndScreeningDateAndTimeSlot(room.getId(), date, timeSlot);
+		verify(screeningRepository, times(1)).save(any(ScreeningEntity.class));
+		verify(screeningRepository, times(1)).existsByCinemaRoomIdAndScreeningDateAndTimeSlot(room.getId(), date, timeSlot);
 		verify(screeningSeatRepository, times(1)).saveAll(anyList());
 
 		assertEquals(price, response.getPrice());
@@ -164,18 +164,18 @@ public class ScreeningsServiceTest {
 		CinemaRoomEntity room = new CinemaRoomEntity(1, 10, 20, new ArrayList<>());
 		room.setId(1L);
 
-		ScreeningsRequest screeningsRequest =
-				new ScreeningsRequest(1L, 1L, LocalDate.now(), TimeSlot.PRIME, BigDecimal.valueOf(10));
+		ScreeningRequest screeningRequest =
+				new ScreeningRequest(1L, 1L, LocalDate.now(), TimeSlot.PRIME, BigDecimal.valueOf(10));
 		when(cinemaRoomService.getRoomEntity(1L)).thenReturn(room);
-		when(screeningsRepository.existsByCinemaRoomIdAndScreeningDateAndTimeSlot
+		when(screeningRepository.existsByCinemaRoomIdAndScreeningDateAndTimeSlot
 				(1L, LocalDate.now(), TimeSlot.PRIME)).thenReturn(true);
 
-		assertThatThrownBy(() -> screeningsService.createScreenings(screeningsRequest))
+		assertThatThrownBy(() -> screeningService.createScreenings(screeningRequest))
 				.isInstanceOf(ScreeningSlotAlreadyBookedException.class)
 				.hasMessage("Screening slot in 1 room ID and " + LocalDate.now() + " and timeslot PRIME already booked");
 
-		verify(screeningsRepository, never()).save(any());
-		verify(screeningsRepository, times(1)).existsByCinemaRoomIdAndScreeningDateAndTimeSlot(screeningsRequest.getRoomId(), LocalDate.now(), TimeSlot.PRIME);
+		verify(screeningRepository, never()).save(any());
+		verify(screeningRepository, times(1)).existsByCinemaRoomIdAndScreeningDateAndTimeSlot(screeningRequest.getRoomId(), LocalDate.now(), TimeSlot.PRIME);
 
 
 	}
@@ -195,32 +195,32 @@ public class ScreeningsServiceTest {
 		BigDecimal oldPrice = BigDecimal.valueOf(10);
 		BigDecimal updatedPrice = BigDecimal.valueOf(15);
 
-		ScreeningsEntity screeningToUpdate =
-				new ScreeningsEntity(room.getId(), oldMovie, date, TimeSlot.PRIME, oldPrice);
+		ScreeningEntity screeningToUpdate =
+				new ScreeningEntity(room.getId(), oldMovie, date, TimeSlot.PRIME, oldPrice);
 		screeningToUpdate.setId(1L);
 
-		ScreeningsRequest request =
-				new ScreeningsRequest(room.getId(), updatedMovie.getId(), date, TimeSlot.EVENING, updatedPrice);
+		ScreeningRequest request =
+				new ScreeningRequest(room.getId(), updatedMovie.getId(), date, TimeSlot.EVENING, updatedPrice);
 
-		when(screeningsRepository.findById(screeningToUpdate.getId()))
+		when(screeningRepository.findById(screeningToUpdate.getId()))
 				.thenReturn(Optional.of(screeningToUpdate));
 
 		when(screeningSeatRepository.hasReservedOrSoldSeats(screeningToUpdate.getId()))
 				.thenReturn(true);
 
-		assertThatThrownBy(() -> screeningsService.updateScreenings(screeningToUpdate.getId(), request))
+		assertThatThrownBy(() -> screeningService.updateScreenings(screeningToUpdate.getId(), request))
 				.isInstanceOf(ScreeningUpdateNotPossibleException.class)
 				.hasMessage("Screening with id 1 cannot be updated");
 
-		verify(screeningsRepository).findById(screeningToUpdate.getId());
+		verify(screeningRepository).findById(screeningToUpdate.getId());
 		verify(movieService,never()).getMovieEntityById(updatedMovie.getId());
 		verify(cinemaRoomService, never()).getRoomEntity(room.getId());
 		verify(screeningSeatRepository).hasReservedOrSoldSeats(screeningToUpdate.getId());
 
-		verify(screeningsRepository, never())
+		verify(screeningRepository, never())
 				.existsByCinemaRoomIdAndScreeningDateAndTimeSlot(anyLong(), any(), any());
 
-		verify(screeningsRepository, never()).save(any());
+		verify(screeningRepository, never()).save(any());
 		verify(screeningSeatRepository, never()).deleteAllInBatch(anyList());
 		verify(screeningSeatRepository, never()).saveAll(any());
 	}
@@ -255,18 +255,18 @@ public class ScreeningsServiceTest {
 		BigDecimal oldPrice = BigDecimal.valueOf(10);
 		BigDecimal updatedPrice = BigDecimal.valueOf(15);
 
-		ScreeningsEntity screeningToUpdate =
-				new ScreeningsEntity(oldRoom.getId(), oldMovie, date, TimeSlot.PRIME, oldPrice);
+		ScreeningEntity screeningToUpdate =
+				new ScreeningEntity(oldRoom.getId(), oldMovie, date, TimeSlot.PRIME, oldPrice);
 		screeningToUpdate.setId(1L);
 
 		ScreeningSeatEntity existingScreeningSeat = new ScreeningSeatEntity();
 		existingScreeningSeat.setScreening(screeningToUpdate);
 		screeningToUpdate.getScreeningSeats().add(existingScreeningSeat);
 
-		ScreeningsRequest request =
-				new ScreeningsRequest(newRoom.getId(), updatedMovie.getId(), date, TimeSlot.PRIME, updatedPrice);
+		ScreeningRequest request =
+				new ScreeningRequest(newRoom.getId(), updatedMovie.getId(), date, TimeSlot.PRIME, updatedPrice);
 
-		when(screeningsRepository.findById(screeningToUpdate.getId()))
+		when(screeningRepository.findById(screeningToUpdate.getId()))
 				.thenReturn(Optional.of(screeningToUpdate));
 
 		when(movieService.getMovieEntityById(updatedMovie.getId()))
@@ -278,7 +278,7 @@ public class ScreeningsServiceTest {
 		when(screeningSeatRepository.hasReservedOrSoldSeats(screeningToUpdate.getId()))
 				.thenReturn(false);
 
-		when(screeningsRepository.existsByCinemaRoomIdAndScreeningDateAndTimeSlot(
+		when(screeningRepository.existsByCinemaRoomIdAndScreeningDateAndTimeSlot(
 				request.getRoomId(),
 				request.getScreeningDate(),
 				request.getTimeSlot()
@@ -287,15 +287,15 @@ public class ScreeningsServiceTest {
 		when(screeningSeatRepository.getScreeningSeatsByScreening(screeningToUpdate))
 				.thenReturn(screeningToUpdate.getScreeningSeats());
 
-		ScreeningsResponse response =
-				screeningsService.updateScreenings(screeningToUpdate.getId(), request);
+		ScreeningResponse response =
+				screeningService.updateScreenings(screeningToUpdate.getId(), request);
 
-		verify(screeningsRepository).findById(screeningToUpdate.getId());
+		verify(screeningRepository).findById(screeningToUpdate.getId());
 		verify(movieService).getMovieEntityById(updatedMovie.getId());
 		verify(cinemaRoomService,times(2)).getRoomEntity(newRoom.getId());
 		verify(screeningSeatRepository).hasReservedOrSoldSeats(screeningToUpdate.getId());
 
-		verify(screeningsRepository).existsByCinemaRoomIdAndScreeningDateAndTimeSlot(
+		verify(screeningRepository).existsByCinemaRoomIdAndScreeningDateAndTimeSlot(
 				request.getRoomId(),
 				request.getScreeningDate(),
 				request.getTimeSlot()
@@ -305,7 +305,7 @@ public class ScreeningsServiceTest {
 		verify(screeningSeatRepository).deleteAllInBatch(anyList());
 		verify(screeningSeatRepository).flush();
 		verify(screeningSeatRepository).saveAll(argThat(seats -> seats.iterator().hasNext()));
-		verify(screeningsRepository).save(screeningToUpdate);
+		verify(screeningRepository).save(screeningToUpdate);
 
 		assertEquals(updatedMovie.getTitle(), response.getMovieInformation().title);
 		assertEquals(updatedPrice, response.getPrice());

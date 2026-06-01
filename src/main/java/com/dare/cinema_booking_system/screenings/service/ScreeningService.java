@@ -8,20 +8,20 @@ import com.dare.cinema_booking_system.rooms.entity.CinemaRoomEntity;
 import com.dare.cinema_booking_system.rooms.entity.SeatEntity;
 import com.dare.cinema_booking_system.rooms.repository.CinemaRoomRepository;
 import com.dare.cinema_booking_system.rooms.service.CinemaRoomService;
-import com.dare.cinema_booking_system.screenings.dto.ScreeningsRequest;
-import com.dare.cinema_booking_system.screenings.dto.ScreeningsResponse;
+import com.dare.cinema_booking_system.screenings.dto.ScreeningSeatResponse;
+import com.dare.cinema_booking_system.screenings.dto.ScreeningRequest;
+import com.dare.cinema_booking_system.screenings.dto.ScreeningResponse;
 import com.dare.cinema_booking_system.screenings.entity.ScreeningSeatEntity;
-import com.dare.cinema_booking_system.screenings.entity.ScreeningsEntity;
+import com.dare.cinema_booking_system.screenings.entity.ScreeningEntity;
 import com.dare.cinema_booking_system.screenings.entity.TimeSlot;
 import com.dare.cinema_booking_system.screenings.exceptions.ScreeningNotFoundException;
 import com.dare.cinema_booking_system.screenings.exceptions.ScreeningSeatNotAvailableException;
 import com.dare.cinema_booking_system.screenings.exceptions.ScreeningSlotAlreadyBookedException;
 import com.dare.cinema_booking_system.screenings.exceptions.ScreeningUpdateNotPossibleException;
 import com.dare.cinema_booking_system.screenings.repository.ScreeningSeatRepository;
-import com.dare.cinema_booking_system.screenings.repository.ScreeningsRepository;
+import com.dare.cinema_booking_system.screenings.repository.ScreeningRepository;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -33,16 +33,16 @@ import java.util.List;
 @Slf4j
 @Service
 @AllArgsConstructor
-public class ScreeningsService {
+public class ScreeningService {
 
-	private final ScreeningsRepository screeningsRepository;
+	private final ScreeningRepository screeningRepository;
 	private final ScreeningSeatRepository screeningSeatRepository;
 	private final CinemaRoomRepository cinemaRoomRepository;
 	private final MovieService movieService;
 	private final CinemaRoomService cinemaRoomService;
 
-	public Page<ScreeningsResponse> getPageOfScreenings(Pageable pageable) {
-		return screeningsRepository.findAll(pageable)
+	public Page<ScreeningResponse> getPageOfScreenings(Pageable pageable) {
+		return screeningRepository.findAll(pageable)
 				.map(screenings ->
 				{
 					log.info("Getting Page of Screenings");
@@ -50,8 +50,8 @@ public class ScreeningsService {
 				});
 	}
 
-	public ScreeningsResponse getScreeningById(Long screeningId) {
-		ScreeningsEntity screening = getScreeningEntity(screeningId);
+	public ScreeningResponse getScreeningById(Long screeningId) {
+		ScreeningEntity screening = getScreeningEntity(screeningId);
 		log.info("Getting screening by {} ID", screeningId);
 		return responseBuilder(screening);
 
@@ -62,8 +62,8 @@ public class ScreeningsService {
 		boolean reservations = validateScreeningUpdate(screeningId);
 
 		if (!reservations) {
-			ScreeningsEntity screening = getScreeningEntity(screeningId);
-			screeningsRepository.delete(screening);
+			ScreeningEntity screening = getScreeningEntity(screeningId);
+			screeningRepository.delete(screening);
 			log.info("Deleted screening with {} ID", screeningId);
 
 		} else {
@@ -71,20 +71,20 @@ public class ScreeningsService {
 		}
 	}
 
-	public ScreeningsResponse createScreenings(ScreeningsRequest screeningsRequest) {
+	public ScreeningResponse createScreenings(ScreeningRequest screeningRequest) {
 
-		MovieEntity movie = movieService.getMovieEntityById(screeningsRequest.getMovieId());
-		CinemaRoomEntity room = cinemaRoomService.getRoomEntity(screeningsRequest.getRoomId());
-		LocalDate date = screeningsRequest.getScreeningDate();
-		TimeSlot timeSlot = screeningsRequest.getTimeSlot();
-		BigDecimal price = screeningsRequest.getPrice();
+		MovieEntity movie = movieService.getMovieEntityById(screeningRequest.getMovieId());
+		CinemaRoomEntity room = cinemaRoomService.getRoomEntity(screeningRequest.getRoomId());
+		LocalDate date = screeningRequest.getScreeningDate();
+		TimeSlot timeSlot = screeningRequest.getTimeSlot();
+		BigDecimal price = screeningRequest.getPrice();
 
-		boolean spotReserved = validateScreeningSpot(screeningsRequest);
+		boolean spotReserved = validateScreeningSpot(screeningRequest);
 
 		if (!spotReserved) {
-			ScreeningsEntity screening = new ScreeningsEntity(room.getId(), movie, date, timeSlot, price);
+			ScreeningEntity screening = new ScreeningEntity(room.getId(), movie, date, timeSlot, price);
 			screening.setTimes(timeSlot);
-			screeningsRepository.save(screening);
+			screeningRepository.save(screening);
 			createScreeningSeats(room, screening);
 
 			log.info("Screening with {} id created successfully", screening.getId());
@@ -96,27 +96,27 @@ public class ScreeningsService {
 		}
 	}
 
-	public ScreeningsResponse updateScreenings(Long screeningId, ScreeningsRequest screeningsRequest) {
+	public ScreeningResponse updateScreenings(Long screeningId, ScreeningRequest screeningRequest) {
 
-		ScreeningsEntity toUpdate = getScreeningEntity(screeningId);
+		ScreeningEntity toUpdate = getScreeningEntity(screeningId);
 		boolean hasReservation = validateScreeningUpdate(screeningId);
-		boolean sameSpot = isSameSpot(toUpdate,screeningsRequest);
+		boolean sameSpot = isSameSpot(toUpdate, screeningRequest);
 
 		if(sameSpot && !hasReservation) {
 
-			return setterForUpdate(toUpdate, screeningsRequest);
+			return setterForUpdate(toUpdate, screeningRequest);
 		} else {
 
 			if (!hasReservation) {
-				boolean spotIsBooked = validateScreeningSpot(screeningsRequest);
+				boolean spotIsBooked = validateScreeningSpot(screeningRequest);
 
 				if (!spotIsBooked) {
-					return setterForUpdate(toUpdate, screeningsRequest);
+					return setterForUpdate(toUpdate, screeningRequest);
 
 				} else {
-					LocalDate requestedDate = screeningsRequest.getScreeningDate();
-					CinemaRoomEntity requestedRoom = cinemaRoomService.getRoomEntity(screeningsRequest.getRoomId());
-					TimeSlot requestedTime = screeningsRequest.getTimeSlot();
+					LocalDate requestedDate = screeningRequest.getScreeningDate();
+					CinemaRoomEntity requestedRoom = cinemaRoomService.getRoomEntity(screeningRequest.getRoomId());
+					TimeSlot requestedTime = screeningRequest.getTimeSlot();
 
 					log.warn("Screening spot on {} at {} in room with ID {} is already reserved",
 							requestedDate,requestedTime,requestedRoom);
@@ -130,9 +130,23 @@ public class ScreeningsService {
 
 	}
 
+	public List<ScreeningSeatResponse> getFreeScreeningSeatsByScreeningId(Long screeningId) {
+		List<ScreeningSeatEntity> freeSeats = screeningSeatRepository.getFreeScreeningSeats(screeningId);
+
+		log.info("Get free screening seats with screening id {}", screeningId);
+		return freeSeats.stream()
+				.map(seat -> ScreeningSeatResponse.builder()
+						.cinemaRoomSeatId(seat.getCinemaSeats().getId())
+						.seatNumber(seat.getCinemaSeats().getSeatNumber())
+						.rowNumber(seat.getCinemaSeats().getRowNumber())
+						.build()
+				)
+				.toList();
+	}
+
 	//Helper
-	public ScreeningsEntity getScreeningEntity(Long screeningId) {
-		return screeningsRepository.findById(screeningId).orElseThrow(
+	public ScreeningEntity getScreeningEntity(Long screeningId) {
+		return screeningRepository.findById(screeningId).orElseThrow(
 				() -> {
 					log.info("Screening with ID {} not found", screeningId);
 					return new ScreeningNotFoundException(screeningId);
@@ -148,7 +162,7 @@ public class ScreeningsService {
 		);
 	}
 
-	private List<ScreeningSeatEntity> createScreeningSeats(CinemaRoomEntity cinemaRoom, ScreeningsEntity screening) {
+	private List<ScreeningSeatEntity> createScreeningSeats(CinemaRoomEntity cinemaRoom, ScreeningEntity screening) {
 		List<SeatEntity> cinemaSeats = cinemaRoom.getSeats();
 		List<ScreeningSeatEntity> screeningSeats = screening.getScreeningSeats();
 		if (!screeningSeats.isEmpty()) {
@@ -167,9 +181,9 @@ public class ScreeningsService {
 		return screeningSeats;
 	}
 
-	private boolean validateScreeningSpot(ScreeningsRequest screeningsRequest) {
-		return screeningsRepository.existsByCinemaRoomIdAndScreeningDateAndTimeSlot
-				(screeningsRequest.getRoomId(), screeningsRequest.getScreeningDate(), screeningsRequest.getTimeSlot());
+	private boolean validateScreeningSpot(ScreeningRequest screeningRequest) {
+		return screeningRepository.existsByCinemaRoomIdAndScreeningDateAndTimeSlot
+				(screeningRequest.getRoomId(), screeningRequest.getScreeningDate(), screeningRequest.getTimeSlot());
 
 	}
 
@@ -177,20 +191,20 @@ public class ScreeningsService {
 		return screeningSeatRepository.hasReservedOrSoldSeats(screeningId);
 	}
 
-	private boolean isSameSpot(ScreeningsEntity screeningEntity, ScreeningsRequest screeningsRequest) {
-		return screeningEntity.getScreeningDate().equals(screeningsRequest.getScreeningDate())
-				&& screeningEntity.getTimeSlot().equals(screeningsRequest.getTimeSlot())
-				&& screeningEntity.getCinemaRoomId().equals(screeningsRequest.getRoomId());
+	private boolean isSameSpot(ScreeningEntity screeningEntity, ScreeningRequest screeningRequest) {
+		return screeningEntity.getScreeningDate().equals(screeningRequest.getScreeningDate())
+				&& screeningEntity.getTimeSlot().equals(screeningRequest.getTimeSlot())
+				&& screeningEntity.getCinemaRoomId().equals(screeningRequest.getRoomId());
 
 	}
 
-	private ScreeningsResponse setterForUpdate(ScreeningsEntity toUpdate, ScreeningsRequest screeningsRequest) {
+	private ScreeningResponse setterForUpdate(ScreeningEntity toUpdate, ScreeningRequest screeningRequest) {
 
-		MovieEntity requestedMovie = movieService.getMovieEntityById(screeningsRequest.getMovieId());
-		LocalDate requestedDate = screeningsRequest.getScreeningDate();
-		CinemaRoomEntity requestedRoom = cinemaRoomService.getRoomEntity(screeningsRequest.getRoomId());
-		TimeSlot requestedTime = screeningsRequest.getTimeSlot();
-		BigDecimal price = screeningsRequest.getPrice();
+		MovieEntity requestedMovie = movieService.getMovieEntityById(screeningRequest.getMovieId());
+		LocalDate requestedDate = screeningRequest.getScreeningDate();
+		CinemaRoomEntity requestedRoom = cinemaRoomService.getRoomEntity(screeningRequest.getRoomId());
+		TimeSlot requestedTime = screeningRequest.getTimeSlot();
+		BigDecimal price = screeningRequest.getPrice();
 		List<ScreeningSeatEntity> newUpdatedScreeningSeats = createScreeningSeats(requestedRoom, toUpdate);
 
 		toUpdate.setMovie(requestedMovie);
@@ -201,18 +215,18 @@ public class ScreeningsService {
 		toUpdate.setPrice(price);
 		toUpdate.setTimes(requestedTime);
 
-		screeningsRepository.save(toUpdate);
+		screeningRepository.save(toUpdate);
 			log.info("Screening with ID {} updated successfully", toUpdate.getId());
 		return responseBuilder(toUpdate);
 	}
 
-	private ScreeningsResponse responseBuilder(ScreeningsEntity screeningEntity) {
+	private ScreeningResponse responseBuilder(ScreeningEntity screeningEntity) {
 		MovieEntity screeningMovie = screeningEntity.getMovie();
 
 		Long roomId = screeningEntity.getCinemaRoomId();
 		CinemaRoomEntity screeningRoom = cinemaRoomService.getRoomEntity(roomId);
 
-		return ScreeningsResponse.builder()
+		return ScreeningResponse.builder()
 				.id(screeningEntity.getId())
 				.screeningDate(screeningEntity.getScreeningDate())
 				.price(screeningEntity.getPrice())

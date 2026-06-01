@@ -18,7 +18,7 @@ import java.util.List;
 @NoArgsConstructor
 @Entity
 @Table(name = "screening")
-public class ScreeningsEntity {
+public class ScreeningEntity {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -53,8 +53,8 @@ public class ScreeningsEntity {
 	@OneToMany(mappedBy = "screening", cascade = CascadeType.ALL)
 	private List<ReservationEntity> reservation;
 
-	public ScreeningsEntity(Long cinemaRoomId, MovieEntity movie, LocalDate screeningDate, TimeSlot timeSlot,
-							BigDecimal price) {
+	public ScreeningEntity(Long cinemaRoomId, MovieEntity movie, LocalDate screeningDate, TimeSlot timeSlot,
+	                       BigDecimal price) {
 		this.cinemaRoomId = cinemaRoomId;
 		this.screeningDate = screeningDate;
 		this.price = price;

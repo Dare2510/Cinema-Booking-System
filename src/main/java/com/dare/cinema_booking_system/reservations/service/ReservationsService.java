@@ -1,21 +1,20 @@
 package com.dare.cinema_booking_system.reservations.service;
 
 import com.dare.cinema_booking_system.reservations.dto.PaymentResponse;
-import com.dare.cinema_booking_system.reservations.dto.ReservationsRequest;
-import com.dare.cinema_booking_system.reservations.dto.ReservationsResponse;
+import com.dare.cinema_booking_system.reservations.dto.ReservationRequest;
+import com.dare.cinema_booking_system.reservations.dto.ReservationResponse;
 import com.dare.cinema_booking_system.reservations.entity.*;
 import com.dare.cinema_booking_system.reservations.exceptions.*;
 import com.dare.cinema_booking_system.reservations.repository.PaymentRepository;
 import com.dare.cinema_booking_system.reservations.repository.ReservationsRepository;
 import com.dare.cinema_booking_system.reservations.repository.TicketRepository;
-import com.dare.cinema_booking_system.screenings.dto.ScreeningSeatResponse;
 import com.dare.cinema_booking_system.screenings.entity.ScreeningSeatEntity;
 import com.dare.cinema_booking_system.screenings.entity.ScreeningSeatStatus;
-import com.dare.cinema_booking_system.screenings.entity.ScreeningsEntity;
+import com.dare.cinema_booking_system.screenings.entity.ScreeningEntity;
 import com.dare.cinema_booking_system.screenings.entity.TimeSlot;
 import com.dare.cinema_booking_system.screenings.exceptions.ScreeningSeatNotAvailableException;
 import com.dare.cinema_booking_system.screenings.repository.ScreeningSeatRepository;
-import com.dare.cinema_booking_system.screenings.service.ScreeningsService;
+import com.dare.cinema_booking_system.screenings.service.ScreeningService;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -42,19 +41,19 @@ public class ReservationsService {
 	private final ScreeningSeatRepository screeningSeatRepository;
 	private final PaymentRepository paymentRepository;
 	private final TicketRepository ticketRepository;
-	private final ScreeningsService screeningsService;
+	private final ScreeningService screeningService;
 	private final ModelMapper modelMapper;
 
-	public ReservationsResponse findReservationById(Long reservationId) {
+	public ReservationResponse findReservationById(Long reservationId) {
 		ReservationEntity reservation = getReservationById(reservationId);
-		return modelMapper.map(reservation, ReservationsResponse.class);
+		return modelMapper.map(reservation, ReservationResponse.class);
 	}
 
-	public Page<ReservationsResponse> getPageOfReservations(Pageable pageable) {
+	public Page<ReservationResponse> getPageOfReservations(Pageable pageable) {
 		return reservationsRepository.findAll(pageable)
 				.map(reservation -> {
 					log.info("Getting Page of Reservations");
-					return ReservationsResponse.builder()
+					return ReservationResponse.builder()
 							.screeningDate(reservation.getScreening().getScreeningDate())
 							.timeSlot(reservation.getScreening().getTimeSlot())
 							.reservedSeats(reservation.getReservedSeats().stream()
@@ -69,22 +68,22 @@ public class ReservationsService {
 	}
 
 	@Transactional
-	public ReservationsResponse createReservation(ReservationsRequest reservationsRequest) {
-		ScreeningsEntity screeningToReserve = screeningsService.getScreeningEntity(reservationsRequest.getScreeningId());
-		boolean seatsAreFree = screeningSeatRepository.areAllCinemaRoomSeatsFree(screeningToReserve.getId(), reservationsRequest.getCinemaRoomSeatIds(), reservationsRequest.getCinemaRoomSeatIds().size());
+	public ReservationResponse createReservation(ReservationRequest reservationRequest) {
+		ScreeningEntity screeningToReserve = screeningService.getScreeningEntity(reservationRequest.getScreeningId());
+		boolean seatsAreFree = screeningSeatRepository.areAllCinemaRoomSeatsFree(screeningToReserve.getId(), reservationRequest.getCinemaRoomSeatIds(), reservationRequest.getCinemaRoomSeatIds().size());
 
 		if (seatsAreFree) {
 			ReservationEntity newReservation = reservationSaver();
 
-			PaymentEntity payment = paymentCreator(reservationsRequest, screeningToReserve, newReservation);
+			PaymentEntity payment = paymentCreator(reservationRequest, screeningToReserve, newReservation);
 			TicketEntity ticket = ticketCreator(newReservation);
-			List<ScreeningSeatEntity> reservedSeats = seatStatusUpdater(screeningToReserve, reservationsRequest);
+			List<ScreeningSeatEntity> reservedSeats = seatStatusUpdater(screeningToReserve, reservationRequest);
 			reservationUpdater(newReservation, payment, ticket, screeningToReserve, reservedSeats);
 
 			return responseBuilder(newReservation, ticket, reservedSeats);
 
 		} else {
-			log.warn("Chosen seats are not free , seats {} ", reservationsRequest.getCinemaRoomSeatIds().stream().toList());
+			log.warn("Chosen seats are not free , seats {} ", reservationRequest.getCinemaRoomSeatIds().stream().toList());
 			throw new ScreeningSeatNotAvailableException();
 		}
 
@@ -228,22 +227,8 @@ public class ReservationsService {
 		);
 	}
 
-	public List<ScreeningSeatResponse> getFreeScreeningSeatsByScreeningId(Long screeningId) {
-		List<ScreeningSeatEntity> freeSeats = screeningSeatRepository.getFreeScreeningSeats(screeningId);
-
-		log.info("Get free screening seats with screening id {}", screeningId);
-		return freeSeats.stream()
-				.map(seat -> ScreeningSeatResponse.builder()
-						.cinemaRoomSeatId(seat.getCinemaSeats().getId())
-						.seatNumber(seat.getCinemaSeats().getSeatNumber())
-						.rowNumber(seat.getCinemaSeats().getRowNumber())
-						.build()
-				)
-				.toList();
-	}
-
 	private void reservationUpdater(ReservationEntity newReservation, PaymentEntity payment, TicketEntity ticket,
-	                                ScreeningsEntity screeningToReserve, List<ScreeningSeatEntity> reservedSeats) {
+	                                ScreeningEntity screeningToReserve, List<ScreeningSeatEntity> reservedSeats) {
 
 		newReservation.setPayment(payment);
 		newReservation.setTicket(ticket);
@@ -261,11 +246,11 @@ public class ReservationsService {
 		return reservationEntity;
 	}
 
-	private PaymentEntity paymentCreator(ReservationsRequest reservationsRequest, ScreeningsEntity screeningToReserve, ReservationEntity newReservation) {
-		int numberOfSeats = reservationsRequest.getCinemaRoomSeatIds().size();
+	private PaymentEntity paymentCreator(ReservationRequest reservationRequest, ScreeningEntity screeningToReserve, ReservationEntity newReservation) {
+		int numberOfSeats = reservationRequest.getCinemaRoomSeatIds().size();
 		BigDecimal pricePerSeat = screeningToReserve.getPrice();
 		BigDecimal finalAmount = pricePerSeat.multiply(BigDecimal.valueOf((double) numberOfSeats));
-		PaymentMethod paymentMethod = reservationsRequest.getPaymentMethod();
+		PaymentMethod paymentMethod = reservationRequest.getPaymentMethod();
 
 		PaymentEntity payments = new PaymentEntity(newReservation, finalAmount, paymentMethod);
 
@@ -287,7 +272,7 @@ public class ReservationsService {
 	}
 
 	private boolean cancelIsOnTime(ReservationEntity reservation) {
-		ScreeningsEntity screeningToCancel = screeningsService.getScreeningEntity(reservation.getScreening().getId());
+		ScreeningEntity screeningToCancel = screeningService.getScreeningEntity(reservation.getScreening().getId());
 		TimeSlot timeSlot = screeningToCancel.getTimeSlot();
 		LocalDate date = screeningToCancel.getScreeningDate();
 
@@ -298,9 +283,9 @@ public class ReservationsService {
 
 	}
 
-	private List<ScreeningSeatEntity> seatStatusUpdater(ScreeningsEntity screeningToReserve, ReservationsRequest reservationsRequest) {
+	private List<ScreeningSeatEntity> seatStatusUpdater(ScreeningEntity screeningToReserve, ReservationRequest reservationRequest) {
 		List<ScreeningSeatEntity> allSeats = screeningSeatRepository.getScreeningSeatsByScreening(screeningToReserve);
-		List<Long> targetSeatIds = reservationsRequest.getCinemaRoomSeatIds();
+		List<Long> targetSeatIds = reservationRequest.getCinemaRoomSeatIds();
 
 		List<ScreeningSeatEntity> seatsToReserve = allSeats.stream()
 				.filter(seat -> targetSeatIds.contains(seat.getCinemaSeats().getId()))
@@ -318,13 +303,13 @@ public class ReservationsService {
 
 	}
 
-	private ReservationsResponse responseBuilder(ReservationEntity newReservation, TicketEntity tickets, List<ScreeningSeatEntity> listOfReservedSeats) {
+	private ReservationResponse responseBuilder(ReservationEntity newReservation, TicketEntity tickets, List<ScreeningSeatEntity> listOfReservedSeats) {
 		List<String> reservedSeats = listOfReservedSeats.stream().
 				map(spot -> "Row: " + spot.getCinemaSeats().getRowNumber() + " - "
 						+ "Seat: " + spot.getCinemaSeats().getSeatNumber()).toList();
 
 		if (newReservation.getPayment().getPaymentMethod() == PaymentMethod.ONLINE) {
-			return ReservationsResponse.builder()
+			return ReservationResponse.builder()
 					.reservationId(newReservation.getId())
 					.reservedSeats(reservedSeats)
 					.screeningDate(newReservation.getScreening().getScreeningDate())
@@ -340,7 +325,7 @@ public class ReservationsService {
 					)
 					.build();
 		} else {
-			return ReservationsResponse.builder()
+			return ReservationResponse.builder()
 					.reservationId(newReservation.getId())
 					.reservedSeats(reservedSeats)
 					.screeningDate(newReservation.getScreening().getScreeningDate())

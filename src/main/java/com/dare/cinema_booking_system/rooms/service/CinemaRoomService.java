@@ -9,7 +9,7 @@ import com.dare.cinema_booking_system.rooms.exceptions.CinemaRoomNotFoundExcepti
 import com.dare.cinema_booking_system.rooms.exceptions.CinemaRoomNumberDuplicateException;
 import com.dare.cinema_booking_system.rooms.repository.CinemaRoomRepository;
 import com.dare.cinema_booking_system.rooms.repository.SeatRepository;
-import com.dare.cinema_booking_system.screenings.repository.ScreeningsRepository;
+import com.dare.cinema_booking_system.screenings.repository.ScreeningRepository;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,7 +28,7 @@ public class CinemaRoomService {
 
 	private final CinemaRoomRepository cinemaRoomRepository;
 	private final SeatRepository seatRepository;
-	private final ScreeningsRepository screeningRepository;
+	private final ScreeningRepository screeningRepository;
 	private final ModelMapper modelMapper;
 
 	@Transactional

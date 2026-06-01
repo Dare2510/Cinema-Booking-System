@@ -13,7 +13,7 @@ import java.time.LocalDate;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ScreeningsResponse {
+public class ScreeningResponse {
 
 	private Long id;
 	private CinemaRoomResponse cinemaRoomInformation;

@@ -5,9 +5,9 @@ import com.dare.cinema_booking_system.movies.entity.Genre;
 import com.dare.cinema_booking_system.rooms.dto.CinemaRoomRequest;
 import com.dare.cinema_booking_system.rooms.repository.CinemaRoomRepository;
 import com.dare.cinema_booking_system.rooms.repository.SeatRepository;
-import com.dare.cinema_booking_system.screenings.dto.ScreeningsRequest;
+import com.dare.cinema_booking_system.screenings.dto.ScreeningRequest;
 import com.dare.cinema_booking_system.screenings.entity.TimeSlot;
-import com.dare.cinema_booking_system.screenings.repository.ScreeningsRepository;
+import com.dare.cinema_booking_system.screenings.repository.ScreeningRepository;
 import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -44,13 +44,13 @@ public class CinemaRoomIntegrationTest {
 	private SeatRepository seatRepository;
 
 	@Autowired
-	private ScreeningsRepository screeningsRepository;
+	private ScreeningRepository screeningRepository;
 
 	@AfterEach
 	public void tearDown() {
 		cinemaRoomRepository.deleteAll();
 		seatRepository.deleteAll();
-		screeningsRepository.deleteAll();
+		screeningRepository.deleteAll();
 	}
 
 	@Test
@@ -110,11 +110,11 @@ public class CinemaRoomIntegrationTest {
 		MovieRequest movieRequest = new MovieRequest("TestTitle", "TestDescription", 90, Genre.FANTASY);
 		Long movieId = getMovieId(movieRequest);
 
-		ScreeningsRequest screeningsRequest = new ScreeningsRequest(roomId, movieId, LocalDate.now(), TimeSlot.PRIME, BigDecimal.valueOf(5));
+		ScreeningRequest screeningRequest = new ScreeningRequest(roomId, movieId, LocalDate.now(), TimeSlot.PRIME, BigDecimal.valueOf(5));
 
 		mockMvc.perform(post("/api/screening")
 						.contentType(MediaType.APPLICATION_JSON)
-						.content(objectMapper.writeValueAsString(screeningsRequest)))
+						.content(objectMapper.writeValueAsString(screeningRequest)))
 				.andExpect(status().isOk());
 
 		request.setRowCapacity(25);

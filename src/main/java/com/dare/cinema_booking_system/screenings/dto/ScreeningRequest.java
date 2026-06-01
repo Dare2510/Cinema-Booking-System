@@ -15,7 +15,7 @@ import java.time.LocalDate;
 @Getter
 @Setter
 @AllArgsConstructor
-public class ScreeningsRequest {
+public class ScreeningRequest {
 
 	@NotNull(message = "Room id is required")
 	@Min(value = 1, message = "Room id must be at least 1")

@@ -1,7 +1,6 @@
 package com.dare.cinema_booking_system.reservations.repository;
 
 import com.dare.cinema_booking_system.reservations.entity.TicketEntity;
-import com.dare.cinema_booking_system.screenings.entity.ScreeningSeatEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

@@ -6,6 +6,7 @@ public class ScreeningSeatNotAvailableException extends RuntimeException {
 	}
 
 	public ScreeningSeatNotAvailableException() {
+
 		super("Chosen seats are not available");
 	}
 }

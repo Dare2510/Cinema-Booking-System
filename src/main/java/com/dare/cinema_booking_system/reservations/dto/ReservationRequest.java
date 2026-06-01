@@ -13,7 +13,7 @@ import java.util.List;
 @AllArgsConstructor
 @Getter
 @Setter
-public class ReservationsRequest {
+public class ReservationRequest {
 
 	@NotNull
 	@Min(value = 1, message = "Screening id must be at least 1")

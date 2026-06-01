@@ -4,10 +4,10 @@ import com.dare.cinema_booking_system.movies.dto.MovieRequest;
 import com.dare.cinema_booking_system.movies.entity.Genre;
 import com.dare.cinema_booking_system.rooms.dto.CinemaRoomRequest;
 import com.dare.cinema_booking_system.rooms.repository.CinemaRoomRepository;
-import com.dare.cinema_booking_system.screenings.dto.ScreeningsRequest;
+import com.dare.cinema_booking_system.screenings.dto.ScreeningRequest;
 import com.dare.cinema_booking_system.screenings.entity.TimeSlot;
 import com.dare.cinema_booking_system.screenings.repository.ScreeningSeatRepository;
-import com.dare.cinema_booking_system.screenings.repository.ScreeningsRepository;
+import com.dare.cinema_booking_system.screenings.repository.ScreeningRepository;
 import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -38,7 +38,7 @@ public class ScreeningIntegrationTest {
 	private ObjectMapper objectMapper;
 
 	@Autowired
-	private ScreeningsRepository  screeningsRepository;
+	private ScreeningRepository screeningRepository;
 
 	@Autowired
 	private ScreeningSeatRepository screeningSeatRepository;
@@ -51,7 +51,7 @@ public class ScreeningIntegrationTest {
 	public void cleanUp() {
 		screeningSeatRepository.deleteAll();
 		cinemaRoomRepository.deleteAll();
-		screeningsRepository.deleteAll();
+		screeningRepository.deleteAll();
 	}
 
 	@Test
@@ -63,7 +63,7 @@ public class ScreeningIntegrationTest {
 		Long movieId = getMovieId(movie);
 		Long roomId = getCinemaId(room);
 
-		ScreeningsRequest screening = new ScreeningsRequest(roomId,movieId, LocalDate.now(), TimeSlot.PRIME, BigDecimal.TEN);
+		ScreeningRequest screening = new ScreeningRequest(roomId,movieId, LocalDate.now(), TimeSlot.PRIME, BigDecimal.TEN);
 
 		mockMvc.perform(post("/api/screening")
 						.contentType(MediaType.APPLICATION_JSON)
@@ -86,7 +86,7 @@ public class ScreeningIntegrationTest {
 		CinemaRoomRequest room = new CinemaRoomRequest(5,10,20);
 		Long roomId = getCinemaId(room);
 
-		ScreeningsRequest screening = new ScreeningsRequest(roomId,99L, LocalDate.now(), TimeSlot.PRIME, BigDecimal.TEN);
+		ScreeningRequest screening = new ScreeningRequest(roomId,99L, LocalDate.now(), TimeSlot.PRIME, BigDecimal.TEN);
 
 		mockMvc.perform(post("/api/screening")
 						.contentType(MediaType.APPLICATION_JSON)
@@ -101,7 +101,7 @@ public class ScreeningIntegrationTest {
 		MovieRequest movie = new MovieRequest("testTitle", "testDescription", 120, Genre.FANTASY);
 		Long movieId = getMovieId(movie);
 
-		ScreeningsRequest screening = new ScreeningsRequest(9L, movieId, LocalDate.now(), TimeSlot.PRIME, BigDecimal.TEN);
+		ScreeningRequest screening = new ScreeningRequest(9L, movieId, LocalDate.now(), TimeSlot.PRIME, BigDecimal.TEN);
 
 		mockMvc.perform(post("/api/screening")
 						.contentType(MediaType.APPLICATION_JSON)
@@ -112,7 +112,7 @@ public class ScreeningIntegrationTest {
 	@Test
 	public void createScreening_whenJsonValueIsInvalid_returnsBadRequest() throws Exception{
 
-		ScreeningsRequest screening = new ScreeningsRequest
+		ScreeningRequest screening = new ScreeningRequest
 				(50L, 51L, LocalDate.of(2020,10,25), TimeSlot.PRIME, BigDecimal.TEN);
 
 		mockMvc.perform(post("/api/screening")
@@ -150,7 +150,7 @@ public class ScreeningIntegrationTest {
 		Long movieId = getMovieId(movie);
 		Long roomId = getCinemaId(room);
 
-		ScreeningsRequest screening = new ScreeningsRequest(roomId,movieId, LocalDate.now(), TimeSlot.PRIME, BigDecimal.valueOf(15));
+		ScreeningRequest screening = new ScreeningRequest(roomId,movieId, LocalDate.now(), TimeSlot.PRIME, BigDecimal.valueOf(15));
 		Long screeningId = getScreeningId(screening);
 
 		mockMvc.perform(get("/api/screening/"+screeningId))
@@ -175,7 +175,7 @@ public class ScreeningIntegrationTest {
 		Long movieId = getMovieId(movie);
 		Long roomId = getCinemaId(room);
 
-		ScreeningsRequest screening = new ScreeningsRequest(roomId,movieId, LocalDate.now(), TimeSlot.PRIME, BigDecimal.TEN);
+		ScreeningRequest screening = new ScreeningRequest(roomId,movieId, LocalDate.now(), TimeSlot.PRIME, BigDecimal.TEN);
 		Long screeningId = getScreeningId(screening);
 
 		mockMvc.perform(delete("/api/screening/"+screeningId))
@@ -190,10 +190,10 @@ public class ScreeningIntegrationTest {
 		Long movieId = getMovieId(movie);
 		Long roomId = getCinemaId(room);
 
-		ScreeningsRequest screening = new ScreeningsRequest(roomId,movieId, LocalDate.now(), TimeSlot.PRIME, BigDecimal.TEN);
+		ScreeningRequest screening = new ScreeningRequest(roomId,movieId, LocalDate.now(), TimeSlot.PRIME, BigDecimal.TEN);
 
 		Long screeningId = getScreeningId(screening);
-		ScreeningsRequest update = new ScreeningsRequest(roomId,movieId, LocalDate.now(), TimeSlot.EVENING, BigDecimal.valueOf(15));
+		ScreeningRequest update = new ScreeningRequest(roomId,movieId, LocalDate.now(), TimeSlot.EVENING, BigDecimal.valueOf(15));
 
 		mockMvc.perform(patch("/api/screening/"+screeningId)
 				.contentType(MediaType.APPLICATION_JSON)
@@ -213,11 +213,11 @@ public class ScreeningIntegrationTest {
 
 	//Helper Methods
 
-	private Long getScreeningId(ScreeningsRequest  screeningsRequest) throws Exception {
+	private Long getScreeningId(ScreeningRequest screeningRequest) throws Exception {
 
 		String screeningResponseJson = mockMvc.perform(post("/api/screening")
 						.contentType(MediaType.APPLICATION_JSON)
-						.content(objectMapper.writeValueAsString(screeningsRequest)))
+						.content(objectMapper.writeValueAsString(screeningRequest)))
 				.andExpect(status().isOk())
 				.andReturn().getResponse().getContentAsString();
 

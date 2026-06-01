@@ -1,7 +1,7 @@
 package com.dare.cinema_booking_system.reservations.entity;
 
 import com.dare.cinema_booking_system.screenings.entity.ScreeningSeatEntity;
-import com.dare.cinema_booking_system.screenings.entity.ScreeningsEntity;
+import com.dare.cinema_booking_system.screenings.entity.ScreeningEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -34,7 +34,7 @@ public class ReservationEntity {
 
 	@ManyToOne
 	@JoinColumn(name = "screening_id")
-	private ScreeningsEntity screening;
+	private ScreeningEntity screening;
 
 	@ManyToMany
 	@JoinTable(
@@ -44,7 +44,7 @@ public class ReservationEntity {
 	)
 	private List<ScreeningSeatEntity> reservedSeats;
 
-	public ReservationEntity(PaymentEntity payment, TicketEntity ticket, ScreeningsEntity screening) {
+	public ReservationEntity(PaymentEntity payment, TicketEntity ticket, ScreeningEntity screening) {
 		this.createdAt = LocalDateTime.now();
 		this.reservationStatus = ReservationStatus.CREATED;
 		this.payment = payment;

@@ -1,6 +1,6 @@
 package com.dare.cinema_booking_system.movies.entity;
 
-import com.dare.cinema_booking_system.screenings.entity.ScreeningsEntity;
+import com.dare.cinema_booking_system.screenings.entity.ScreeningEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -32,7 +32,7 @@ public class MovieEntity {
 	private int duration;
 
 	@OneToMany(mappedBy = "movie", cascade = CascadeType.ALL)
-	private List<ScreeningsEntity> screeningsEntities;
+	private List<ScreeningEntity> screeningsEntities;
 
 
 	public MovieEntity(String title, String description, Genre genre, int duration) {

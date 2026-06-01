@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @Setter
 public class ErrorResponse {
 
-	private int status;
+	private int httpStatus;
 	private String message;
 	private String path;
 	LocalDateTime timestamp;

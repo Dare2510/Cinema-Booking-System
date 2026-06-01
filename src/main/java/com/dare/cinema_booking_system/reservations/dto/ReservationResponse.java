@@ -13,7 +13,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class ReservationsResponse {
+public class ReservationResponse {
 
 	public Long reservationId;
 	public String ticketNumber;

@@ -9,8 +9,7 @@ import com.dare.cinema_booking_system.rooms.exceptions.CinemaRoomNumberDuplicate
 import com.dare.cinema_booking_system.rooms.repository.CinemaRoomRepository;
 import com.dare.cinema_booking_system.rooms.repository.SeatRepository;
 import com.dare.cinema_booking_system.rooms.service.CinemaRoomService;
-import com.dare.cinema_booking_system.screenings.repository.ScreeningSeatRepository;
-import com.dare.cinema_booking_system.screenings.repository.ScreeningsRepository;
+import com.dare.cinema_booking_system.screenings.repository.ScreeningRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -40,7 +39,7 @@ public class CinemaRoomServiceTest {
 	@Mock
 	private SeatRepository seatRepository;
 	@Mock
-	private ScreeningsRepository screeningsRepository;
+	private ScreeningRepository screeningRepository;
 	@Spy
 	private ModelMapper modelMapper;
 	@InjectMocks
@@ -90,7 +89,7 @@ public class CinemaRoomServiceTest {
 
 		verify(cinemaRoomRepository, never()).save(any());
 		verify(seatRepository, never()).saveAll(any());
-		verify(screeningsRepository, never()).existsByCinemaRoomId(anyLong());
+		verify(screeningRepository, never()).existsByCinemaRoomId(anyLong());
 	}
 
 	@Test
@@ -108,7 +107,7 @@ public class CinemaRoomServiceTest {
 		CinemaRoomEntity newRoomEntity = new CinemaRoomEntity(1, 20, 25, seatsNew);
 
 		when(cinemaRoomRepository.findById(id)).thenReturn(Optional.of(oldRoomEntity));
-		when(screeningsRepository.existsByCinemaRoomId(id)).thenReturn(false);
+		when(screeningRepository.existsByCinemaRoomId(id)).thenReturn(false);
 		when(seatRepository.findByCinemaRoom(oldRoomEntity)).thenReturn(seatsOld);
 		when(seatRepository.saveAll(any())).thenReturn(seatsNew);
 		when(cinemaRoomRepository.save(any())).thenReturn(newRoomEntity);
@@ -126,7 +125,7 @@ public class CinemaRoomServiceTest {
 		verify(seatRepository, times(1)).deleteAllInBatch(seatsOld);
 		verify(seatRepository, times(1)).flush();
 		verify(seatRepository, times(1)).saveAll(any());
-		verify(screeningsRepository, times(1)).existsByCinemaRoomId(id);
+		verify(screeningRepository, times(1)).existsByCinemaRoomId(id);
 
 	}
 
@@ -134,7 +133,7 @@ public class CinemaRoomServiceTest {
 	public void updateCinemaRoom_whenRoomByIdAndScreeningExists_returnsCinemaRoomChangesNotPossibleException() {
 		CinemaRoomEntity oldRoomEntity = new CinemaRoomEntity(1, 10, 20, null);
 		when(cinemaRoomRepository.findById(1L)).thenReturn(Optional.of(oldRoomEntity));
-		when(screeningsRepository.existsByCinemaRoomId(1L)).thenReturn(true);
+		when(screeningRepository.existsByCinemaRoomId(1L)).thenReturn(true);
 
 		assertThatThrownBy(() -> cinemaRoomService.updateCinemaRoom(
 				new CinemaRoomRequest(1, 10, 20), 1L
@@ -143,14 +142,14 @@ public class CinemaRoomServiceTest {
 
 		verify(cinemaRoomRepository, never()).save(any());
 		verify(seatRepository, never()).saveAll(any());
-		verify(screeningsRepository, times(1)).existsByCinemaRoomId(anyLong());
+		verify(screeningRepository, times(1)).existsByCinemaRoomId(anyLong());
 
 	}
 
 	@Test
 	public void deleteCinemaRoom_whenRoomIdDoesExists_returnsCinemaResponse() {
 		when(cinemaRoomRepository.findById(any())).thenReturn(Optional.of(new CinemaRoomEntity()));
-		when(screeningsRepository.existsByCinemaRoomId(1L)).thenReturn(false);
+		when(screeningRepository.existsByCinemaRoomId(1L)).thenReturn(false);
 		cinemaRoomService.deleteCinemaRoom(1L);
 
 		assertFalse(cinemaRoomRepository.existsById(1L));
@@ -165,7 +164,7 @@ public class CinemaRoomServiceTest {
 	public void deleteCinemaRoom_whenRoomIdAndScreeningExists_returnsCinemaResponse() {
 		CinemaRoomEntity oldRoomEntity = new CinemaRoomEntity(1, 10, 20, null);
 		when(cinemaRoomRepository.findById(1L)).thenReturn(Optional.of(oldRoomEntity));
-		when(screeningsRepository.existsByCinemaRoomId(1L)).thenReturn(true);
+		when(screeningRepository.existsByCinemaRoomId(1L)).thenReturn(true);
 
 		assertThatThrownBy(() -> cinemaRoomService.deleteCinemaRoom(1L))
 				.isInstanceOf(CinemaRoomChangesNotPossibleException.class)
@@ -173,6 +172,6 @@ public class CinemaRoomServiceTest {
 
 		verify(cinemaRoomRepository, never()).save(any());
 		verify(seatRepository, never()).saveAll(any());
-		verify(screeningsRepository, times(1)).existsByCinemaRoomId(anyLong());
+		verify(screeningRepository, times(1)).existsByCinemaRoomId(anyLong());
 	}
 }

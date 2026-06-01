@@ -27,9 +27,9 @@ public class ScreeningSeatEntity {
 
 	@ManyToOne
 	@JoinColumn(name = "screening_id")
-	private ScreeningsEntity screening;
+	private ScreeningEntity screening;
 
-	public ScreeningSeatEntity(ScreeningsEntity screening,
+	public ScreeningSeatEntity(ScreeningEntity screening,
 	                           SeatEntity cinemaSeats) {
 		this.screening = screening;
 		this.screeningSeatStatus = ScreeningSeatStatus.FREE;
