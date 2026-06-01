@@ -1,6 +1,6 @@
 package com.dare.cinema_booking_system.screenings.dto;
 
-import com.dare.cinema_booking_system.movies.dto.MovieResponse;
+import com.dare.cinema_booking_system.movie.dto.MovieResponse;
 import com.dare.cinema_booking_system.rooms.dto.CinemaRoomResponse;
 import com.dare.cinema_booking_system.screenings.entity.TimeSlot;
 import com.fasterxml.jackson.annotation.JsonFormat;

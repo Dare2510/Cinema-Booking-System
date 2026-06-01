@@ -146,7 +146,7 @@ public class CinemaRoomService {
 		room.setRoomNumber(updatedRoomNumber);
 		room.setRows(updatedNumberOfRows);
 		room.setRowCapacity(updatedRowCapacity);
-		room.setCapacity(updatedRowCapacity * updatedNumberOfRows);
+		room.setRoomCapacity(updatedRowCapacity * updatedNumberOfRows);
 
 		cinemaRoomRepository.save(room);
 		log.info("Room number {} updated", updatedRoomNumber);

@@ -46,13 +46,13 @@ public class ReservationManagementController {
 		return ResponseEntity.ok().build();
 	}
 
-	@PatchMapping("/tickets/{ticketNumber}/used")
+	@PatchMapping("/ticket/{ticketNumber}/used")
 	public ResponseEntity<Void> setTicketToUsed(@PathVariable String ticketNumber) {
 		reservationsService.setTicketToUsed(ticketNumber);
 		return ResponseEntity.noContent().build();
 	}
 
-	@PatchMapping("/expired")
+	@PatchMapping("/ticket/expire")
 	public ResponseEntity<Void> expireTickets() {
 		reservationsService.setStatusOfExpiredTickets();
 		return ResponseEntity.ok().build();

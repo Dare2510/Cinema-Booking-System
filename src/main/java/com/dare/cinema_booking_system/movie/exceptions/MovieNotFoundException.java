@@ -1,4 +1,4 @@
-package com.dare.cinema_booking_system.movies.exceptions;
+package com.dare.cinema_booking_system.movie.exceptions;
 
 public class MovieNotFoundException extends RuntimeException {
 

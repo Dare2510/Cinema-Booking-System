@@ -1,6 +1,6 @@
-package com.dare.cinema_booking_system.movies.dto;
+package com.dare.cinema_booking_system.movie.dto;
 
-import com.dare.cinema_booking_system.movies.entity.Genre;
+import com.dare.cinema_booking_system.movie.entity.Genre;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

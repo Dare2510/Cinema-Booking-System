@@ -1,8 +1,8 @@
 package com.dare.cinema_booking_system.screenings.service;
 
-import com.dare.cinema_booking_system.movies.dto.MovieResponse;
-import com.dare.cinema_booking_system.movies.entity.MovieEntity;
-import com.dare.cinema_booking_system.movies.service.MovieService;
+import com.dare.cinema_booking_system.movie.dto.MovieResponse;
+import com.dare.cinema_booking_system.movie.entity.MovieEntity;
+import com.dare.cinema_booking_system.movie.service.MovieService;
 import com.dare.cinema_booking_system.rooms.dto.CinemaRoomResponse;
 import com.dare.cinema_booking_system.rooms.entity.CinemaRoomEntity;
 import com.dare.cinema_booking_system.rooms.entity.SeatEntity;
@@ -239,7 +239,7 @@ public class ScreeningService {
 						.build())
 				.cinemaRoomInformation(CinemaRoomResponse.builder()
 						.roomNumber(screeningRoom.getRoomNumber())
-						.capacity(screeningRoom.getCapacity())
+						.capacity(screeningRoom.getRoomCapacity())
 						.build()
 				)
 				.build();

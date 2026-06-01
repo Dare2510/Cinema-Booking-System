@@ -18,7 +18,7 @@ import java.util.List;
 @RestController
 @RequestMapping("api/screening")
 @AllArgsConstructor
-public class ScreeningsController {
+public class ScreeningController {
 
 	private final ScreeningService screeningService;
 

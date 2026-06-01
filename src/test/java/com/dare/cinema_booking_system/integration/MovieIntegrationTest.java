@@ -1,8 +1,8 @@
 package com.dare.cinema_booking_system.integration;
 
-import com.dare.cinema_booking_system.movies.dto.MovieRequest;
-import com.dare.cinema_booking_system.movies.entity.Genre;
-import com.dare.cinema_booking_system.movies.repository.MovieRepository;
+import com.dare.cinema_booking_system.movie.dto.MovieRequest;
+import com.dare.cinema_booking_system.movie.entity.Genre;
+import com.dare.cinema_booking_system.movie.repository.MovieRepository;
 import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;

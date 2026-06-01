@@ -1,9 +1,9 @@
 package com.dare.cinema_booking_system.common;
 
-import com.dare.cinema_booking_system.movies.exceptions.MovieByDurationNotFoundException;
-import com.dare.cinema_booking_system.movies.exceptions.MovieByGenreNotFoundException;
-import com.dare.cinema_booking_system.movies.exceptions.MovieNotFoundException;
-import com.dare.cinema_booking_system.movies.exceptions.MovieUpdateNotPossibleException;
+import com.dare.cinema_booking_system.movie.exceptions.MovieByDurationNotFoundException;
+import com.dare.cinema_booking_system.movie.exceptions.MovieByGenreNotFoundException;
+import com.dare.cinema_booking_system.movie.exceptions.MovieNotFoundException;
+import com.dare.cinema_booking_system.movie.exceptions.MovieUpdateNotPossibleException;
 import com.dare.cinema_booking_system.reservations.exceptions.*;
 import com.dare.cinema_booking_system.rooms.exceptions.CinemaRoomChangesNotPossibleException;
 import com.dare.cinema_booking_system.rooms.exceptions.CinemaRoomNotFoundException;

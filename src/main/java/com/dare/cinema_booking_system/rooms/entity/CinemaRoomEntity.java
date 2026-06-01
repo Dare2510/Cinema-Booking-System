@@ -28,7 +28,7 @@ public class CinemaRoomEntity {
 	private int rowCapacity;
 
 	@Column(name = "capacity", nullable = false)
-	private int capacity;
+	private int roomCapacity;
 
 	@OneToMany(mappedBy = "cinemaRoom", cascade = CascadeType.ALL)
 	private List<SeatEntity> seats;
@@ -37,7 +37,7 @@ public class CinemaRoomEntity {
 		this.roomNumber = roomNumber;
 		this.rows = rows;
 		this.rowCapacity = rowCapacity;
-		this.capacity = rows * rowCapacity;
+		this.roomCapacity = rows * rowCapacity;
 		this.seats = seats;
 	}
 }

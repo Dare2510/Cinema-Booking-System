@@ -1,8 +1,8 @@
 package com.dare.cinema_booking_system.service;
 
-import com.dare.cinema_booking_system.movies.entity.Genre;
-import com.dare.cinema_booking_system.movies.entity.MovieEntity;
-import com.dare.cinema_booking_system.movies.service.MovieService;
+import com.dare.cinema_booking_system.movie.entity.Genre;
+import com.dare.cinema_booking_system.movie.entity.MovieEntity;
+import com.dare.cinema_booking_system.movie.service.MovieService;
 import com.dare.cinema_booking_system.rooms.entity.CinemaRoomEntity;
 import com.dare.cinema_booking_system.rooms.entity.SeatEntity;
 import com.dare.cinema_booking_system.rooms.service.CinemaRoomService;

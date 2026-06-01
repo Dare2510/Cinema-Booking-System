@@ -1,6 +1,6 @@
-package com.dare.cinema_booking_system.movies.exceptions;
+package com.dare.cinema_booking_system.movie.exceptions;
 
-import com.dare.cinema_booking_system.movies.entity.Genre;
+import com.dare.cinema_booking_system.movie.entity.Genre;
 
 public class MovieByGenreNotFoundException extends RuntimeException {
 

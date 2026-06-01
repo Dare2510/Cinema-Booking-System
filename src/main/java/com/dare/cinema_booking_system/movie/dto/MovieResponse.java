@@ -1,6 +1,6 @@
-package com.dare.cinema_booking_system.movies.dto;
+package com.dare.cinema_booking_system.movie.dto;
 
-import com.dare.cinema_booking_system.movies.entity.Genre;
+import com.dare.cinema_booking_system.movie.entity.Genre;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
 

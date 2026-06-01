@@ -1,7 +1,7 @@
-package com.dare.cinema_booking_system.movies.repository;
+package com.dare.cinema_booking_system.movie.repository;
 
-import com.dare.cinema_booking_system.movies.entity.Genre;
-import com.dare.cinema_booking_system.movies.entity.MovieEntity;
+import com.dare.cinema_booking_system.movie.entity.Genre;
+import com.dare.cinema_booking_system.movie.entity.MovieEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

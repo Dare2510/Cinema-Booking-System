@@ -1,7 +1,7 @@
 package com.dare.cinema_booking_system.integration;
 
-import com.dare.cinema_booking_system.movies.dto.MovieRequest;
-import com.dare.cinema_booking_system.movies.entity.Genre;
+import com.dare.cinema_booking_system.movie.dto.MovieRequest;
+import com.dare.cinema_booking_system.movie.entity.Genre;
 import com.dare.cinema_booking_system.rooms.dto.CinemaRoomRequest;
 import com.dare.cinema_booking_system.rooms.repository.CinemaRoomRepository;
 import com.dare.cinema_booking_system.rooms.repository.SeatRepository;

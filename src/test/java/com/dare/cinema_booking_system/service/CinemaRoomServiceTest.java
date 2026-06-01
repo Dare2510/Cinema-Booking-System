@@ -60,7 +60,7 @@ public class CinemaRoomServiceTest {
 		assertEquals(10, newRoom.getRows());
 		assertEquals(20, newRoom.getRowCapacity());
 		assertEquals(0, newRoom.getSeats().size());
-		assertEquals(200, newRoom.getCapacity());
+		assertEquals(200, newRoom.getRoomCapacity());
 
 		verify(seatRepository, times(1)).saveAll(any());
 		verify(cinemaRoomRepository, times(2)).save(any());
@@ -116,7 +116,7 @@ public class CinemaRoomServiceTest {
 		assertEquals(1, newRoomEntity.getRoomNumber());
 		assertEquals(20, newRoomEntity.getRows());
 		assertEquals(25, newRoomEntity.getRowCapacity());
-		assertEquals(500, newRoomEntity.getCapacity());
+		assertEquals(500, newRoomEntity.getRoomCapacity());
 		assertEquals(2, newRoomEntity.getSeats().size());
 
 		verify(cinemaRoomRepository, times(1)).findById(1L);

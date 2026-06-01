@@ -1,9 +1,9 @@
-package com.dare.cinema_booking_system.movies.controller;
+package com.dare.cinema_booking_system.movie.controller;
 
-import com.dare.cinema_booking_system.movies.dto.MovieRequest;
-import com.dare.cinema_booking_system.movies.dto.MovieResponse;
-import com.dare.cinema_booking_system.movies.entity.Genre;
-import com.dare.cinema_booking_system.movies.service.MovieService;
+import com.dare.cinema_booking_system.movie.dto.MovieRequest;
+import com.dare.cinema_booking_system.movie.dto.MovieResponse;
+import com.dare.cinema_booking_system.movie.entity.Genre;
+import com.dare.cinema_booking_system.movie.service.MovieService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
