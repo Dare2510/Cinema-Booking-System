@@ -1,7 +1,7 @@
 package com.dare.cinema_booking_system.reservations.entity;
 
-import com.dare.cinema_booking_system.screenings.entity.ScreeningSeatEntity;
 import com.dare.cinema_booking_system.screenings.entity.ScreeningEntity;
+import com.dare.cinema_booking_system.screenings.entity.ScreeningSeatEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -12,14 +12,15 @@ import java.util.List;
 
 @Entity
 @Table(name = "reservation")
-@Getter @Setter
+@Getter
+@Setter
 public class ReservationEntity {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	@Column(name = "created_at",nullable = false)
+	@Column(name = "created_at", nullable = false)
 	LocalDateTime createdAt;
 
 	@Column(name = "reservation_status", nullable = false)
@@ -53,7 +54,7 @@ public class ReservationEntity {
 		this.reservedSeats = new ArrayList<>();
 	}
 
-	public ReservationEntity(){
+	public ReservationEntity() {
 		this.createdAt = LocalDateTime.now();
 		this.reservationStatus = ReservationStatus.CREATED;
 		this.reservedSeats = new ArrayList<>();

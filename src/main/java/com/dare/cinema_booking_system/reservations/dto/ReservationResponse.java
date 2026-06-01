@@ -23,5 +23,4 @@ public class ReservationResponse {
 	public PaymentResponse paymentResponse;
 
 
-
 }

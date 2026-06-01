@@ -8,18 +8,18 @@ import com.dare.cinema_booking_system.rooms.entity.CinemaRoomEntity;
 import com.dare.cinema_booking_system.rooms.entity.SeatEntity;
 import com.dare.cinema_booking_system.rooms.repository.CinemaRoomRepository;
 import com.dare.cinema_booking_system.rooms.service.CinemaRoomService;
-import com.dare.cinema_booking_system.screenings.dto.ScreeningSeatResponse;
 import com.dare.cinema_booking_system.screenings.dto.ScreeningRequest;
 import com.dare.cinema_booking_system.screenings.dto.ScreeningResponse;
-import com.dare.cinema_booking_system.screenings.entity.ScreeningSeatEntity;
+import com.dare.cinema_booking_system.screenings.dto.ScreeningSeatResponse;
 import com.dare.cinema_booking_system.screenings.entity.ScreeningEntity;
+import com.dare.cinema_booking_system.screenings.entity.ScreeningSeatEntity;
 import com.dare.cinema_booking_system.screenings.entity.TimeSlot;
 import com.dare.cinema_booking_system.screenings.exceptions.ScreeningNotFoundException;
 import com.dare.cinema_booking_system.screenings.exceptions.ScreeningSeatNotAvailableException;
 import com.dare.cinema_booking_system.screenings.exceptions.ScreeningSlotAlreadyBookedException;
 import com.dare.cinema_booking_system.screenings.exceptions.ScreeningUpdateNotPossibleException;
-import com.dare.cinema_booking_system.screenings.repository.ScreeningSeatRepository;
 import com.dare.cinema_booking_system.screenings.repository.ScreeningRepository;
+import com.dare.cinema_booking_system.screenings.repository.ScreeningSeatRepository;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -102,7 +102,7 @@ public class ScreeningService {
 		boolean hasReservation = validateScreeningUpdate(screeningId);
 		boolean sameSpot = isSameSpot(toUpdate, screeningRequest);
 
-		if(sameSpot && !hasReservation) {
+		if (sameSpot && !hasReservation) {
 
 			return setterForUpdate(toUpdate, screeningRequest);
 		} else {
@@ -119,7 +119,7 @@ public class ScreeningService {
 					TimeSlot requestedTime = screeningRequest.getTimeSlot();
 
 					log.warn("Screening spot on {} at {} in room with ID {} is already reserved",
-							requestedDate,requestedTime,requestedRoom);
+							requestedDate, requestedTime, requestedRoom);
 					throw new ScreeningSlotAlreadyBookedException(requestedRoom.getId(), requestedDate, requestedTime);
 				}
 			} else {
@@ -153,7 +153,7 @@ public class ScreeningService {
 				});
 	}
 
-	public ScreeningSeatEntity  getScreeningSeatEntity(Long screeningSeatId) {
+	public ScreeningSeatEntity getScreeningSeatEntity(Long screeningSeatId) {
 		return screeningSeatRepository.findById(screeningSeatId).orElseThrow(
 				() -> {
 					log.info("Screening seat with ID {} not found or not available", screeningSeatId);
@@ -216,7 +216,7 @@ public class ScreeningService {
 		toUpdate.setTimes(requestedTime);
 
 		screeningRepository.save(toUpdate);
-			log.info("Screening with ID {} updated successfully", toUpdate.getId());
+		log.info("Screening with ID {} updated successfully", toUpdate.getId());
 		return responseBuilder(toUpdate);
 	}
 

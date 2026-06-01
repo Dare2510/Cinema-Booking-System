@@ -8,14 +8,14 @@ import com.dare.cinema_booking_system.rooms.entity.SeatEntity;
 import com.dare.cinema_booking_system.rooms.service.CinemaRoomService;
 import com.dare.cinema_booking_system.screenings.dto.ScreeningRequest;
 import com.dare.cinema_booking_system.screenings.dto.ScreeningResponse;
-import com.dare.cinema_booking_system.screenings.entity.ScreeningSeatEntity;
 import com.dare.cinema_booking_system.screenings.entity.ScreeningEntity;
+import com.dare.cinema_booking_system.screenings.entity.ScreeningSeatEntity;
 import com.dare.cinema_booking_system.screenings.entity.TimeSlot;
 import com.dare.cinema_booking_system.screenings.exceptions.ScreeningNotFoundException;
 import com.dare.cinema_booking_system.screenings.exceptions.ScreeningSlotAlreadyBookedException;
 import com.dare.cinema_booking_system.screenings.exceptions.ScreeningUpdateNotPossibleException;
-import com.dare.cinema_booking_system.screenings.repository.ScreeningSeatRepository;
 import com.dare.cinema_booking_system.screenings.repository.ScreeningRepository;
+import com.dare.cinema_booking_system.screenings.repository.ScreeningSeatRepository;
 import com.dare.cinema_booking_system.screenings.service.ScreeningService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -33,12 +33,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
-
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
 @ActiveProfiles("test")
 @ExtendWith(MockitoExtension.class)
@@ -213,7 +212,7 @@ public class ScreeningServiceTest {
 				.hasMessage("Screening with id 1 cannot be updated");
 
 		verify(screeningRepository).findById(screeningToUpdate.getId());
-		verify(movieService,never()).getMovieEntityById(updatedMovie.getId());
+		verify(movieService, never()).getMovieEntityById(updatedMovie.getId());
 		verify(cinemaRoomService, never()).getRoomEntity(room.getId());
 		verify(screeningSeatRepository).hasReservedOrSoldSeats(screeningToUpdate.getId());
 
@@ -292,7 +291,7 @@ public class ScreeningServiceTest {
 
 		verify(screeningRepository).findById(screeningToUpdate.getId());
 		verify(movieService).getMovieEntityById(updatedMovie.getId());
-		verify(cinemaRoomService,times(2)).getRoomEntity(newRoom.getId());
+		verify(cinemaRoomService, times(2)).getRoomEntity(newRoom.getId());
 		verify(screeningSeatRepository).hasReservedOrSoldSeats(screeningToUpdate.getId());
 
 		verify(screeningRepository).existsByCinemaRoomIdAndScreeningDateAndTimeSlot(

@@ -2,7 +2,9 @@ package com.dare.cinema_booking_system.movies.entity;
 
 import com.dare.cinema_booking_system.screenings.entity.ScreeningEntity;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.List;

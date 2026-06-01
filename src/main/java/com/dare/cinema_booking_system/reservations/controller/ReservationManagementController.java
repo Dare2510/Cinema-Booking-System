@@ -53,11 +53,10 @@ public class ReservationManagementController {
 	}
 
 	@PatchMapping("/expired")
-	public ResponseEntity<Void> expireTickets(){
+	public ResponseEntity<Void> expireTickets() {
 		reservationsService.setStatusOfExpiredTickets();
 		return ResponseEntity.ok().build();
 	}
-
 
 
 }

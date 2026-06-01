@@ -5,18 +5,18 @@ public enum ReservationStatus {
 	CONFIRMED,
 	CANCELLED;
 
-	public boolean correctStatusOrder(ReservationEntity toChange, ReservationStatus status){
+	public boolean correctStatusOrder(ReservationEntity toChange, ReservationStatus status) {
 		boolean validStatusChange = false;
-		switch(toChange.getReservationStatus()){
+		switch (toChange.getReservationStatus()) {
 			case CREATED:
-				if(status == CONFIRMED || status == CANCELLED){
+				if (status == CONFIRMED || status == CANCELLED) {
 					validStatusChange = true;
 				}
 				break;
-				case CONFIRMED:
-					if(status == CANCELLED) {
-						validStatusChange = true;
-					}
+			case CONFIRMED:
+				if (status == CANCELLED) {
+					validStatusChange = true;
+				}
 		}
 		return validStatusChange;
 	}

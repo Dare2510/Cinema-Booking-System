@@ -6,11 +6,11 @@ public enum PaymentStatus {
 	REFUND_PENDING,
 	REFUNDED;
 
-	public boolean validatorToCompletePayment(ReservationStatus currentStatus, PaymentStatus currentPaymentStatus){
+	public boolean validatorToCompletePayment(ReservationStatus currentStatus, PaymentStatus currentPaymentStatus) {
 		return currentStatus == ReservationStatus.CREATED && currentPaymentStatus == PaymentStatus.UNPAID;
 	}
 
-	public boolean validatorToRefundPayment(ReservationStatus currentReservationStatus, PaymentStatus currentPaymentStatus){
+	public boolean validatorToRefundPayment(ReservationStatus currentReservationStatus, PaymentStatus currentPaymentStatus) {
 		return currentPaymentStatus == PaymentStatus.REFUND_PENDING && currentReservationStatus == ReservationStatus.CANCELLED;
 	}
 }

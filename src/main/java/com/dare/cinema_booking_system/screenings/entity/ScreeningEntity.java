@@ -37,10 +37,10 @@ public class ScreeningEntity {
 	@Column(name = "time_slot", nullable = false)
 	private TimeSlot timeSlot;
 
-	@Column(name = "start_time" , nullable = false)
+	@Column(name = "start_time", nullable = false)
 	private LocalTime startTime;
 
-	@Column(name = "end_time" , nullable = false)
+	@Column(name = "end_time", nullable = false)
 	private LocalTime endTime;
 
 	@OneToMany(mappedBy = "screening", cascade = CascadeType.ALL)
@@ -62,7 +62,7 @@ public class ScreeningEntity {
 		this.movie = movie;
 		this.reservation = new ArrayList<>();
 		this.timeSlot = timeSlot;
-		}
+	}
 
 	public void setTimes(TimeSlot timeSlot) {
 		switch (timeSlot) {

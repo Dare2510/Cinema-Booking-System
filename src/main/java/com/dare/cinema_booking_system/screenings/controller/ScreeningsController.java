@@ -1,8 +1,8 @@
 package com.dare.cinema_booking_system.screenings.controller;
 
-import com.dare.cinema_booking_system.screenings.dto.ScreeningSeatResponse;
 import com.dare.cinema_booking_system.screenings.dto.ScreeningRequest;
 import com.dare.cinema_booking_system.screenings.dto.ScreeningResponse;
+import com.dare.cinema_booking_system.screenings.dto.ScreeningSeatResponse;
 import com.dare.cinema_booking_system.screenings.service.ScreeningService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;

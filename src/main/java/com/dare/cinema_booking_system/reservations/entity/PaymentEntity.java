@@ -9,7 +9,8 @@ import java.math.BigDecimal;
 
 @Entity
 @Table(name = "payment")
-@Getter @Setter
+@Getter
+@Setter
 @NoArgsConstructor
 public class PaymentEntity {
 
@@ -32,7 +33,7 @@ public class PaymentEntity {
 	@JoinColumn(name = "reservation_id")
 	private ReservationEntity reservation;
 
-	public PaymentEntity(ReservationEntity reservationEntity,BigDecimal amount,PaymentMethod paymentMethod) {
+	public PaymentEntity(ReservationEntity reservationEntity, BigDecimal amount, PaymentMethod paymentMethod) {
 		this.reservation = reservationEntity;
 		this.amount = amount;
 		this.paymentStatus = PaymentStatus.UNPAID;

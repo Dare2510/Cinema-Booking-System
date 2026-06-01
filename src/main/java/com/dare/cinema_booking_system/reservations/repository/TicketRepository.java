@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface TicketRepository extends JpaRepository<TicketEntity,Long> {
+public interface TicketRepository extends JpaRepository<TicketEntity, Long> {
 
 	Optional<TicketEntity> findByTicketNumber(String ticketNumber);
 

@@ -20,10 +20,12 @@ public class ReservationController {
 	public ResponseEntity<ReservationResponse> getScreeningById(@PathVariable Long reservationId) {
 		return ResponseEntity.ok(reservationsService.findReservationById(reservationId));
 	}
+
 	@PostMapping
-	public ResponseEntity<ReservationResponse> createReservations (@Valid @RequestBody ReservationRequest reservationRequest) {
+	public ResponseEntity<ReservationResponse> createReservations(@Valid @RequestBody ReservationRequest reservationRequest) {
 		return ResponseEntity.ok(reservationsService.createReservation(reservationRequest));
 	}
+
 	@PatchMapping("/{reservationId}/cancel")
 	public ResponseEntity<Void> cancelReservations(@PathVariable Long reservationId) {
 		reservationsService.cancelReservation(reservationId);

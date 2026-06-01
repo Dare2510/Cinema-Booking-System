@@ -54,12 +54,12 @@ public class MovieService {
 
 	public List<MovieResponse> getListOfByDuration(int duration) {
 		List<MovieEntity> listOfMovies = movieRepository.findByDurationGreaterThan(duration);
-			if (!listOfMovies.isEmpty()) {
-				return mappingListOfResponses(listOfMovies);
-			} else {
-				log.warn("No movies found with duration greater than {} min", duration);
-				throw  new MovieByDurationNotFoundException(duration);
-			}
+		if (!listOfMovies.isEmpty()) {
+			return mappingListOfResponses(listOfMovies);
+		} else {
+			log.warn("No movies found with duration greater than {} min", duration);
+			throw new MovieByDurationNotFoundException(duration);
+		}
 	}
 
 	public MovieResponse addMovies(MovieRequest movieRequest) {

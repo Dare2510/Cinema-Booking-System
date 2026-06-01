@@ -170,7 +170,7 @@ public class CinemaRoomIntegrationTest {
 				.andExpect(status().isCreated())
 				.andReturn().getResponse().getContentAsString();
 
-		return ((Number)JsonPath.read(responseJson, "$.id")).longValue();
+		return ((Number) JsonPath.read(responseJson, "$.id")).longValue();
 	}
 
 }

@@ -6,8 +6,8 @@ import com.dare.cinema_booking_system.rooms.dto.CinemaRoomRequest;
 import com.dare.cinema_booking_system.rooms.repository.CinemaRoomRepository;
 import com.dare.cinema_booking_system.screenings.dto.ScreeningRequest;
 import com.dare.cinema_booking_system.screenings.entity.TimeSlot;
-import com.dare.cinema_booking_system.screenings.repository.ScreeningSeatRepository;
 import com.dare.cinema_booking_system.screenings.repository.ScreeningRepository;
+import com.dare.cinema_booking_system.screenings.repository.ScreeningSeatRepository;
 import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -57,13 +57,13 @@ public class ScreeningIntegrationTest {
 	@Test
 	public void createScreening_whenMovieRoomAndScreeningAreValid_returns200() throws Exception {
 		MovieRequest movie = new MovieRequest("testTitle", "testDescription", 120, Genre.FANTASY);
-		CinemaRoomRequest room = new CinemaRoomRequest(5,10,20);
+		CinemaRoomRequest room = new CinemaRoomRequest(5, 10, 20);
 
 
 		Long movieId = getMovieId(movie);
 		Long roomId = getCinemaId(room);
 
-		ScreeningRequest screening = new ScreeningRequest(roomId,movieId, LocalDate.now(), TimeSlot.PRIME, BigDecimal.TEN);
+		ScreeningRequest screening = new ScreeningRequest(roomId, movieId, LocalDate.now(), TimeSlot.PRIME, BigDecimal.TEN);
 
 		mockMvc.perform(post("/api/screening")
 						.contentType(MediaType.APPLICATION_JSON)
@@ -83,17 +83,17 @@ public class ScreeningIntegrationTest {
 
 	@Test
 	public void createScreening_whenMovieDoesNotExist_returnsIsNotFound() throws Exception {
-		CinemaRoomRequest room = new CinemaRoomRequest(5,10,20);
+		CinemaRoomRequest room = new CinemaRoomRequest(5, 10, 20);
 		Long roomId = getCinemaId(room);
 
-		ScreeningRequest screening = new ScreeningRequest(roomId,99L, LocalDate.now(), TimeSlot.PRIME, BigDecimal.TEN);
+		ScreeningRequest screening = new ScreeningRequest(roomId, 99L, LocalDate.now(), TimeSlot.PRIME, BigDecimal.TEN);
 
 		mockMvc.perform(post("/api/screening")
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(screening)))
 				.andExpect(status().isNotFound())
 				.andExpect(jsonPath("$.message")
-				.value("Could not find movie with id: 99"));
+						.value("Could not find movie with id: 99"));
 	}
 
 	@Test
@@ -109,11 +109,12 @@ public class ScreeningIntegrationTest {
 				.andExpect(status().isNotFound())
 				.andExpect(jsonPath("$.message").value("Cinema Room with ID 9 not found"));
 	}
+
 	@Test
-	public void createScreening_whenJsonValueIsInvalid_returnsBadRequest() throws Exception{
+	public void createScreening_whenJsonValueIsInvalid_returnsBadRequest() throws Exception {
 
 		ScreeningRequest screening = new ScreeningRequest
-				(50L, 51L, LocalDate.of(2020,10,25), TimeSlot.PRIME, BigDecimal.TEN);
+				(50L, 51L, LocalDate.of(2020, 10, 25), TimeSlot.PRIME, BigDecimal.TEN);
 
 		mockMvc.perform(post("/api/screening")
 						.contentType(MediaType.APPLICATION_JSON)
@@ -136,24 +137,24 @@ public class ScreeningIntegrationTest {
 
 	@Test
 	public void getScreeningById_whenScreeningDoesNotExist_returnsNotFound() throws Exception {
-		mockMvc.perform(get("/api/screening/"+1000))
+		mockMvc.perform(get("/api/screening/" + 1000))
 				.andExpect(status().isNotFound())
-				.andExpect(jsonPath("$.message").value("Screening with id "+1000+" not found"));
+				.andExpect(jsonPath("$.message").value("Screening with id " + 1000 + " not found"));
 
 	}
 
 	@Test
 	public void getScreeningById_whenScreeningDoesExist_returnsIsOK() throws Exception {
 		MovieRequest movie = new MovieRequest("testTitle", "testDescription", 120, Genre.FANTASY);
-		CinemaRoomRequest room = new CinemaRoomRequest(5,10,20);
+		CinemaRoomRequest room = new CinemaRoomRequest(5, 10, 20);
 
 		Long movieId = getMovieId(movie);
 		Long roomId = getCinemaId(room);
 
-		ScreeningRequest screening = new ScreeningRequest(roomId,movieId, LocalDate.now(), TimeSlot.PRIME, BigDecimal.valueOf(15));
+		ScreeningRequest screening = new ScreeningRequest(roomId, movieId, LocalDate.now(), TimeSlot.PRIME, BigDecimal.valueOf(15));
 		Long screeningId = getScreeningId(screening);
 
-		mockMvc.perform(get("/api/screening/"+screeningId))
+		mockMvc.perform(get("/api/screening/" + screeningId))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.id").value(screeningId))
 				.andExpect(jsonPath("$.screeningDate").value(String.valueOf(LocalDate.now())))
@@ -170,34 +171,34 @@ public class ScreeningIntegrationTest {
 	@Test
 	public void deleteScreeningById_whenScreeningHasNoReservations_returnsNoContent() throws Exception {
 		MovieRequest movie = new MovieRequest("testTitle", "testDescription", 120, Genre.FANTASY);
-		CinemaRoomRequest room = new CinemaRoomRequest(5,10,20);
+		CinemaRoomRequest room = new CinemaRoomRequest(5, 10, 20);
 
 		Long movieId = getMovieId(movie);
 		Long roomId = getCinemaId(room);
 
-		ScreeningRequest screening = new ScreeningRequest(roomId,movieId, LocalDate.now(), TimeSlot.PRIME, BigDecimal.TEN);
+		ScreeningRequest screening = new ScreeningRequest(roomId, movieId, LocalDate.now(), TimeSlot.PRIME, BigDecimal.TEN);
 		Long screeningId = getScreeningId(screening);
 
-		mockMvc.perform(delete("/api/screening/"+screeningId))
+		mockMvc.perform(delete("/api/screening/" + screeningId))
 				.andExpect(status().isNoContent());
 	}
 
 	@Test
 	public void updateScreeningById_whenScreeningHasNoReservations_returnsOK() throws Exception {
 		MovieRequest movie = new MovieRequest("testTitle", "testDescription", 120, Genre.FANTASY);
-		CinemaRoomRequest room = new CinemaRoomRequest(5,10,20);
+		CinemaRoomRequest room = new CinemaRoomRequest(5, 10, 20);
 
 		Long movieId = getMovieId(movie);
 		Long roomId = getCinemaId(room);
 
-		ScreeningRequest screening = new ScreeningRequest(roomId,movieId, LocalDate.now(), TimeSlot.PRIME, BigDecimal.TEN);
+		ScreeningRequest screening = new ScreeningRequest(roomId, movieId, LocalDate.now(), TimeSlot.PRIME, BigDecimal.TEN);
 
 		Long screeningId = getScreeningId(screening);
-		ScreeningRequest update = new ScreeningRequest(roomId,movieId, LocalDate.now(), TimeSlot.EVENING, BigDecimal.valueOf(15));
+		ScreeningRequest update = new ScreeningRequest(roomId, movieId, LocalDate.now(), TimeSlot.EVENING, BigDecimal.valueOf(15));
 
-		mockMvc.perform(patch("/api/screening/"+screeningId)
-				.contentType(MediaType.APPLICATION_JSON)
-				.content(objectMapper.writeValueAsString(update)))
+		mockMvc.perform(patch("/api/screening/" + screeningId)
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(update)))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.id").value(screeningId))
 				.andExpect(jsonPath("$.screeningDate").value(String.valueOf(LocalDate.now())))
@@ -221,7 +222,7 @@ public class ScreeningIntegrationTest {
 				.andExpect(status().isOk())
 				.andReturn().getResponse().getContentAsString();
 
-		return ((Number)JsonPath.read(screeningResponseJson, "$.id")).longValue();
+		return ((Number) JsonPath.read(screeningResponseJson, "$.id")).longValue();
 	}
 
 	private Long getMovieId(MovieRequest movieRequest) throws Exception {
@@ -232,7 +233,7 @@ public class ScreeningIntegrationTest {
 				.andExpect(status().isCreated())
 				.andReturn().getResponse().getContentAsString();
 
-		return  ((Number)JsonPath.read(movieResponseJson, "$.id")).longValue();
+		return ((Number) JsonPath.read(movieResponseJson, "$.id")).longValue();
 	}
 
 	private Long getCinemaId(CinemaRoomRequest cinemaRoomRequest) throws Exception {
@@ -243,11 +244,8 @@ public class ScreeningIntegrationTest {
 				.andExpect(status().isCreated())
 				.andReturn().getResponse().getContentAsString();
 
-		return  ((Number)JsonPath.read(roomResponseJson, "$.id")).longValue();
+		return ((Number) JsonPath.read(roomResponseJson, "$.id")).longValue();
 	}
-
-
-
 
 
 }

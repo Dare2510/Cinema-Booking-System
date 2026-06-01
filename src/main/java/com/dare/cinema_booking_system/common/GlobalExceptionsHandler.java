@@ -160,7 +160,7 @@ public class GlobalExceptionsHandler {
 
 	@ExceptionHandler(ScreeningSeatNotAvailableException.class)
 	public ResponseEntity<ErrorResponse> handleScreeningSeatNotAvailableException(ScreeningSeatNotAvailableException ex,
-																				  HttpServletRequest request) {
+	                                                                              HttpServletRequest request) {
 		ErrorResponse error = new ErrorResponse(
 				HttpStatus.BAD_REQUEST.value(),
 				ex.getMessage(),
@@ -172,7 +172,7 @@ public class GlobalExceptionsHandler {
 
 	@ExceptionHandler(ReservationNotFoundException.class)
 	public ResponseEntity<ErrorResponse> handleReservationNotFoundException(ReservationNotFoundException ex,
-																			HttpServletRequest request) {
+	                                                                        HttpServletRequest request) {
 		ErrorResponse error = new ErrorResponse(
 				HttpStatus.NOT_FOUND.value(),
 				ex.getMessage(),
@@ -184,7 +184,7 @@ public class GlobalExceptionsHandler {
 
 	@ExceptionHandler(ReservationCancelNotOnTimeException.class)
 	public ResponseEntity<ErrorResponse> handleReservationCancelNotOnTimeException(ReservationCancelNotOnTimeException ex,
-																				   HttpServletRequest request) {
+	                                                                               HttpServletRequest request) {
 		ErrorResponse error = new ErrorResponse(
 				HttpStatus.BAD_REQUEST.value(),
 				ex.getMessage(),
@@ -196,7 +196,7 @@ public class GlobalExceptionsHandler {
 
 	@ExceptionHandler(ReservationInvalidStatusFlowException.class)
 	public ResponseEntity<ErrorResponse> handleReservationInvalidStatusFlowException(ReservationInvalidStatusFlowException ex,
-																					 HttpServletRequest request) {
+	                                                                                 HttpServletRequest request) {
 		ErrorResponse error = new ErrorResponse(
 				HttpStatus.BAD_REQUEST.value(),
 				ex.getMessage(),
@@ -208,7 +208,7 @@ public class GlobalExceptionsHandler {
 
 	@ExceptionHandler(ReservationRefundException.class)
 	public ResponseEntity<ErrorResponse> handleReservationRefundException(ReservationRefundException ex,
-																		  HttpServletRequest request) {
+	                                                                      HttpServletRequest request) {
 		ErrorResponse error = new ErrorResponse(
 				HttpStatus.BAD_REQUEST.value(),
 				ex.getMessage(),
@@ -220,7 +220,7 @@ public class GlobalExceptionsHandler {
 
 	@ExceptionHandler(ReservationCompletePaymentException.class)
 	public ResponseEntity<ErrorResponse> handleReservationCompletePaymentException(ReservationCompletePaymentException ex,
-																		   HttpServletRequest request) {
+	                                                                               HttpServletRequest request) {
 		ErrorResponse error = new ErrorResponse(
 				HttpStatus.BAD_REQUEST.value(),
 				ex.getMessage(),
@@ -232,7 +232,7 @@ public class GlobalExceptionsHandler {
 
 	@ExceptionHandler(TicketNotFoundException.class)
 	public ResponseEntity<ErrorResponse> handleTicketNotFoundException(TicketNotFoundException ex,
-																		   HttpServletRequest request) {
+	                                                                   HttpServletRequest request) {
 		ErrorResponse error = new ErrorResponse(
 				HttpStatus.NOT_FOUND.value(),
 				ex.getMessage(),
@@ -244,7 +244,7 @@ public class GlobalExceptionsHandler {
 
 	@ExceptionHandler(TicketUseNotPossibleException.class)
 	public ResponseEntity<ErrorResponse> handleTicketUseNotPossibleException(TicketUseNotPossibleException ex,
-																		   HttpServletRequest request) {
+	                                                                         HttpServletRequest request) {
 		ErrorResponse error = new ErrorResponse(
 				HttpStatus.BAD_REQUEST.value(),
 				ex.getMessage(),
