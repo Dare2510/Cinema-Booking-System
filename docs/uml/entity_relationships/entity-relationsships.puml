@@ -1,9 +1,15 @@
 @startchen
 
-entity reservations{
+entity reservation{
     id <<key>>
-    screenings_id <<FK>>
-    users_id <<FK>>
+    screening_id <<FK>>
+    created_at
+    reservation_status
+}
+
+entity reservation_screening_seats{
+    reservation_id <<FK>>
+    screening_seat_id <<FK>>
 }
 
 entity movies{
@@ -14,74 +20,68 @@ entity movies{
     duration
 }
 
-entity screenings{
+entity screening{
     id <<key>>
     movies_id <<FK>>
-    cinemaRooms_id <<FK>>
-    startTime
-    endTime
+    cinema_room_id
+    screening_date
     price
+    time_slot
+    start_time
+    end_time
 }
 
-entity users{
-    id<<key>>
-    name
-    surname
-    email
-    passwordHash
-    role
-}
-
-entity payments{
+entity payment{
     id <<key>>
     reservation_id <<FK>>
     amount
-    status
-    paymentMethod
+    payment_status
+    payment_method
 }
 
-entity cinemaRooms{
-    id<<key>>
+entity cinemaRoom{
+    id <<key>>
     roomNumber
+    rows
+    rowCapacity
     capacity
-
 }
 
 entity tickets{
     id <<key>>
-    screeningSeats_id <<FK>>
-    reservations_id <<FK>>
-    ticketNumber
-    status
-    issuedAt
-
+    reservation_id <<FK>>
+    ticket_number
+    ticket_status
+    date_issued
 }
+
 entity seats{
     id <<key>>
-    cinemaRooms_id <<FK>>
+    cinemaRoom_id <<FK>>
     rowNumber
     seatNumber
 }
 
-relationship screeningSeats{
- id <<key>>
- screenings_id <<FK>>
- seats_id <<FK>>
- status
+entity screening_seats{
+    id <<key>>
+    screening_id <<FK>>
+    seats_id <<FK>>
+    screeningSeatStatus
 }
 
-reservations =(n,1)= users
-reservations =1= payments
-reservations =(1,n)= tickets
+relationship reservationSeats{
+}
 
-screenings =(n,1)= cinemaRooms
-screenings =(n,1)= movies
+reservation =(n,1)= screening
+reservation =1= payment
+reservation =1= tickets
+reservation =(1,n)= reservation_screening_seats
+screening_seats =(1,n)= reservation_screening_seats
 
-reservations =(n,1)= screenings
+screening =(n,1)= movies
+screening =(1,n)= screening_seats
 
-cinemaRooms =(1,n)= seats
-seats =(1,n)= screeningSeats
-screenings =(1,n)= screeningSeats
-tickets =(0,1)= screeningSeats
+cinemaRoom =(1,n)= seats
+seats =(1,n)= screening_seats
 
 @endchen

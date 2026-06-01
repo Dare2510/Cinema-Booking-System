@@ -1,99 +1,117 @@
-# Cinema Booking Backend
+# Cinema Booking System
 
-## Overview
+Backend-only portfolio project built with **Java** and **Spring Boot**.
 
-This project is a backend application for a cinema booking system.
-It is built to manage movies, screenings, cinema rooms, seats, reservations, tickets, payments, and user authentication.
+The application models a cinema booking flow with movies, cinema rooms, seats, screenings, reservations, tickets and an internal payment status flow. The main focus is backend architecture, domain modeling, reservation consistency, validation, testing and security.
 
-The goal of this project is to design and implement a structured backend system instead of coding features without a clear domain model.
+## Tech Stack
 
-## Version 1 Scope
+- Java
+- Spring Boot
+- Spring Data JPA / Hibernate
+- PostgreSQL
+- Maven
+- JUnit / Mockito
+- JWT Security planned
+- Docker planned
 
-Version 1 focuses on the core booking flow:
+## Features
 
-* user authentication with JWT
-* movie management
-* screening management
-* cinema room and seat management
-* reservation creation and cancellation
-* ticket creation
-* payment handling
+- Movie management
+- Cinema room and seat management
+- Screening management
+- Seat availability per screening
+- Reservation creation and cancellation
+- Ticket generation and ticket validation
+- Internal payment and refund status flow
+- Customer and management API structure
 
-Out of scope for version 1:
+## Core Booking Flow
 
-* frontend application
-* email notifications
-* refunds
-* advanced reporting
-* multi-cinema support
-* external payment provider integration
+1. A screening is created for a movie and a cinema room.
+2. Seats for that screening are generated as screening seats.
+3. A customer checks the free seats for a screening.
+4. A customer creates a reservation with selected cinema room seat IDs.
+5. The selected screening seats are marked as reserved.
+6. A ticket and payment record are created for the reservation.
+7. Staff or admin can complete payment, complete refund or validate tickets.
 
-## Main Features
+## API Overview
 
-* login with JWT
-* create and manage screenings
-* browse movies and screenings
-* create reservations
-* cancel reservations
-* assign tickets to reserved screening seats
-* store payment information
+### Customer / Reservation API
 
-## Domain Model
+```http
+GET  /api/reservations/screenings/{screeningId}/free-seats
+POST /api/reservations
+GET  /api/reservations/{reservationId}
+POST /api/reservations/{reservationId}/cancel
+```
 
-Main entities in the system:
+### Management API
 
-* User
-* Movie
-* Screening
-* CinemaRoom
-* Seat
-* Reservation
-* Ticket
-* Payment
-* ScreeningSeat
+```http
+GET   /api/management/reservations
+GET   /api/management/reservations/{reservationId}
+POST  /api/management/reservations/{reservationId}/cancel
+PATCH /api/management/reservations/{reservationId}/payment/complete
+PATCH /api/management/reservations/{reservationId}/refund/complete
+PATCH /api/management/reservations/tickets/{ticketNumber}/used
+```
 
-## Technology Stack
+### Movie, Screening and Room APIs
 
-* Java
-* Spring Boot
-* Spring Security
-* JWT
-* JPA / Hibernate
-* PostgreSQL
-* Maven
-* PlantUML
+The project also contains endpoints for managing movies, cinema rooms, seats and screenings.
+These endpoints are part of the backend administration flow and will be protected with role-based security.
 
-## Documentation
+## Example Reservation Request
 
-Project planning currently includes:
+```json
+{
+  "screeningId": 1,
+  "cinemaRoomSeatIds": [1, 2],
+  "paymentMethod": "ONLINE"
+}
+```
 
-* use case diagrams
-* class diagram
-* sequence diagrams
-* ER diagram
+## Domain Notes
 
-These diagrams are stored in the `docs/uml` folder.
+A physical seat belongs to a cinema room.  
+A screening seat belongs to a specific screening and represents the availability of that physical seat for that screening.
+
+This distinction is important because the same physical seat can be free in one screening and reserved in another.
+
+Reservations are linked to their reserved screening seats through a join table, so cancellation only affects the seats that belong to the cancelled reservation.
 
 ## Current Status
 
-The project is currently in the planning and design phase.
+Implemented:
 
-Finished so far:
+- Core movie, room, screening and reservation logic
+- Seat availability handling
+- Reservation cancellation flow
+- Ticket and payment status handling
+- UML documentation
 
-* project scope definition
-* domain object analysis
-* class diagram draft
-* sequence diagrams for core flows
-* ER diagram draft
-* define API endpoints
+Planned before final portfolio version:
 
-Next steps:
+- Unit tests for reservation and status logic
+- Integration tests for reservation endpoints
+- JWT authentication
+- Role-based authorization
+- Docker setup with PostgreSQL
 
-* create JPA entities
-* design database migrations
-* implement authentication
-* implement reservation flow
+## Out of Scope
 
-## Project Goal
+This project intentionally does not include:
 
-This project is primarily meant to improve backend design skills, domain modeling, and structured project planning.
+- Frontend application
+- External payment provider
+- Email notifications
+- Advanced reporting
+
+The goal is to keep the scope focused on backend development.
+
+## Documentation
+
+UML diagrams are included in the project documentation folder.
+

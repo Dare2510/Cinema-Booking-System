@@ -12,17 +12,22 @@ rectangle "Cinema Booking System" {
   usecase "Login" as UC2
   usecase "Browse Movies" as UC3
   usecase "Filter Movies" as UC4
-  usecase "View Available Seats" as UC5
-  usecase "Reserve Ticket" as UC6
-  usecase "Cancel Reservation" as UC7
+  usecase "View Movie Details" as UC5
+  usecase "Browse Screenings" as UC6
+  usecase "View Free Seats" as UC7
+  usecase "Create Reservation" as UC8
+  usecase "View Reservation" as UC9
+  usecase "Cancel Reservation" as UC10
 
-  usecase "Manage Movies" as UC8
-  usecase "Schedule Movies" as UC9
-  usecase "Receive Payment" as UC10
-  usecase "Manage Reservations" as UC11
-  usecase "View Movie Details" as UC12
+  usecase "Manage Movies" as UC11
+  usecase "Manage Screenings" as UC12
+  usecase "Manage Reservations" as UC13
+  usecase "Complete Payment" as UC14
+  usecase "Complete Refund" as UC15
+  usecase "Validate Ticket" as UC16
+  usecase "Expire Tickets" as UC17
 
-  usecase "Manage Cinema Rooms" as UC13
+  usecase "Manage Cinema Rooms" as UC18
 }
 
 customer --> UC1
@@ -32,13 +37,26 @@ customer --> UC4
 customer --> UC5
 customer --> UC6
 customer --> UC7
+customer --> UC8
+customer --> UC9
+customer --> UC10
 
-staff --> UC8
-staff --> UC9
-staff --> UC10
+staff --> UC3
+staff --> UC4
+staff --> UC5
+staff --> UC6
 staff --> UC11
 staff --> UC12
+staff --> UC13
+staff --> UC14
+staff --> UC15
+staff --> UC16
+staff --> UC17
 
-admin --> UC13
+admin --> UC18
+
+UC8 ..> UC7
+UC8 ..> UC14
+UC10 ..> UC15
 
 @enduml
