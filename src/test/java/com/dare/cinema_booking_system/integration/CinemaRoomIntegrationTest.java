@@ -62,7 +62,7 @@ public class CinemaRoomIntegrationTest {
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.id").value(id))
 				.andExpect(jsonPath("$.roomNumber").value(1))
-				.andExpect(jsonPath("$.capacity").value(200));
+				.andExpect(jsonPath("$.roomCapacity").value(200));
 	}
 
 	@Test
@@ -97,7 +97,7 @@ public class CinemaRoomIntegrationTest {
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.id").value(id))
 				.andExpect(jsonPath("$.roomNumber").value(1))
-				.andExpect(jsonPath("$.capacity").value(250));
+				.andExpect(jsonPath("$.roomCapacity").value(250));
 
 	}
 

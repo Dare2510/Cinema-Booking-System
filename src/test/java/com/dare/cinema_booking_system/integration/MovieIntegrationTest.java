@@ -3,6 +3,11 @@ package com.dare.cinema_booking_system.integration;
 import com.dare.cinema_booking_system.movie.dto.MovieRequest;
 import com.dare.cinema_booking_system.movie.entity.Genre;
 import com.dare.cinema_booking_system.movie.repository.MovieRepository;
+import com.dare.cinema_booking_system.rooms.dto.CinemaRoomRequest;
+import com.dare.cinema_booking_system.rooms.repository.CinemaRoomRepository;
+import com.dare.cinema_booking_system.screenings.dto.ScreeningRequest;
+import com.dare.cinema_booking_system.screenings.entity.TimeSlot;
+import com.dare.cinema_booking_system.screenings.repository.ScreeningRepository;
 import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -13,6 +18,9 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import tools.jackson.databind.ObjectMapper;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -32,10 +40,18 @@ public class MovieIntegrationTest {
 	@Autowired
 	private MovieRepository movieRepository;
 
+	@Autowired
+	private ScreeningRepository screeningRepository;
+
+	@Autowired
+	private CinemaRoomRepository cinemaRoomRepository;
+
 
 	@AfterEach
 	public void tearDown() throws Exception {
 		movieRepository.deleteAll();
+		cinemaRoomRepository.deleteAll();
+		screeningRepository.deleteAll();
 	}
 
 	@Test
@@ -117,7 +133,7 @@ public class MovieIntegrationTest {
 	}
 
 	@Test
-	public void updateMovie_whenMoviesExistAndRequestIsValid_returnIsOK() throws Exception {
+	public void updateMovie_whenMoviesExistAndRequestIsValidAndNoScreeningExits_returnIsOK() throws Exception {
 		MovieRequest request = new MovieRequest(
 				"testTitle", "testDescription", 100, Genre.FANTASY);
 
@@ -134,7 +150,34 @@ public class MovieIntegrationTest {
 	}
 
 	@Test
-	public void deleteMovie_whenMoviesExistAndRequestIsValid_returnNoContent() throws Exception {
+	public void updateMovie_whenMoviesExistAndRequestIsValidAndScreeningExits_returnsBadRequest() throws Exception {
+		MovieRequest request = new MovieRequest(
+				"testTitle", "testDescription", 100, Genre.FANTASY);
+
+		CinemaRoomRequest roomRequest = new CinemaRoomRequest(10, 10, 20);
+		Long movieId = getMovieId(request);
+		Long roomId = getCinemaId(roomRequest);
+
+		ScreeningRequest screeningRequest = new ScreeningRequest(roomId, movieId, LocalDate.now(), TimeSlot.PRIME, BigDecimal.TEN);
+
+		mockMvc.perform(post("/api/screening")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(screeningRequest)))
+				.andExpect(status().isOk());
+
+		request.setTitle("newTitle");
+
+		mockMvc.perform(patch("/api/movies/" + movieId)
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(request)))
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.message").
+						value("Movie with id " + movieId + " cannot be updated, screening exits"));
+
+	}
+
+	@Test
+	public void deleteMovie_whenMoviesExistAndRequestIsValidAndNoScreeningExists_returnNoContent() throws Exception {
 		MovieRequest request = new MovieRequest(
 				"testTitle", "testDescription", 100, Genre.FANTASY);
 
@@ -142,6 +185,30 @@ public class MovieIntegrationTest {
 
 		mockMvc.perform(delete("/api/movies/" + id))
 				.andExpect(status().isNoContent());
+
+	}
+
+	@Test
+	public void deleteMovie_whenMoviesExistAndRequestIsValidAndScreeningExists_returnsBadRequest() throws Exception {
+		MovieRequest request = new MovieRequest(
+				"testTitle", "testDescription", 100, Genre.FANTASY);
+
+		CinemaRoomRequest roomRequest = new CinemaRoomRequest(10, 10, 20);
+		Long movieId = getMovieId(request);
+		Long roomId = getCinemaId(roomRequest);
+
+		ScreeningRequest screeningRequest = new ScreeningRequest(roomId, movieId, LocalDate.now(), TimeSlot.PRIME, BigDecimal.TEN);
+
+		mockMvc.perform(post("/api/screening")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(screeningRequest)))
+				.andExpect(status().isOk());
+
+		mockMvc.perform(delete("/api/movies/" + movieId))
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.message")
+						.value("Movie with id " + movieId + " cannot be deleted, screening exits"));
+		;
 
 	}
 
@@ -168,5 +235,17 @@ public class MovieIntegrationTest {
 
 		return ((Number) JsonPath.read(responseJson, "$.id")).longValue();
 	}
+
+	private Long getCinemaId(CinemaRoomRequest cinemaRoomRequest) throws Exception {
+
+		String roomResponseJson = mockMvc.perform(post("/api/rooms")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(cinemaRoomRequest)))
+				.andExpect(status().isCreated())
+				.andReturn().getResponse().getContentAsString();
+
+		return ((Number) JsonPath.read(roomResponseJson, "$.id")).longValue();
+	}
+
 
 }

@@ -5,11 +5,10 @@ import com.dare.cinema_booking_system.movie.dto.MovieRequest;
 import com.dare.cinema_booking_system.movie.dto.MovieResponse;
 import com.dare.cinema_booking_system.movie.entity.Genre;
 import com.dare.cinema_booking_system.movie.entity.MovieEntity;
-import com.dare.cinema_booking_system.movie.exceptions.MovieByDurationNotFoundException;
-import com.dare.cinema_booking_system.movie.exceptions.MovieByGenreNotFoundException;
-import com.dare.cinema_booking_system.movie.exceptions.MovieNotFoundException;
+import com.dare.cinema_booking_system.movie.exceptions.*;
 import com.dare.cinema_booking_system.movie.repository.MovieRepository;
 import com.dare.cinema_booking_system.movie.service.MovieService;
+import com.dare.cinema_booking_system.screenings.repository.ScreeningRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -35,6 +34,8 @@ public class MovieServiceTest {
 
 	@Mock
 	private MovieRepository movieRepository;
+	@Mock
+	private ScreeningRepository screeningRepository;
 	@Spy
 	private ModelMapper modelMapper;
 	@InjectMocks
@@ -56,13 +57,14 @@ public class MovieServiceTest {
 	}
 
 	@Test
-	public void updateMovie_whenMovieIsFound_returnsMovieResponse() {
+	public void updateMovie_whenMovieIsFoundAndNoScreeningExits_returnsMovieResponse() {
 
 		MovieRequest newInformation = new MovieRequest("newTitle", "newDescription", 99, Genre.COMEDY);
 		MovieEntity toUpdate = new MovieEntity("testTitle", "testDescription", Genre.COMEDY, 99);
 		Long movieId = toUpdate.getId();
 
 		when(movieRepository.findById(movieId)).thenReturn(Optional.of(toUpdate));
+		when(screeningRepository.existsByMovieId(movieId)).thenReturn(false);
 
 		movieService.updateMovies(movieId, newInformation);
 
@@ -71,6 +73,29 @@ public class MovieServiceTest {
 
 		assertEquals("newTitle", toUpdate.getTitle());
 		assertEquals("newDescription", toUpdate.getDescription());
+
+	}
+
+	@Test
+	public void updateMovie_whenMovieIsFoundAndScreeningExits_throwMovieUpdateNotPossibleException() {
+
+		MovieRequest newInformation = new MovieRequest("newTitle", "newDescription", 99, Genre.COMEDY);
+		MovieEntity toUpdate = new MovieEntity("testTitle", "testDescription", Genre.COMEDY, 99);
+		Long movieId = toUpdate.getId();
+
+		when(movieRepository.findById(movieId)).thenReturn(Optional.of(toUpdate));
+		when(screeningRepository.existsByMovieId(movieId)).thenReturn(true);
+
+		assertThatThrownBy(() -> movieService.updateMovies(movieId, newInformation))
+				.isInstanceOf(MovieUpdateNotPossibleException.class)
+				.hasMessage("Movie with id " + movieId + " cannot be updated, screening exits");
+
+		verify(movieRepository, times(1)).findById(movieId);
+		verify(movieRepository, never()).save(any());
+		verify(screeningRepository, times(1)).existsByMovieId(movieId);
+
+		assertEquals("testTitle", toUpdate.getTitle());
+		assertEquals("testDescription", toUpdate.getDescription());
 
 	}
 
@@ -84,17 +109,35 @@ public class MovieServiceTest {
 	}
 
 	@Test
-	public void deleteMovie_whenMovieIsFound_successful() {
+	public void deleteMovie_whenMovieIsFoundAndNoScreeningExits_successful() {
 		MovieEntity toDelete = new MovieEntity("testTitle", "testDescription", Genre.COMEDY, 99);
 		Long movieId = toDelete.getId();
 
 		when(movieRepository.findById(movieId)).thenReturn(Optional.of(toDelete));
+		when(screeningRepository.existsByMovieId(movieId)).thenReturn(false);
 		movieService.deleteMovies(movieId);
 
 		verify(movieRepository, times(1)).findById(movieId);
 		verify(movieRepository, times(1)).delete(toDelete);
+		verify(screeningRepository, times(1)).existsByMovieId(movieId);
 
 		assertFalse(movieRepository.existsById(movieId));
+	}
+
+	@Test
+	public void deleteMovie_whenMovieIsFoundAndScreeningExits_throwsMovieDeletionNotPossibleException() {
+		MovieEntity toDelete = new MovieEntity("testTitle", "testDescription", Genre.COMEDY, 99);
+		Long movieId = toDelete.getId();
+
+		when(movieRepository.findById(movieId)).thenReturn(Optional.of(toDelete));
+		when(screeningRepository.existsByMovieId(movieId)).thenReturn(true);
+		assertThatThrownBy(() -> movieService.deleteMovies(movieId))
+				.isInstanceOf(MovieDeletionNotPossibleException.class)
+				.hasMessage("Movie with id " + movieId + " cannot be deleted, screening exits");
+
+		verify(movieRepository, times(1)).findById(movieId);
+		verify(movieRepository, never()).delete(toDelete);
+		verify(screeningRepository, times(1)).existsByMovieId(movieId);
 	}
 
 	@Test

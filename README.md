@@ -1,6 +1,6 @@
 # Cinema Booking System
 
-Backend-only portfolio project built with **Java** and **Spring Boot**.
+Backend-only project built with **Java** and **Spring Boot**.
 
 The application models a cinema booking flow with movies, cinema rooms, seats, screenings, reservations, tickets and an internal payment status flow. The main focus is backend architecture, domain modeling, reservation consistency, validation, testing and security.
 

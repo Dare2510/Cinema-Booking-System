@@ -77,7 +77,7 @@ public class ScreeningIntegrationTest {
 				.andExpect(jsonPath("$.movieInformation.duration").value(120))
 				.andExpect(jsonPath("$.movieInformation.genre").value("FANTASY"))
 				.andExpect(jsonPath("$.cinemaRoomInformation.roomNumber").value(room.getRoomNumber()))
-				.andExpect(jsonPath("$.cinemaRoomInformation.capacity").value(200))
+				.andExpect(jsonPath("$.cinemaRoomInformation.roomCapacity").value(200))
 				.andExpect(jsonPath("$.timeSlot").value("PRIME"));
 	}
 
@@ -164,7 +164,7 @@ public class ScreeningIntegrationTest {
 				.andExpect(jsonPath("$.movieInformation.duration").value(120))
 				.andExpect(jsonPath("$.movieInformation.genre").value("FANTASY"))
 				.andExpect(jsonPath("$.cinemaRoomInformation.roomNumber").value(room.getRoomNumber()))
-				.andExpect(jsonPath("$.cinemaRoomInformation.capacity").value(200))
+				.andExpect(jsonPath("$.cinemaRoomInformation.roomCapacity").value(200))
 				.andExpect(jsonPath("$.timeSlot").value("PRIME"));
 	}
 
@@ -208,7 +208,7 @@ public class ScreeningIntegrationTest {
 				.andExpect(jsonPath("$.movieInformation.duration").value(120))
 				.andExpect(jsonPath("$.movieInformation.genre").value("FANTASY"))
 				.andExpect(jsonPath("$.cinemaRoomInformation.roomNumber").value(room.getRoomNumber()))
-				.andExpect(jsonPath("$.cinemaRoomInformation.capacity").value(200))
+				.andExpect(jsonPath("$.cinemaRoomInformation.roomCapacity").value(200))
 				.andExpect(jsonPath("$.timeSlot").value("EVENING"));
 	}
 

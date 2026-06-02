@@ -13,5 +13,5 @@ public class CinemaRoomResponse {
 
 	private Long id;
 	private int roomNumber;
-	private int capacity;
+	private int roomCapacity;
 }

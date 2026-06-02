@@ -239,7 +239,7 @@ public class ScreeningService {
 						.build())
 				.cinemaRoomInformation(CinemaRoomResponse.builder()
 						.roomNumber(screeningRoom.getRoomNumber())
-						.capacity(screeningRoom.getRoomCapacity())
+						.roomCapacity(screeningRoom.getRoomCapacity())
 						.build()
 				)
 				.build();

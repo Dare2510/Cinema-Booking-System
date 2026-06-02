@@ -4,10 +4,9 @@ import com.dare.cinema_booking_system.movie.dto.MovieRequest;
 import com.dare.cinema_booking_system.movie.dto.MovieResponse;
 import com.dare.cinema_booking_system.movie.entity.Genre;
 import com.dare.cinema_booking_system.movie.entity.MovieEntity;
-import com.dare.cinema_booking_system.movie.exceptions.MovieByDurationNotFoundException;
-import com.dare.cinema_booking_system.movie.exceptions.MovieByGenreNotFoundException;
-import com.dare.cinema_booking_system.movie.exceptions.MovieNotFoundException;
+import com.dare.cinema_booking_system.movie.exceptions.*;
 import com.dare.cinema_booking_system.movie.repository.MovieRepository;
+import com.dare.cinema_booking_system.screenings.repository.ScreeningRepository;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
@@ -25,6 +24,7 @@ public class MovieService {
 
 	private final MovieRepository movieRepository;
 	private final ModelMapper modelMapper;
+	private final ScreeningRepository screeningRepository;
 
 	public Page<MovieResponse> getPageOfMovies(Pageable pageable) {
 		return movieRepository.findAll(pageable)
@@ -74,18 +74,32 @@ public class MovieService {
 	public MovieResponse updateMovies(Long movieId, MovieRequest movieRequest) {
 		MovieEntity toUpdate = getMovieEntityById(movieId);
 
-		modelMapper.map(movieRequest, toUpdate);
-		movieRepository.save(toUpdate);
+		boolean screeningExists = screeningRepository.existsByMovieId(movieId);
 
-		log.info("Updated movie with ID {}", toUpdate.getId());
-		return mappingResponse(toUpdate);
+		if (screeningExists) {
+			log.warn("Movie with ID {} cannot be updated, screening exits", movieId);
+			throw new MovieUpdateNotPossibleException(movieId);
+		} else {
+			modelMapper.map(movieRequest, toUpdate);
+			movieRepository.save(toUpdate);
+
+			log.info("Updated movie with ID {}", toUpdate.getId());
+			return mappingResponse(toUpdate);
+		}
 	}
 
 	public void deleteMovies(Long movieId) {
 		MovieEntity movieEntity = getMovieEntityById(movieId);
 
-		movieRepository.delete(movieEntity);
-		log.info("Deleted movie with ID {}", movieEntity.getId());
+		boolean screeningExists = screeningRepository.existsByMovieId(movieId);
+
+		if (screeningExists) {
+			log.warn("Movie with ID {} cannot be deleted, screening exits", movieId);
+			throw new MovieDeletionNotPossibleException(movieId);
+		} else {
+			movieRepository.delete(movieEntity);
+			log.info("Deleted movie with ID {}", movieEntity.getId());
+		}
 	}
 	//Helper Methods
 

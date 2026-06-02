@@ -1,9 +1,6 @@
 package com.dare.cinema_booking_system.common;
 
-import com.dare.cinema_booking_system.movie.exceptions.MovieByDurationNotFoundException;
-import com.dare.cinema_booking_system.movie.exceptions.MovieByGenreNotFoundException;
-import com.dare.cinema_booking_system.movie.exceptions.MovieNotFoundException;
-import com.dare.cinema_booking_system.movie.exceptions.MovieUpdateNotPossibleException;
+import com.dare.cinema_booking_system.movie.exceptions.*;
 import com.dare.cinema_booking_system.reservations.exceptions.*;
 import com.dare.cinema_booking_system.rooms.exceptions.CinemaRoomChangesNotPossibleException;
 import com.dare.cinema_booking_system.rooms.exceptions.CinemaRoomNotFoundException;
@@ -77,6 +74,18 @@ public class GlobalExceptionsHandler {
 	@ExceptionHandler(MovieUpdateNotPossibleException.class)
 	public ResponseEntity<ErrorResponse> handleMovieUpdateNotPossibleException(MovieUpdateNotPossibleException ex,
 	                                                                           HttpServletRequest request) {
+		ErrorResponse error = new ErrorResponse(
+				HttpStatus.BAD_REQUEST.value(),
+				ex.getMessage(),
+				request.getRequestURI(),
+				LocalDateTime.now()
+		);
+		return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+	}
+
+	@ExceptionHandler(MovieDeletionNotPossibleException.class)
+	public ResponseEntity<ErrorResponse> handleMovieDeletionNotPossibleException(MovieDeletionNotPossibleException ex,
+	                                                                             HttpServletRequest request) {
 		ErrorResponse error = new ErrorResponse(
 				HttpStatus.BAD_REQUEST.value(),
 				ex.getMessage(),
