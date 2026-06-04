@@ -1,6 +1,5 @@
 package com.dare.cinema_booking_system.service;
 
-
 import com.dare.cinema_booking_system.movie.dto.MovieRequest;
 import com.dare.cinema_booking_system.movie.dto.MovieResponse;
 import com.dare.cinema_booking_system.movie.entity.Genre;
@@ -16,180 +15,299 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
-import org.springframework.test.context.ActiveProfiles;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-@ActiveProfiles("test")
 @ExtendWith(MockitoExtension.class)
-public class MovieServiceTest {
+class MovieServiceTest {
+
+	private static final Long MOVIE_ID = 1L;
+
+	private static final String TITLE = "testTitle";
+	private static final String DESCRIPTION = "testDescription";
+	private static final int DURATION = 99;
+	private static final Genre GENRE = Genre.COMEDY;
 
 	@Mock
 	private MovieRepository movieRepository;
+
 	@Mock
 	private ScreeningRepository screeningRepository;
+
 	@Spy
 	private ModelMapper modelMapper;
+
 	@InjectMocks
 	private MovieService movieService;
 
 	@Test
-	public void addMovie_whenSuccessful_returnsMovieResponse() {
-		MovieRequest toAdd = new MovieRequest("testTitle", "testDescription", 99, Genre.COMEDY);
+	void addMovie_whenSuccessful_returnsMovieResponse() {
+		MovieRequest request = movieRequest();
 
-		when(movieRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
-		MovieResponse response = movieService.addMovies(toAdd);
+		when(movieRepository.save(any(MovieEntity.class)))
+				.thenAnswer(invocation -> {
+					MovieEntity movie = invocation.getArgument(0);
+					movie.setId(MOVIE_ID);
+					return movie;
+				});
 
-		assertEquals(toAdd.title, response.title);
-		assertEquals(toAdd.description, response.description);
-		assertEquals(toAdd.genre, response.genre);
-		assertEquals(toAdd.duration, response.duration);
-		verify(movieRepository, times(1)).save(any());
+		MovieResponse response = movieService.addMovies(request);
 
+		assertMovieResponse(response, request.title, request.description, request.duration, request.genre);
+
+		verify(movieRepository).save(any(MovieEntity.class));
+		verifyNoInteractions(screeningRepository);
 	}
 
 	@Test
-	public void updateMovie_whenMovieIsFoundAndNoScreeningExits_returnsMovieResponse() {
+	void updateMovie_whenMovieIsFoundAndNoScreeningExists_returnsMovieResponse() {
+		MovieEntity movie = movieEntity();
+		MovieRequest request = movieRequest("newTitle", "newDescription", 120, Genre.DRAMA);
 
-		MovieRequest newInformation = new MovieRequest("newTitle", "newDescription", 99, Genre.COMEDY);
-		MovieEntity toUpdate = new MovieEntity("testTitle", "testDescription", Genre.COMEDY, 99);
-		Long movieId = toUpdate.getId();
+		when(movieRepository.findById(MOVIE_ID)).thenReturn(Optional.of(movie));
+		when(screeningRepository.existsByMovieId(MOVIE_ID)).thenReturn(false);
+		when(movieRepository.save(any(MovieEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-		when(movieRepository.findById(movieId)).thenReturn(Optional.of(toUpdate));
-		when(screeningRepository.existsByMovieId(movieId)).thenReturn(false);
+		MovieResponse response = movieService.updateMovies(MOVIE_ID, request);
 
-		movieService.updateMovies(movieId, newInformation);
+		assertMovieResponse(response, "newTitle", "newDescription", 120, Genre.DRAMA);
 
-		verify(movieRepository, times(1)).findById(movieId);
-		verify(movieRepository, times(1)).save(any());
+		assertEquals("newTitle", movie.getTitle());
+		assertEquals("newDescription", movie.getDescription());
+		assertEquals(120, movie.getDuration());
+		assertEquals(Genre.DRAMA, movie.getGenre());
 
-		assertEquals("newTitle", toUpdate.getTitle());
-		assertEquals("newDescription", toUpdate.getDescription());
-
+		verify(movieRepository).findById(MOVIE_ID);
+		verify(screeningRepository).existsByMovieId(MOVIE_ID);
+		verify(movieRepository).save(movie);
 	}
 
 	@Test
-	public void updateMovie_whenMovieIsFoundAndScreeningExits_throwMovieUpdateNotPossibleException() {
+	void updateMovie_whenMovieIsFoundAndScreeningExists_throwsMovieUpdateNotPossibleException() {
+		MovieEntity movie = movieEntity();
+		MovieRequest request = movieRequest("newTitle", "newDescription", 120, Genre.DRAMA);
 
-		MovieRequest newInformation = new MovieRequest("newTitle", "newDescription", 99, Genre.COMEDY);
-		MovieEntity toUpdate = new MovieEntity("testTitle", "testDescription", Genre.COMEDY, 99);
-		Long movieId = toUpdate.getId();
+		when(movieRepository.findById(MOVIE_ID)).thenReturn(Optional.of(movie));
+		when(screeningRepository.existsByMovieId(MOVIE_ID)).thenReturn(true);
 
-		when(movieRepository.findById(movieId)).thenReturn(Optional.of(toUpdate));
-		when(screeningRepository.existsByMovieId(movieId)).thenReturn(true);
-
-		assertThatThrownBy(() -> movieService.updateMovies(movieId, newInformation))
+		assertThatThrownBy(() -> movieService.updateMovies(MOVIE_ID, request))
 				.isInstanceOf(MovieUpdateNotPossibleException.class)
-				.hasMessage("Movie with id " + movieId + " cannot be updated, screening exits");
+				.hasMessage("Movie with id " + MOVIE_ID + " cannot be updated, screening exits");
 
-		verify(movieRepository, times(1)).findById(movieId);
-		verify(movieRepository, never()).save(any());
-		verify(screeningRepository, times(1)).existsByMovieId(movieId);
+		assertMovieEntity(movie, TITLE, DESCRIPTION, DURATION, GENRE);
 
-		assertEquals("testTitle", toUpdate.getTitle());
-		assertEquals("testDescription", toUpdate.getDescription());
-
+		verify(movieRepository).findById(MOVIE_ID);
+		verify(screeningRepository).existsByMovieId(MOVIE_ID);
+		verify(movieRepository, never()).save(any(MovieEntity.class));
 	}
 
 	@Test
-	public void getMovieEntityById_whenMovieIsNotFound_throwsMovieNotFoundException() {
-		assertThatThrownBy(() -> movieService.getMovieResponseById(20L))
+	void getMovieResponseById_whenMovieExists_returnsMovieResponse() {
+		MovieEntity movie = movieEntity();
+
+		when(movieRepository.findById(MOVIE_ID)).thenReturn(Optional.of(movie));
+
+		MovieResponse response = movieService.getMovieResponseById(MOVIE_ID);
+
+		assertMovieResponse(response, TITLE, DESCRIPTION, DURATION, GENRE);
+
+		verify(movieRepository).findById(MOVIE_ID);
+	}
+
+	@Test
+	void getMovieResponseById_whenMovieIsNotFound_throwsMovieNotFoundException() {
+		when(movieRepository.findById(MOVIE_ID)).thenReturn(Optional.empty());
+
+		assertThatThrownBy(() -> movieService.getMovieResponseById(MOVIE_ID))
 				.isInstanceOf(MovieNotFoundException.class)
-				.hasMessage("Could not find movie with id: 20");
+				.hasMessage("Could not find movie with id: " + MOVIE_ID);
 
-		verify(movieRepository, times(1)).findById(anyLong());
+		verify(movieRepository).findById(MOVIE_ID);
 	}
 
 	@Test
-	public void deleteMovie_whenMovieIsFoundAndNoScreeningExits_successful() {
-		MovieEntity toDelete = new MovieEntity("testTitle", "testDescription", Genre.COMEDY, 99);
-		Long movieId = toDelete.getId();
+	void getMovieEntityById_whenMovieExists_returnsMovieEntity() {
+		MovieEntity movie = movieEntity();
 
-		when(movieRepository.findById(movieId)).thenReturn(Optional.of(toDelete));
-		when(screeningRepository.existsByMovieId(movieId)).thenReturn(false);
-		movieService.deleteMovies(movieId);
+		when(movieRepository.findById(MOVIE_ID)).thenReturn(Optional.of(movie));
 
-		verify(movieRepository, times(1)).findById(movieId);
-		verify(movieRepository, times(1)).delete(toDelete);
-		verify(screeningRepository, times(1)).existsByMovieId(movieId);
+		MovieEntity result = movieService.getMovieEntityById(MOVIE_ID);
 
-		assertFalse(movieRepository.existsById(movieId));
+		assertSame(movie, result);
+
+		verify(movieRepository).findById(MOVIE_ID);
 	}
 
 	@Test
-	public void deleteMovie_whenMovieIsFoundAndScreeningExits_throwsMovieDeletionNotPossibleException() {
-		MovieEntity toDelete = new MovieEntity("testTitle", "testDescription", Genre.COMEDY, 99);
-		Long movieId = toDelete.getId();
+	void getMovieEntityById_whenMovieIsNotFound_throwsMovieNotFoundException() {
+		when(movieRepository.findById(MOVIE_ID)).thenReturn(Optional.empty());
 
-		when(movieRepository.findById(movieId)).thenReturn(Optional.of(toDelete));
-		when(screeningRepository.existsByMovieId(movieId)).thenReturn(true);
-		assertThatThrownBy(() -> movieService.deleteMovies(movieId))
+		assertThatThrownBy(() -> movieService.getMovieEntityById(MOVIE_ID))
+				.isInstanceOf(MovieNotFoundException.class)
+				.hasMessage("Could not find movie with id: " + MOVIE_ID);
+
+		verify(movieRepository).findById(MOVIE_ID);
+	}
+
+	@Test
+	void deleteMovie_whenMovieIsFoundAndNoScreeningExists_deletesMovie() {
+		MovieEntity movie = movieEntity();
+
+		when(movieRepository.findById(MOVIE_ID)).thenReturn(Optional.of(movie));
+		when(screeningRepository.existsByMovieId(MOVIE_ID)).thenReturn(false);
+
+		movieService.deleteMovies(MOVIE_ID);
+
+		verify(movieRepository).findById(MOVIE_ID);
+		verify(screeningRepository).existsByMovieId(MOVIE_ID);
+		verify(movieRepository).delete(movie);
+	}
+
+	@Test
+	void deleteMovie_whenMovieIsFoundAndScreeningExists_throwsMovieDeletionNotPossibleException() {
+		MovieEntity movie = movieEntity();
+
+		when(movieRepository.findById(MOVIE_ID)).thenReturn(Optional.of(movie));
+		when(screeningRepository.existsByMovieId(MOVIE_ID)).thenReturn(true);
+
+		assertThatThrownBy(() -> movieService.deleteMovies(MOVIE_ID))
 				.isInstanceOf(MovieDeletionNotPossibleException.class)
-				.hasMessage("Movie with id " + movieId + " cannot be deleted, screening exits");
+				.hasMessage("Movie with id " + MOVIE_ID + " cannot be deleted, screening exits");
 
-		verify(movieRepository, times(1)).findById(movieId);
-		verify(movieRepository, never()).delete(toDelete);
-		verify(screeningRepository, times(1)).existsByMovieId(movieId);
+		verify(movieRepository).findById(MOVIE_ID);
+		verify(screeningRepository).existsByMovieId(MOVIE_ID);
+		verify(movieRepository, never()).delete(any(MovieEntity.class));
 	}
 
 	@Test
-	public void getListOfByDuration_whenMoviesWithWantedDurationExists_returnsListOfMovieResponse() {
-		List<MovieEntity> listOfMovies = new ArrayList<>();
-		listOfMovies.add(new MovieEntity("testTitle1", "testDescription1", Genre.COMEDY, 99));
-		listOfMovies.add(new MovieEntity("testTitle2", "testDescription2", Genre.DRAMA, 120));
+	void deleteMovie_whenMovieIsNotFound_throwsMovieNotFoundException() {
+		when(movieRepository.findById(MOVIE_ID)).thenReturn(Optional.empty());
 
-		when(movieRepository.findByDurationGreaterThan(60)).thenReturn(listOfMovies);
+		assertThatThrownBy(() -> movieService.deleteMovies(MOVIE_ID))
+				.isInstanceOf(MovieNotFoundException.class)
+				.hasMessage("Could not find movie with id: " + MOVIE_ID);
 
-		List<MovieResponse> filteredList = movieService.getListOfByDuration(60);
-
-		verify(movieRepository, times(1)).findByDurationGreaterThan(60);
-		assertEquals("testTitle1", filteredList.get(0).title);
-		assertEquals("testTitle2", filteredList.get(1).title);
-
+		verify(movieRepository).findById(MOVIE_ID);
+		verifyNoInteractions(screeningRepository);
+		verify(movieRepository, never()).delete(any(MovieEntity.class));
 	}
 
 	@Test
-	public void getListOfByDuration_whenNoMoviesWithWantedDurationWereFound_returnsMovieByDurationNotFoundException() {
+	void getListOfByDuration_whenMoviesWithWantedDurationExist_returnsListOfMovieResponses() {
+		List<MovieEntity> movies = movies();
+
+		when(movieRepository.findByDurationGreaterThan(60)).thenReturn(movies);
+
+		List<MovieResponse> responses = movieService.getListOfByDuration(60);
+
+		assertEquals(2, responses.size());
+		assertMovieResponse(responses.get(0), "testTitle1", "testDescription1", 99, Genre.COMEDY);
+		assertMovieResponse(responses.get(1), "testTitle2", "testDescription2", 120, Genre.DRAMA);
+
+		verify(movieRepository).findByDurationGreaterThan(60);
+	}
+
+	@Test
+	void getListOfByDuration_whenNoMoviesWithWantedDurationWereFound_throwsMovieByDurationNotFoundException() {
+		when(movieRepository.findByDurationGreaterThan(120)).thenReturn(List.of());
+
 		assertThatThrownBy(() -> movieService.getListOfByDuration(120))
 				.isInstanceOf(MovieByDurationNotFoundException.class)
 				.hasMessage("No movies with greater than 120 min duration found");
 
-		verify(movieRepository, times(1)).findByDurationGreaterThan(120);
-
+		verify(movieRepository).findByDurationGreaterThan(120);
 	}
 
 	@Test
-	public void getListOfByGenre_whenMoviesWithWantedGenreWereFound_returnsListOfMovieResponse() {
-		List<MovieEntity> listOfMovies = new ArrayList<>();
-		listOfMovies.add(new MovieEntity("testTitle1", "testDescription1", Genre.FANTASY, 99));
-		listOfMovies.add(new MovieEntity("testTitle2", "testDescription2", Genre.FANTASY, 120));
+	void getListOfByGenre_whenMoviesWithWantedGenreWereFound_returnsListOfMovieResponses() {
+		List<MovieEntity> movies = List.of(
+				movieEntity(1L, "testTitle1", "testDescription1", 99, Genre.FANTASY),
+				movieEntity(2L, "testTitle2", "testDescription2", 120, Genre.FANTASY)
+		);
 
-		when(movieRepository.findByGenre(Genre.FANTASY)).thenReturn(listOfMovies);
+		when(movieRepository.findByGenre(Genre.FANTASY)).thenReturn(movies);
 
-		List<MovieResponse> filteredList = movieService.getListOfByGenre(Genre.FANTASY);
+		List<MovieResponse> responses = movieService.getListOfByGenre(Genre.FANTASY);
 
-		verify(movieRepository, times(1)).findByGenre(Genre.FANTASY);
-		assertEquals("testTitle1", filteredList.get(0).title);
-		assertEquals("testTitle2", filteredList.get(1).title);
+		assertEquals(2, responses.size());
+		assertMovieResponse(responses.get(0), "testTitle1", "testDescription1", 99, Genre.FANTASY);
+		assertMovieResponse(responses.get(1), "testTitle2", "testDescription2", 120, Genre.FANTASY);
 
+		verify(movieRepository).findByGenre(Genre.FANTASY);
 	}
 
 	@Test
-	public void getListOfByGenre_whenNoMoviesWithWantedGenreWereFound_throwsMovieByGenreNotFoundException() {
+	void getListOfByGenre_whenNoMoviesWithWantedGenreWereFound_throwsMovieByGenreNotFoundException() {
+		when(movieRepository.findByGenre(Genre.FANTASY)).thenReturn(List.of());
+
 		assertThatThrownBy(() -> movieService.getListOfByGenre(Genre.FANTASY))
 				.isInstanceOf(MovieByGenreNotFoundException.class)
 				.hasMessage("No movies with FANTASY as genre were found");
 
-		verify(movieRepository, times(1)).findByGenre(Genre.FANTASY);
+		verify(movieRepository).findByGenre(Genre.FANTASY);
 	}
 
+	private MovieRequest movieRequest() {
+		return movieRequest(TITLE, DESCRIPTION, DURATION, GENRE);
+	}
 
+	private MovieRequest movieRequest(String title, String description, int duration, Genre genre) {
+		return new MovieRequest(title, description, duration, genre);
+	}
+
+	private MovieEntity movieEntity() {
+		return movieEntity(MOVIE_ID, TITLE, DESCRIPTION, DURATION, GENRE);
+	}
+
+	private MovieEntity movieEntity(
+			Long id,
+			String title,
+			String description,
+			int duration,
+			Genre genre
+	) {
+		MovieEntity movie = new MovieEntity(title, description, genre, duration);
+		movie.setId(id);
+		return movie;
+	}
+
+	private List<MovieEntity> movies() {
+		return List.of(
+				movieEntity(1L, "testTitle1", "testDescription1", 99, Genre.COMEDY),
+				movieEntity(2L, "testTitle2", "testDescription2", 120, Genre.DRAMA)
+		);
+	}
+
+	private void assertMovieResponse(
+			MovieResponse response,
+			String expectedTitle,
+			String expectedDescription,
+			int expectedDuration,
+			Genre expectedGenre
+	) {
+		assertNotNull(response);
+		assertEquals(expectedTitle, response.title);
+		assertEquals(expectedDescription, response.description);
+		assertEquals(expectedDuration, response.duration);
+		assertEquals(expectedGenre, response.genre);
+	}
+
+	private void assertMovieEntity(
+			MovieEntity movie,
+			String expectedTitle,
+			String expectedDescription,
+			int expectedDuration,
+			Genre expectedGenre
+	) {
+		assertEquals(expectedTitle, movie.getTitle());
+		assertEquals(expectedDescription, movie.getDescription());
+		assertEquals(expectedDuration, movie.getDuration());
+		assertEquals(expectedGenre, movie.getGenre());
+	}
 }
