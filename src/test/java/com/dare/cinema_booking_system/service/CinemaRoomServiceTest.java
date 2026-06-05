@@ -1,6 +1,7 @@
 package com.dare.cinema_booking_system.service;
 
 import com.dare.cinema_booking_system.rooms.dto.CinemaRoomRequest;
+import com.dare.cinema_booking_system.rooms.dto.CinemaRoomResponse;
 import com.dare.cinema_booking_system.rooms.entity.CinemaRoomEntity;
 import com.dare.cinema_booking_system.rooms.entity.SeatEntity;
 import com.dare.cinema_booking_system.rooms.exceptions.CinemaRoomChangesNotPossibleException;
@@ -17,160 +18,290 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
-import org.springframework.test.context.ActiveProfiles;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.mockito.ArgumentMatchers.any;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
-@ActiveProfiles("test")
 @ExtendWith(MockitoExtension.class)
-public class CinemaRoomServiceTest {
+class CinemaRoomServiceTest {
+
+	private static final Long ROOM_ID = 1L;
+
+	private static final int ROOM_NUMBER = 1;
+	private static final int ROWS = 10;
+	private static final int ROW_CAPACITY = 20;
+	private static final int ROOM_CAPACITY = 200;
+
+	private static final int UPDATED_ROWS = 20;
+	private static final int UPDATED_ROW_CAPACITY = 25;
+	private static final int UPDATED_ROOM_CAPACITY = 500;
 
 	@Mock
 	private CinemaRoomRepository cinemaRoomRepository;
+
 	@Mock
 	private SeatRepository seatRepository;
+
 	@Mock
 	private ScreeningRepository screeningRepository;
+
 	@Spy
 	private ModelMapper modelMapper;
+
 	@InjectMocks
 	private CinemaRoomService cinemaRoomService;
 
 	@Test
-	public void createCinemaRoom_whenRoomNumberIsValid_returnsCinemaResponse() {
-		CinemaRoomRequest roomRequest = new CinemaRoomRequest(1, 10, 20);
-		List<SeatEntity> seats = new ArrayList<>();
-		CinemaRoomEntity newRoom = new CinemaRoomEntity(1, 10, 20, seats);
+	void createCinemaRoom_whenRoomNumberIsValid_returnsCinemaRoomResponse() {
+		CinemaRoomRequest request = roomRequest();
 
-		when(cinemaRoomRepository.existsByRoomNumber(roomRequest.getRoomNumber())).thenReturn(false);
-		when(seatRepository.saveAll(any())).thenReturn(seats);
-		when(cinemaRoomRepository.save(any())).thenReturn(newRoom);
+		mockRoomNumberExists(false);
+		mockRoomSaveAssignsId();
+		mockSaveAllSeats();
 
-		cinemaRoomService.createCinemaRoom(roomRequest);
+		CinemaRoomResponse response = cinemaRoomService.createCinemaRoom(request);
 
-		assertEquals(1, newRoom.getRoomNumber());
-		assertEquals(10, newRoom.getRows());
-		assertEquals(20, newRoom.getRowCapacity());
-		assertEquals(0, newRoom.getSeats().size());
-		assertEquals(200, newRoom.getRoomCapacity());
+		assertNotNull(response);
+		assertEquals(ROOM_NUMBER, response.getRoomNumber());
+		assertEquals(ROOM_CAPACITY, response.getRoomCapacity());
 
-		verify(seatRepository, times(1)).saveAll(any());
+		verify(cinemaRoomRepository).existsByRoomNumber(ROOM_NUMBER);
 		verify(cinemaRoomRepository, times(2)).save(any());
 
+		verify(cinemaRoomRepository, times(2)).save(any(CinemaRoomEntity.class));
 	}
 
 	@Test
-	public void createCinemaRoom_whenRoomNumberIsInvalid_returnsCinemaRoomDuplicateException() {
-		CinemaRoomRequest roomRequest = new CinemaRoomRequest(1, 10, 20);
-		when(cinemaRoomRepository.existsByRoomNumber(roomRequest.getRoomNumber())).thenReturn(true);
-		assertThatThrownBy(() -> cinemaRoomService.createCinemaRoom(roomRequest))
+	void createCinemaRoom_whenRoomNumberAlreadyExists_throwsCinemaRoomNumberDuplicateException() {
+		CinemaRoomRequest request = roomRequest();
+
+		mockRoomNumberExists(true);
+
+		assertThatThrownBy(() -> cinemaRoomService.createCinemaRoom(request))
 				.isInstanceOf(CinemaRoomNumberDuplicateException.class)
 				.hasMessage("Room number 1 is already in use, please choose another room number");
 
+		verify(cinemaRoomRepository).existsByRoomNumber(ROOM_NUMBER);
 		verify(cinemaRoomRepository, never()).save(any());
-		verify(seatRepository, never()).saveAll(any());
+		verify(seatRepository, never()).saveAll(anyList());
 	}
 
 	@Test
-	public void updateCinemaRoom_whenRoomByIdDoesNotExist_returnsCinemaResponse() {
-		CinemaRoomRequest roomRequest = new CinemaRoomRequest(1, 10, 20);
-		assertThatThrownBy(() -> cinemaRoomService.updateCinemaRoom(roomRequest, 1L))
+	void updateCinemaRoom_whenRoomByIdDoesNotExist_throwsCinemaRoomNotFoundException() {
+		CinemaRoomRequest request = updatedRoomRequest();
+
+		when(cinemaRoomRepository.findById(ROOM_ID)).thenReturn(Optional.empty());
+
+		assertThatThrownBy(() -> cinemaRoomService.updateCinemaRoom(request, ROOM_ID))
 				.isInstanceOf(CinemaRoomNotFoundException.class)
 				.hasMessage("Cinema Room with ID 1 not found");
 
-		verify(cinemaRoomRepository, never()).save(any());
-		verify(seatRepository, never()).saveAll(any());
+		verify(cinemaRoomRepository).findById(ROOM_ID);
 		verify(screeningRepository, never()).existsByCinemaRoomId(anyLong());
-	}
-
-	@Test
-	public void updateCinemaRoom_whenRoomByIdExistsAndNoScreeningExists_returnsCinemaResponse() {
-		CinemaRoomRequest roomRequest = new CinemaRoomRequest(1, 20, 25);
-		List<SeatEntity> seatsOld = new ArrayList<>();
-		seatsOld.add(new SeatEntity());
-
-		List<SeatEntity> seatsNew = new ArrayList<>();
-		seatsNew.add(new SeatEntity());
-		seatsNew.add(new SeatEntity());
-
-		Long id = 1L;
-		CinemaRoomEntity oldRoomEntity = new CinemaRoomEntity(1, 10, 20, seatsOld);
-		CinemaRoomEntity newRoomEntity = new CinemaRoomEntity(1, 20, 25, seatsNew);
-
-		when(cinemaRoomRepository.findById(id)).thenReturn(Optional.of(oldRoomEntity));
-		when(screeningRepository.existsByCinemaRoomId(id)).thenReturn(false);
-		when(seatRepository.findByCinemaRoom(oldRoomEntity)).thenReturn(seatsOld);
-		when(seatRepository.saveAll(any())).thenReturn(seatsNew);
-		when(cinemaRoomRepository.save(any())).thenReturn(newRoomEntity);
-
-		cinemaRoomService.updateCinemaRoom(roomRequest, id);
-
-		assertEquals(1, newRoomEntity.getRoomNumber());
-		assertEquals(20, newRoomEntity.getRows());
-		assertEquals(25, newRoomEntity.getRowCapacity());
-		assertEquals(500, newRoomEntity.getRoomCapacity());
-		assertEquals(2, newRoomEntity.getSeats().size());
-
-		verify(cinemaRoomRepository, times(1)).findById(1L);
-		verify(cinemaRoomRepository, times(2)).save(any());
-		verify(seatRepository, times(1)).deleteAllInBatch(seatsOld);
-		verify(seatRepository, times(1)).flush();
-		verify(seatRepository, times(1)).saveAll(any());
-		verify(screeningRepository, times(1)).existsByCinemaRoomId(id);
-
-	}
-
-	@Test
-	public void updateCinemaRoom_whenRoomByIdAndScreeningExists_returnsCinemaRoomChangesNotPossibleException() {
-		CinemaRoomEntity oldRoomEntity = new CinemaRoomEntity(1, 10, 20, null);
-		when(cinemaRoomRepository.findById(1L)).thenReturn(Optional.of(oldRoomEntity));
-		when(screeningRepository.existsByCinemaRoomId(1L)).thenReturn(true);
-
-		assertThatThrownBy(() -> cinemaRoomService.updateCinemaRoom(
-				new CinemaRoomRequest(1, 10, 20), 1L
-		)).isInstanceOf(CinemaRoomChangesNotPossibleException.class)
-				.hasMessage("Changes are not possible for cinema room with id 1 screening exits");
-
 		verify(cinemaRoomRepository, never()).save(any());
-		verify(seatRepository, never()).saveAll(any());
-		verify(screeningRepository, times(1)).existsByCinemaRoomId(anyLong());
-
+		verify(seatRepository, never()).saveAll(anyList());
 	}
 
 	@Test
-	public void deleteCinemaRoom_whenRoomIdDoesExists_returnsCinemaResponse() {
-		when(cinemaRoomRepository.findById(any())).thenReturn(Optional.of(new CinemaRoomEntity()));
-		when(screeningRepository.existsByCinemaRoomId(1L)).thenReturn(false);
-		cinemaRoomService.deleteCinemaRoom(1L);
+	void updateCinemaRoom_whenRoomExistsAndNoScreeningExists_returnsCinemaRoomResponse() {
+		CinemaRoomRequest request = updatedRoomRequest();
+		CinemaRoomEntity room = roomEntityWithOneExistingSeat();
 
-		assertFalse(cinemaRoomRepository.existsById(1L));
+		when(cinemaRoomRepository.findById(ROOM_ID)).thenReturn(Optional.of(room));
+		when(screeningRepository.existsByCinemaRoomId(ROOM_ID)).thenReturn(false);
+		when(seatRepository.findByCinemaRoom(room)).thenReturn(room.getSeats());
+		mockRoomSaveReturnsSameEntity();
+		mockSaveAllSeats();
 
-		verify(cinemaRoomRepository, times(1)).findById(1L);
-		verify(cinemaRoomRepository, times(1)).delete(any(CinemaRoomEntity.class));
+		CinemaRoomResponse response = cinemaRoomService.updateCinemaRoom(request, ROOM_ID);
 
+		assertNotNull(response);
+		assertEquals(ROOM_NUMBER, response.getRoomNumber());
+		assertEquals(UPDATED_ROOM_CAPACITY, response.getRoomCapacity());
 
+		assertEquals(ROOM_NUMBER, room.getRoomNumber());
+		assertEquals(UPDATED_ROWS, room.getRows());
+		assertEquals(UPDATED_ROW_CAPACITY, room.getRowCapacity());
+		assertEquals(UPDATED_ROOM_CAPACITY, room.getRoomCapacity());
+		assertEquals(UPDATED_ROOM_CAPACITY, room.getSeats().size());
+
+		verify(cinemaRoomRepository).findById(ROOM_ID);
+		verify(screeningRepository).existsByCinemaRoomId(ROOM_ID);
+		verify(seatRepository).findByCinemaRoom(room);
+		verify(seatRepository).deleteAllInBatch(anyList());
+		verify(seatRepository).flush();
+		verify(seatRepository).saveAll(room.getSeats());
+		verify(cinemaRoomRepository, times(2)).save(room);
 	}
 
 	@Test
-	public void deleteCinemaRoom_whenRoomIdAndScreeningExists_returnsCinemaResponse() {
-		CinemaRoomEntity oldRoomEntity = new CinemaRoomEntity(1, 10, 20, null);
-		when(cinemaRoomRepository.findById(1L)).thenReturn(Optional.of(oldRoomEntity));
-		when(screeningRepository.existsByCinemaRoomId(1L)).thenReturn(true);
+	void updateCinemaRoom_whenRoomExistsAndScreeningExists_throwsCinemaRoomChangesNotPossibleException() {
+		CinemaRoomEntity room = roomEntity();
 
-		assertThatThrownBy(() -> cinemaRoomService.deleteCinemaRoom(1L))
+		when(cinemaRoomRepository.findById(ROOM_ID)).thenReturn(Optional.of(room));
+		when(screeningRepository.existsByCinemaRoomId(ROOM_ID)).thenReturn(true);
+
+		assertThatThrownBy(() -> cinemaRoomService.updateCinemaRoom(roomRequest(), ROOM_ID))
 				.isInstanceOf(CinemaRoomChangesNotPossibleException.class)
 				.hasMessage("Changes are not possible for cinema room with id 1 screening exits");
 
+		verify(cinemaRoomRepository).findById(ROOM_ID);
+		verify(screeningRepository).existsByCinemaRoomId(ROOM_ID);
 		verify(cinemaRoomRepository, never()).save(any());
-		verify(seatRepository, never()).saveAll(any());
-		verify(screeningRepository, times(1)).existsByCinemaRoomId(anyLong());
+		verify(seatRepository, never()).saveAll(anyList());
+		verify(seatRepository, never()).deleteAllInBatch(anyList());
+		verify(seatRepository, never()).flush();
+	}
+
+	@Test
+	void deleteCinemaRoom_whenRoomExistsAndNoScreeningExists_deletesCinemaRoom() {
+		CinemaRoomEntity room = roomEntity();
+
+		when(cinemaRoomRepository.findById(ROOM_ID)).thenReturn(Optional.of(room));
+		when(screeningRepository.existsByCinemaRoomId(ROOM_ID)).thenReturn(false);
+
+		cinemaRoomService.deleteCinemaRoom(ROOM_ID);
+
+		verify(cinemaRoomRepository).findById(ROOM_ID);
+		verify(screeningRepository).existsByCinemaRoomId(ROOM_ID);
+		verify(cinemaRoomRepository).delete(room);
+
+		verify(cinemaRoomRepository, never()).save(any());
+		verify(seatRepository, never()).saveAll(anyList());
+	}
+
+	@Test
+	void deleteCinemaRoom_whenRoomExistsAndScreeningExists_throwsCinemaRoomChangesNotPossibleException() {
+		CinemaRoomEntity room = roomEntity();
+
+		when(cinemaRoomRepository.findById(ROOM_ID)).thenReturn(Optional.of(room));
+		when(screeningRepository.existsByCinemaRoomId(ROOM_ID)).thenReturn(true);
+
+		assertThatThrownBy(() -> cinemaRoomService.deleteCinemaRoom(ROOM_ID))
+				.isInstanceOf(CinemaRoomChangesNotPossibleException.class)
+				.hasMessage("Changes are not possible for cinema room with id 1 screening exits");
+
+		verify(cinemaRoomRepository).findById(ROOM_ID);
+		verify(screeningRepository).existsByCinemaRoomId(ROOM_ID);
+		verify(cinemaRoomRepository, never()).delete(any(CinemaRoomEntity.class));
+		verify(cinemaRoomRepository, never()).save(any());
+		verify(seatRepository, never()).saveAll(anyList());
+	}
+
+	@Test
+	void deleteCinemaRoom_whenRoomDoesNotExist_throwsCinemaRoomNotFoundException() {
+		when(cinemaRoomRepository.findById(ROOM_ID)).thenReturn(Optional.empty());
+
+		assertThatThrownBy(() -> cinemaRoomService.deleteCinemaRoom(ROOM_ID))
+				.isInstanceOf(CinemaRoomNotFoundException.class)
+				.hasMessage("Cinema Room with ID 1 not found");
+
+		verify(cinemaRoomRepository).findById(ROOM_ID);
+		verify(screeningRepository, never()).existsByCinemaRoomId(anyLong());
+		verify(cinemaRoomRepository, never()).delete(any());
+	}
+
+	@Test
+	void getRoomEntity_whenRoomExists_returnsCinemaRoomEntity() {
+		CinemaRoomEntity room = roomEntity();
+
+		when(cinemaRoomRepository.findById(ROOM_ID)).thenReturn(Optional.of(room));
+
+		CinemaRoomEntity result = cinemaRoomService.getRoomEntity(ROOM_ID);
+
+		assertSame(room, result);
+
+		verify(cinemaRoomRepository).findById(ROOM_ID);
+	}
+
+	@Test
+	void getRoomEntity_whenRoomDoesNotExist_throwsCinemaRoomNotFoundException() {
+		when(cinemaRoomRepository.findById(ROOM_ID)).thenReturn(Optional.empty());
+
+		assertThatThrownBy(() -> cinemaRoomService.getRoomEntity(ROOM_ID))
+				.isInstanceOf(CinemaRoomNotFoundException.class)
+				.hasMessage("Cinema Room with ID 1 not found");
+
+		verify(cinemaRoomRepository).findById(ROOM_ID);
+	}
+
+	@Test
+	void getRoomResponseById_whenRoomExists_returnsCinemaRoomResponse() {
+		CinemaRoomEntity room = roomEntity();
+
+		when(cinemaRoomRepository.findById(ROOM_ID)).thenReturn(Optional.of(room));
+
+		CinemaRoomResponse response = cinemaRoomService.getRoomResponseById(ROOM_ID);
+
+		assertNotNull(response);
+		assertEquals(ROOM_NUMBER, response.getRoomNumber());
+		assertEquals(ROOM_CAPACITY, response.getRoomCapacity());
+
+		verify(cinemaRoomRepository).findById(ROOM_ID);
+	}
+
+	private CinemaRoomRequest roomRequest() {
+		return new CinemaRoomRequest(ROOM_NUMBER, ROWS, ROW_CAPACITY);
+	}
+
+	private CinemaRoomRequest updatedRoomRequest() {
+		return new CinemaRoomRequest(ROOM_NUMBER, UPDATED_ROWS, UPDATED_ROW_CAPACITY);
+	}
+
+	private CinemaRoomEntity roomEntity() {
+		return roomEntity(ROOM_NUMBER, ROWS, ROW_CAPACITY, new ArrayList<>());
+	}
+
+	private CinemaRoomEntity roomEntityWithOneExistingSeat() {
+		List<SeatEntity> seats = new ArrayList<>();
+		seats.add(seat(1, 1));
+		return roomEntity(ROOM_NUMBER, ROWS, ROW_CAPACITY, seats);
+	}
+
+	private CinemaRoomEntity roomEntity(
+			int roomNumber,
+			int rows,
+			int rowCapacity,
+			List<SeatEntity> seats
+	) {
+		CinemaRoomEntity room = new CinemaRoomEntity(roomNumber, rows, rowCapacity, seats);
+		room.setId(ROOM_ID);
+		return room;
+	}
+
+	private SeatEntity seat(int rowNumber, int seatNumber) {
+		SeatEntity seat = new SeatEntity();
+		seat.setRowNumber(rowNumber);
+		seat.setSeatNumber(seatNumber);
+		return seat;
+	}
+
+	private void mockRoomNumberExists(boolean exists) {
+		when(cinemaRoomRepository.existsByRoomNumber(ROOM_NUMBER)).thenReturn(exists);
+	}
+
+	private void mockRoomSaveAssignsId() {
+		when(cinemaRoomRepository.save(any(CinemaRoomEntity.class)))
+				.thenAnswer(invocation -> {
+					CinemaRoomEntity room = invocation.getArgument(0);
+					room.setId(ROOM_ID);
+					return room;
+				});
+	}
+
+	private void mockRoomSaveReturnsSameEntity() {
+		when(cinemaRoomRepository.save(any(CinemaRoomEntity.class)))
+				.thenAnswer(invocation -> invocation.getArgument(0));
+	}
+
+	private void mockSaveAllSeats() {
+		when(seatRepository.saveAll(anyList()))
+				.thenAnswer(invocation -> invocation.getArgument(0));
 	}
 }
