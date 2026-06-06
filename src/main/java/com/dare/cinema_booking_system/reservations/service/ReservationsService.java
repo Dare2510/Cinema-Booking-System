@@ -46,7 +46,7 @@ public class ReservationsService {
 
 	public ReservationResponse findReservationById(Long reservationId) {
 		ReservationEntity reservation = getReservationById(reservationId);
-		return modelMapper.map(reservation, ReservationResponse.class);
+		return responseBuilder(reservation,reservation.getTicket(),reservation.getReservedSeats());
 	}
 
 	public Page<ReservationResponse> getPageOfReservations(Pageable pageable) {
@@ -313,6 +313,7 @@ public class ReservationsService {
 					.reservationId(newReservation.getId())
 					.reservedSeats(reservedSeats)
 					.screeningDate(newReservation.getScreening().getScreeningDate())
+					.timeSlot(newReservation.getScreening().getTimeSlot())
 					.ticketNumber(tickets.getTicketNumber())
 					.paymentResponse(PaymentResponse.builder()
 							.paymentInformation("Payment information")

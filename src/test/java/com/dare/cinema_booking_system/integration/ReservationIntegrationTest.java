@@ -31,8 +31,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -99,10 +98,48 @@ public class ReservationIntegrationTest {
 	private static final int ROW_CAPACITY = 20;
 
 	private static final BigDecimal SCREENING_PRICE = BigDecimal.valueOf(10.00);
+	private static final String SCREENING_DATE = LocalDate.now().toString();
+	private static final String SCREENING_SLOT = TimeSlot.PRIME.name();
 
 	private static final List<Long> SEAT_IDS_TO_RESERVE = List.of(1L, 2L);
 	private static final List<String> SEATS_RESPONSE = List.of("Row: 1 - Seat: 1", "Row: 1 - Seat: 2");
 	private static final PaymentMethod RESERVATION_PAYMENT_METHOD = PaymentMethod.ONLINE;
+	private static final BigDecimal RESERVATION_AMOUNT = BigDecimal.valueOf(20.0);
+
+	@Test
+	public void getReservationById_whenReservationExists_returnsOK() throws Exception {
+		MovieRequest movie = movieRequest();
+		Long movieId = createMovieAndGetId(movie);
+
+		CinemaRoomRequest room = cinemaRoomRequest();
+		Long roomId = createCinemaRoomAndGetId(room);
+
+		ScreeningRequest screening = screeningRequest(movieId, roomId);
+		Long screeningId = createScreeningAndGetId(screening);
+
+		ReservationRequest reservation = reservationRequest(screeningId);
+		Long reservationId = createReservationAndGetId(reservation);
+
+		mockMvc.perform(get("/api/reservation/" + reservationId))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.reservationId").value(reservationId))
+				.andExpect(jsonPath("$.paymentResponse.amount").value(RESERVATION_AMOUNT))
+				.andExpect(jsonPath("$.timeSlot").value(SCREENING_SLOT))
+				.andExpect(jsonPath("$.screeningDate").value(SCREENING_DATE))
+				.andExpect(jsonPath("$.ticketNumber").exists())
+				.andExpect(jsonPath("$.reservedSeats[0]").value(SEATS_RESPONSE.get(0)))
+				.andExpect(jsonPath("$.reservedSeats[1]").value(SEATS_RESPONSE.get(1)));
+	}
+
+
+	@Test
+	public void getReservationById_whenReservationDoesNotExists_returnsNotFound() throws Exception {
+		mockMvc.perform(get("/api/reservation/" + 99))
+				.andExpect(status().isNotFound())
+				.andExpect(jsonPath("$.message")
+						.value("Reservation with id " + 99 + " not found"));
+
+	}
 
 	@Test
 	public void createReservation_screeningExistsAndSeatsAreFree_returnsOK() throws Exception {
@@ -125,7 +162,7 @@ public class ReservationIntegrationTest {
 				.andExpect(jsonPath("$.reservedSeats[0]").value(SEATS_RESPONSE.get(0)))
 				.andExpect(jsonPath("$.reservedSeats[1]").value(SEATS_RESPONSE.get(1)))
 				.andExpect(jsonPath("$.paymentResponse.recipient").value("Cinema-Booking System"))
-				.andExpect(jsonPath("$.paymentResponse.amount").value(BigDecimal.valueOf(20.0)))
+				.andExpect(jsonPath("$.paymentResponse.amount").value(RESERVATION_AMOUNT))
 				.andExpect(result -> {
 
 					result.getResponse().getContentAsString();
@@ -175,7 +212,7 @@ public class ReservationIntegrationTest {
 		ReservationRequest reservation = reservationRequest(screeningId);
 		Long reservationId = createReservationAndGetId(reservation);
 
-		mockMvc.perform(patch("/api/reservation/"+reservationId+"/cancel"))
+		mockMvc.perform(patch("/api/reservation/" + reservationId + "/cancel"))
 				.andExpect(status().isOk());
 	}
 
@@ -195,14 +232,13 @@ public class ReservationIntegrationTest {
 
 		cancelReservation(reservationId);
 
-		mockMvc.perform(patch("/api/reservation/"+reservationId+"/cancel"))
+		mockMvc.perform(patch("/api/reservation/" + reservationId + "/cancel"))
 				.andExpect(status().isBadRequest());
 	}
 
 
-
 	private void cancelReservation(Long reservationId) throws Exception {
-		mockMvc.perform(patch("/api/reservation/"+reservationId+"/cancel"))
+		mockMvc.perform(patch("/api/reservation/" + reservationId + "/cancel"))
 				.andExpect(status().isOk());
 	}
 
@@ -264,7 +300,7 @@ public class ReservationIntegrationTest {
 	}
 
 	private Long createReservationAndGetId(ReservationRequest reservation) throws Exception {
-		String reservationJson =  mockMvc.perform(post("/api/reservation/")
+		String reservationJson = mockMvc.perform(post("/api/reservation/")
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(reservation)))
 				.andExpect(status().isOk())
