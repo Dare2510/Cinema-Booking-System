@@ -17,7 +17,7 @@ public class ReservationController {
 	private final ReservationsService reservationsService;
 
 	@GetMapping("/{reservationId}")
-	public ResponseEntity<ReservationResponse> getScreeningById(@PathVariable Long reservationId) {
+	public ResponseEntity<ReservationResponse> getReservationById(@PathVariable Long reservationId) {
 		return ResponseEntity.ok(reservationsService.findReservationById(reservationId));
 	}
 
