@@ -54,39 +54,56 @@ public class ScreeningIntegrationTest {
 		screeningRepository.deleteAll();
 	}
 
+	private static final String MOVIE_TITLE = "testTitle";
+	private static final String MOVIE_DESCRIPTION = "testDescription";
+	private static final int MOVIE_DURATION = 120;
+	private static final String MOVIE_GENRE = Genre.FANTASY.name();
+
+	private static final int ROOM_NUMBER = 5;
+	private static final int ROWS = 10;
+	private static final int ROW_CAPACITY = 20;
+	private static final int ROOM_CAPACITY = 200;
+
+	private static final String SCREENING_DATE = LocalDate.now().toString();
+	private static final String SCREENING_SLOT = TimeSlot.PRIME.name();
+	private static final BigDecimal SCREENING_PRICE = BigDecimal.valueOf(10.00);
+	private static final LocalDate INVALID_SCREENING_DATE = LocalDate.now().minusDays(1);
+
+	private static final BigDecimal UPDATED_PRICE = BigDecimal.valueOf(15.00);
+	private static final String UPDATED_SCREENING_SLOT = TimeSlot.EVENING.name();
+
 	@Test
 	public void createScreening_whenMovieRoomAndScreeningAreValid_returns200() throws Exception {
-		MovieRequest movie = new MovieRequest("testTitle", "testDescription", 120, Genre.FANTASY);
-		CinemaRoomRequest room = new CinemaRoomRequest(5, 10, 20);
+		MovieRequest movie = movieRequest();
+		CinemaRoomRequest room = cinemaRoomRequest();
 
 
-		Long movieId = getMovieId(movie);
-		Long roomId = getCinemaId(room);
+		Long movieId = createMovieAndGetId(movie);
+		Long roomId = createCinemaRoomAndGetId(room);
 
-		ScreeningRequest screening = new ScreeningRequest(roomId, movieId, LocalDate.now(), TimeSlot.PRIME, BigDecimal.TEN);
+		ScreeningRequest screening = screeningRequest(roomId, movieId);
 
 		mockMvc.perform(post("/api/screening")
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(screening)))
 				.andExpect(status().isOk())
-				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.screeningDate").value(String.valueOf(LocalDate.now())))
-				.andExpect(jsonPath("$.price").value(10.00))
-				.andExpect(jsonPath("$.movieInformation.title").value("testTitle"))
-				.andExpect(jsonPath("$.movieInformation.description").value("testDescription"))
-				.andExpect(jsonPath("$.movieInformation.duration").value(120))
-				.andExpect(jsonPath("$.movieInformation.genre").value("FANTASY"))
-				.andExpect(jsonPath("$.cinemaRoomInformation.roomNumber").value(room.getRoomNumber()))
-				.andExpect(jsonPath("$.cinemaRoomInformation.roomCapacity").value(200))
-				.andExpect(jsonPath("$.timeSlot").value("PRIME"));
+				.andExpect(jsonPath("$.screeningDate").value(SCREENING_DATE))
+				.andExpect(jsonPath("$.price").value(SCREENING_PRICE))
+				.andExpect(jsonPath("$.movieInformation.title").value(MOVIE_TITLE))
+				.andExpect(jsonPath("$.movieInformation.description").value(MOVIE_DESCRIPTION))
+				.andExpect(jsonPath("$.movieInformation.duration").value(MOVIE_DURATION))
+				.andExpect(jsonPath("$.movieInformation.genre").value(MOVIE_GENRE))
+				.andExpect(jsonPath("$.cinemaRoomInformation.roomNumber").value(ROOM_NUMBER))
+				.andExpect(jsonPath("$.cinemaRoomInformation.roomCapacity").value(ROOM_CAPACITY))
+				.andExpect(jsonPath("$.timeSlot").value(SCREENING_SLOT));
 	}
 
 	@Test
 	public void createScreening_whenMovieDoesNotExist_returnsIsNotFound() throws Exception {
-		CinemaRoomRequest room = new CinemaRoomRequest(5, 10, 20);
-		Long roomId = getCinemaId(room);
+		CinemaRoomRequest room = cinemaRoomRequest();
+		Long roomId = createCinemaRoomAndGetId(room);
 
-		ScreeningRequest screening = new ScreeningRequest(roomId, 99L, LocalDate.now(), TimeSlot.PRIME, BigDecimal.TEN);
+		ScreeningRequest screening = screeningRequest(roomId, 99L);
 
 		mockMvc.perform(post("/api/screening")
 						.contentType(MediaType.APPLICATION_JSON)
@@ -98,10 +115,10 @@ public class ScreeningIntegrationTest {
 
 	@Test
 	public void createScreening_whenRoomDoesNotExist_returnsIsNotFound() throws Exception {
-		MovieRequest movie = new MovieRequest("testTitle", "testDescription", 120, Genre.FANTASY);
-		Long movieId = getMovieId(movie);
+		MovieRequest movie = movieRequest();
+		Long movieId = createMovieAndGetId(movie);
 
-		ScreeningRequest screening = new ScreeningRequest(9L, movieId, LocalDate.now(), TimeSlot.PRIME, BigDecimal.TEN);
+		ScreeningRequest screening = screeningRequest(9L, movieId);
 
 		mockMvc.perform(post("/api/screening")
 						.contentType(MediaType.APPLICATION_JSON)
@@ -113,8 +130,7 @@ public class ScreeningIntegrationTest {
 	@Test
 	public void createScreening_whenJsonValueIsInvalid_returnsBadRequest() throws Exception {
 
-		ScreeningRequest screening = new ScreeningRequest
-				(50L, 51L, LocalDate.of(2020, 10, 25), TimeSlot.PRIME, BigDecimal.TEN);
+		ScreeningRequest screening = screeningRequestWithInvalidDate();
 
 		mockMvc.perform(post("/api/screening")
 						.contentType(MediaType.APPLICATION_JSON)
@@ -145,39 +161,39 @@ public class ScreeningIntegrationTest {
 
 	@Test
 	public void getScreeningById_whenScreeningDoesExist_returnsIsOK() throws Exception {
-		MovieRequest movie = new MovieRequest("testTitle", "testDescription", 120, Genre.FANTASY);
-		CinemaRoomRequest room = new CinemaRoomRequest(5, 10, 20);
+		MovieRequest movie = movieRequest();
+		CinemaRoomRequest room = cinemaRoomRequest();
 
-		Long movieId = getMovieId(movie);
-		Long roomId = getCinemaId(room);
+		Long movieId = createMovieAndGetId(movie);
+		Long roomId = createCinemaRoomAndGetId(room);
 
-		ScreeningRequest screening = new ScreeningRequest(roomId, movieId, LocalDate.now(), TimeSlot.PRIME, BigDecimal.valueOf(15));
-		Long screeningId = getScreeningId(screening);
+		ScreeningRequest screening = screeningRequest(roomId, movieId);
+		Long screeningId = createScreeningAndGetId(screening);
 
 		mockMvc.perform(get("/api/screening/" + screeningId))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.id").value(screeningId))
-				.andExpect(jsonPath("$.screeningDate").value(String.valueOf(LocalDate.now())))
-				.andExpect(jsonPath("$.price").value(15.00))
-				.andExpect(jsonPath("$.movieInformation.title").value("testTitle"))
-				.andExpect(jsonPath("$.movieInformation.description").value("testDescription"))
-				.andExpect(jsonPath("$.movieInformation.duration").value(120))
-				.andExpect(jsonPath("$.movieInformation.genre").value("FANTASY"))
-				.andExpect(jsonPath("$.cinemaRoomInformation.roomNumber").value(room.getRoomNumber()))
-				.andExpect(jsonPath("$.cinemaRoomInformation.roomCapacity").value(200))
-				.andExpect(jsonPath("$.timeSlot").value("PRIME"));
+				.andExpect(jsonPath("$.screeningDate").value(SCREENING_DATE))
+				.andExpect(jsonPath("$.price").value(SCREENING_PRICE.doubleValue()))
+				.andExpect(jsonPath("$.movieInformation.title").value(MOVIE_TITLE))
+				.andExpect(jsonPath("$.movieInformation.description").value(MOVIE_DESCRIPTION))
+				.andExpect(jsonPath("$.movieInformation.duration").value(MOVIE_DURATION))
+				.andExpect(jsonPath("$.movieInformation.genre").value(MOVIE_GENRE))
+				.andExpect(jsonPath("$.cinemaRoomInformation.roomNumber").value(ROOM_NUMBER))
+				.andExpect(jsonPath("$.cinemaRoomInformation.roomCapacity").value(ROOM_CAPACITY))
+				.andExpect(jsonPath("$.timeSlot").value(SCREENING_SLOT));
 	}
 
 	@Test
 	public void deleteScreeningById_whenScreeningHasNoReservations_returnsNoContent() throws Exception {
-		MovieRequest movie = new MovieRequest("testTitle", "testDescription", 120, Genre.FANTASY);
-		CinemaRoomRequest room = new CinemaRoomRequest(5, 10, 20);
+		MovieRequest movie = movieRequest();
+		CinemaRoomRequest room = cinemaRoomRequest();
 
-		Long movieId = getMovieId(movie);
-		Long roomId = getCinemaId(room);
+		Long movieId = createMovieAndGetId(movie);
+		Long roomId = createCinemaRoomAndGetId(room);
 
-		ScreeningRequest screening = new ScreeningRequest(roomId, movieId, LocalDate.now(), TimeSlot.PRIME, BigDecimal.TEN);
-		Long screeningId = getScreeningId(screening);
+		ScreeningRequest screening = screeningRequest(roomId, movieId);
+		Long screeningId = createScreeningAndGetId(screening);
 
 		mockMvc.perform(delete("/api/screening/" + screeningId))
 				.andExpect(status().isNoContent());
@@ -185,36 +201,36 @@ public class ScreeningIntegrationTest {
 
 	@Test
 	public void updateScreeningById_whenScreeningHasNoReservations_returnsOK() throws Exception {
-		MovieRequest movie = new MovieRequest("testTitle", "testDescription", 120, Genre.FANTASY);
-		CinemaRoomRequest room = new CinemaRoomRequest(5, 10, 20);
+		MovieRequest movie = movieRequest();
+		CinemaRoomRequest room = cinemaRoomRequest();
 
-		Long movieId = getMovieId(movie);
-		Long roomId = getCinemaId(room);
+		Long movieId = createMovieAndGetId(movie);
+		Long roomId = createCinemaRoomAndGetId(room);
 
-		ScreeningRequest screening = new ScreeningRequest(roomId, movieId, LocalDate.now(), TimeSlot.PRIME, BigDecimal.TEN);
+		ScreeningRequest screening = screeningRequest(roomId, movieId);
 
-		Long screeningId = getScreeningId(screening);
-		ScreeningRequest update = new ScreeningRequest(roomId, movieId, LocalDate.now(), TimeSlot.EVENING, BigDecimal.valueOf(15));
+		Long screeningId = createScreeningAndGetId(screening);
+		ScreeningRequest update = uodatedScreeningRequest(roomId, movieId);
 
 		mockMvc.perform(patch("/api/screening/" + screeningId)
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(update)))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.id").value(screeningId))
-				.andExpect(jsonPath("$.screeningDate").value(String.valueOf(LocalDate.now())))
-				.andExpect(jsonPath("$.price").value(15.00))
-				.andExpect(jsonPath("$.movieInformation.title").value("testTitle"))
-				.andExpect(jsonPath("$.movieInformation.description").value("testDescription"))
-				.andExpect(jsonPath("$.movieInformation.duration").value(120))
-				.andExpect(jsonPath("$.movieInformation.genre").value("FANTASY"))
-				.andExpect(jsonPath("$.cinemaRoomInformation.roomNumber").value(room.getRoomNumber()))
-				.andExpect(jsonPath("$.cinemaRoomInformation.roomCapacity").value(200))
-				.andExpect(jsonPath("$.timeSlot").value("EVENING"));
+				.andExpect(jsonPath("$.screeningDate").value(SCREENING_DATE))
+				.andExpect(jsonPath("$.price").value(UPDATED_PRICE.doubleValue()))
+				.andExpect(jsonPath("$.movieInformation.title").value(MOVIE_TITLE))
+				.andExpect(jsonPath("$.movieInformation.description").value(MOVIE_DESCRIPTION))
+				.andExpect(jsonPath("$.movieInformation.duration").value(MOVIE_DURATION))
+				.andExpect(jsonPath("$.movieInformation.genre").value(MOVIE_GENRE))
+				.andExpect(jsonPath("$.cinemaRoomInformation.roomNumber").value(ROOM_NUMBER))
+				.andExpect(jsonPath("$.cinemaRoomInformation.roomCapacity").value(ROOM_CAPACITY))
+				.andExpect(jsonPath("$.timeSlot").value(UPDATED_SCREENING_SLOT));
 	}
 
 	//Helper Methods
 
-	private Long getScreeningId(ScreeningRequest screeningRequest) throws Exception {
+	private Long createScreeningAndGetId(ScreeningRequest screeningRequest) throws Exception {
 
 		String screeningResponseJson = mockMvc.perform(post("/api/screening")
 						.contentType(MediaType.APPLICATION_JSON)
@@ -225,7 +241,7 @@ public class ScreeningIntegrationTest {
 		return ((Number) JsonPath.read(screeningResponseJson, "$.id")).longValue();
 	}
 
-	private Long getMovieId(MovieRequest movieRequest) throws Exception {
+	private Long createMovieAndGetId(MovieRequest movieRequest) throws Exception {
 
 		String movieResponseJson = mockMvc.perform(post("/api/movies")
 						.contentType(MediaType.APPLICATION_JSON)
@@ -236,7 +252,7 @@ public class ScreeningIntegrationTest {
 		return ((Number) JsonPath.read(movieResponseJson, "$.id")).longValue();
 	}
 
-	private Long getCinemaId(CinemaRoomRequest cinemaRoomRequest) throws Exception {
+	private Long createCinemaRoomAndGetId(CinemaRoomRequest cinemaRoomRequest) throws Exception {
 
 		String roomResponseJson = mockMvc.perform(post("/api/rooms")
 						.contentType(MediaType.APPLICATION_JSON)
@@ -245,6 +261,29 @@ public class ScreeningIntegrationTest {
 				.andReturn().getResponse().getContentAsString();
 
 		return ((Number) JsonPath.read(roomResponseJson, "$.id")).longValue();
+	}
+
+	private MovieRequest movieRequest() {
+		return new MovieRequest(MOVIE_TITLE, MOVIE_DESCRIPTION, MOVIE_DURATION, Genre.FANTASY);
+	}
+
+	private CinemaRoomRequest cinemaRoomRequest() {
+		return new CinemaRoomRequest(ROOM_NUMBER, ROWS, ROW_CAPACITY);
+	}
+
+	private ScreeningRequest screeningRequest(Long roomId, Long movieId) {
+		return new ScreeningRequest(roomId, movieId, LocalDate.now(), TimeSlot.PRIME, SCREENING_PRICE);
+
+	}
+
+	private ScreeningRequest uodatedScreeningRequest(Long roomId, Long movieId) {
+		return new ScreeningRequest(roomId, movieId, LocalDate.now(), TimeSlot.EVENING, UPDATED_PRICE);
+
+	}
+
+	private ScreeningRequest screeningRequestWithInvalidDate() {
+		return new ScreeningRequest(99L, 50L, INVALID_SCREENING_DATE, TimeSlot.PRIME, SCREENING_PRICE);
+
 	}
 
 

@@ -46,30 +46,34 @@ public class MovieIntegrationTest {
 	@Autowired
 	private CinemaRoomRepository cinemaRoomRepository;
 
+	private static final String MOVIE_TITLE = "testTitle";
+	private static final String MOVIE_DESCRIPTION = "testDescription";
+	private static final int MOVIE_DURATION = 100;
+	private static final Genre MOVIE_GENRE = Genre.FANTASY;
+
+	private static final String UPDATED_MOVIE_TITLE = "newTitle";
 
 	@AfterEach
-	public void tearDown() throws Exception {
-		movieRepository.deleteAll();
-		cinemaRoomRepository.deleteAll();
+	void tearDown() {
 		screeningRepository.deleteAll();
+		cinemaRoomRepository.deleteAll();
+		movieRepository.deleteAll();
 	}
 
 	@Test
 	public void createAndGetMovie_whenJsonIsValid_returnIsCreatedAndIsOK() throws Exception {
-		MovieRequest request = new MovieRequest(
-				"testTitle", "testDescription", 100, Genre.FANTASY);
+		MovieRequest request = movieRequest();
 
-		Long id = getMovieId(request);
+		Long id = createMovieAndReturnId(request);
 
 		mockMvc.perform(get("/api/movies/" + id))
 				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.title").value("testTitle"));
+				.andExpect(jsonPath("$.title").value(MOVIE_TITLE));
 	}
 
 	@Test
 	public void createMovie_whenJsonIsInvalid_returnBadRequest() throws Exception {
-		MovieRequest request = new MovieRequest(
-				" ", "testDescription", 100, Genre.FANTASY);
+		MovieRequest request = invalidRequest();
 
 		mockMvc.perform(post("/api/movies")
 						.contentType(MediaType.APPLICATION_JSON)
@@ -88,17 +92,13 @@ public class MovieIntegrationTest {
 
 	@Test
 	public void getMovieListByGenre_whenMoviesExist_returnIsOK() throws Exception {
-		MovieRequest request = new MovieRequest(
-				"testTitle", "testDescription", 100, Genre.FANTASY);
+		MovieRequest request = movieRequest();
 
-		mockMvc.perform(post("/api/movies")
-						.contentType(MediaType.APPLICATION_JSON)
-						.content(objectMapper.writeValueAsString(request)))
-				.andExpect(status().isCreated());
+		postMovie(request);
 
 		mockMvc.perform(get("/api/movies/filter/genre/FANTASY"))
 				.andExpect(status().isOk())
-				.andExpect(jsonPath("$[0].title").value("testTitle"));
+				.andExpect(jsonPath("$[0].title").value(MOVIE_TITLE));
 	}
 
 	@Test
@@ -111,17 +111,13 @@ public class MovieIntegrationTest {
 
 	@Test
 	public void getMovieListByDuration_whenMoviesExist_returnIsOK() throws Exception {
-		MovieRequest request = new MovieRequest(
-				"testTitle", "testDescription", 100, Genre.FANTASY);
+		MovieRequest request = movieRequest();
 
-		mockMvc.perform(post("/api/movies")
-						.contentType(MediaType.APPLICATION_JSON)
-						.content(objectMapper.writeValueAsString(request)))
-				.andExpect(status().isCreated());
+		postMovie(request);
 
 		mockMvc.perform(get("/api/movies/filter/duration/80"))
 				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.[0]title").value("testTitle"));
+				.andExpect(jsonPath("$.[0].title").value(MOVIE_TITLE));
 	}
 
 	@Test
@@ -134,38 +130,33 @@ public class MovieIntegrationTest {
 
 	@Test
 	public void updateMovie_whenMoviesExistAndRequestIsValidAndNoScreeningExits_returnIsOK() throws Exception {
-		MovieRequest request = new MovieRequest(
-				"testTitle", "testDescription", 100, Genre.FANTASY);
+		MovieRequest request = movieRequest();
 
-		Long id = getMovieId(request);
+		Long id = createMovieAndReturnId(request);
 
-		request.setTitle("newTitle");
+		updateMovieTitle(request);
 
 		mockMvc.perform(patch("/api/movies/" + id)
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(request)))
 				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.title").value("newTitle"));
+				.andExpect(jsonPath("$.title").value(UPDATED_MOVIE_TITLE));
 
 	}
 
 	@Test
 	public void updateMovie_whenMoviesExistAndRequestIsValidAndScreeningExits_returnsBadRequest() throws Exception {
-		MovieRequest request = new MovieRequest(
-				"testTitle", "testDescription", 100, Genre.FANTASY);
+		MovieRequest request = movieRequest();
 
-		CinemaRoomRequest roomRequest = new CinemaRoomRequest(10, 10, 20);
-		Long movieId = getMovieId(request);
-		Long roomId = getCinemaId(roomRequest);
+		CinemaRoomRequest roomRequest = cinemaRoomRequest();
+		Long movieId = createMovieAndReturnId(request);
+		Long roomId = createCinemaRoomAndReturnId(roomRequest);
 
-		ScreeningRequest screeningRequest = new ScreeningRequest(roomId, movieId, LocalDate.now(), TimeSlot.PRIME, BigDecimal.TEN);
+		ScreeningRequest screeningRequest = screeningRequest(roomId, movieId);
 
-		mockMvc.perform(post("/api/screening")
-						.contentType(MediaType.APPLICATION_JSON)
-						.content(objectMapper.writeValueAsString(screeningRequest)))
-				.andExpect(status().isOk());
+		postScreening(screeningRequest);
 
-		request.setTitle("newTitle");
+		updateMovieTitle(request);
 
 		mockMvc.perform(patch("/api/movies/" + movieId)
 						.contentType(MediaType.APPLICATION_JSON)
@@ -178,10 +169,9 @@ public class MovieIntegrationTest {
 
 	@Test
 	public void deleteMovie_whenMoviesExistAndRequestIsValidAndNoScreeningExists_returnNoContent() throws Exception {
-		MovieRequest request = new MovieRequest(
-				"testTitle", "testDescription", 100, Genre.FANTASY);
+		MovieRequest request = movieRequest();
 
-		Long id = getMovieId(request);
+		Long id = createMovieAndReturnId(request);
 
 		mockMvc.perform(delete("/api/movies/" + id))
 				.andExpect(status().isNoContent());
@@ -190,19 +180,15 @@ public class MovieIntegrationTest {
 
 	@Test
 	public void deleteMovie_whenMoviesExistAndRequestIsValidAndScreeningExists_returnsBadRequest() throws Exception {
-		MovieRequest request = new MovieRequest(
-				"testTitle", "testDescription", 100, Genre.FANTASY);
+		MovieRequest request = movieRequest();
 
-		CinemaRoomRequest roomRequest = new CinemaRoomRequest(10, 10, 20);
-		Long movieId = getMovieId(request);
-		Long roomId = getCinemaId(roomRequest);
+		CinemaRoomRequest roomRequest = cinemaRoomRequest();
+		Long movieId = createMovieAndReturnId(request);
+		Long roomId = createCinemaRoomAndReturnId(roomRequest);
 
-		ScreeningRequest screeningRequest = new ScreeningRequest(roomId, movieId, LocalDate.now(), TimeSlot.PRIME, BigDecimal.TEN);
+		ScreeningRequest screeningRequest = screeningRequest(roomId, movieId);
 
-		mockMvc.perform(post("/api/screening")
-						.contentType(MediaType.APPLICATION_JSON)
-						.content(objectMapper.writeValueAsString(screeningRequest)))
-				.andExpect(status().isOk());
+		postScreening(screeningRequest);
 
 		mockMvc.perform(delete("/api/movies/" + movieId))
 				.andExpect(status().isBadRequest())
@@ -226,7 +212,7 @@ public class MovieIntegrationTest {
 
 	//Helper Method
 
-	private Long getMovieId(MovieRequest movieRequest) throws Exception {
+	private Long createMovieAndReturnId(MovieRequest movieRequest) throws Exception {
 		String responseJson = mockMvc.perform(post("/api/movies")
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(movieRequest)))
@@ -236,7 +222,7 @@ public class MovieIntegrationTest {
 		return ((Number) JsonPath.read(responseJson, "$.id")).longValue();
 	}
 
-	private Long getCinemaId(CinemaRoomRequest cinemaRoomRequest) throws Exception {
+	private Long createCinemaRoomAndReturnId(CinemaRoomRequest cinemaRoomRequest) throws Exception {
 
 		String roomResponseJson = mockMvc.perform(post("/api/rooms")
 						.contentType(MediaType.APPLICATION_JSON)
@@ -245,6 +231,40 @@ public class MovieIntegrationTest {
 				.andReturn().getResponse().getContentAsString();
 
 		return ((Number) JsonPath.read(roomResponseJson, "$.id")).longValue();
+	}
+
+	private MovieRequest movieRequest() {
+		return new MovieRequest(MOVIE_TITLE, MOVIE_DESCRIPTION, MOVIE_DURATION, MOVIE_GENRE);
+	}
+
+	private MovieRequest invalidRequest() {
+		return new MovieRequest(" ", MOVIE_DESCRIPTION, MOVIE_DURATION, MOVIE_GENRE);
+	}
+
+	private CinemaRoomRequest cinemaRoomRequest() {
+		return new CinemaRoomRequest(10, 10, 20);
+	}
+
+	private void updateMovieTitle(MovieRequest movieRequest) {
+		movieRequest.setTitle(UPDATED_MOVIE_TITLE);
+	}
+
+	private ScreeningRequest screeningRequest(Long roomId, Long movieId) {
+		return new ScreeningRequest(roomId, movieId, LocalDate.now(), TimeSlot.PRIME, BigDecimal.TEN);
+	}
+
+	private void postScreening(ScreeningRequest screeningRequest) throws Exception {
+		mockMvc.perform(post("/api/screening")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(screeningRequest)))
+				.andExpect(status().isOk());
+	}
+
+	private void postMovie(MovieRequest movieRequest) throws Exception {
+		mockMvc.perform(post("/api/movies")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(movieRequest)))
+				.andExpect(status().isCreated());
 	}
 
 
