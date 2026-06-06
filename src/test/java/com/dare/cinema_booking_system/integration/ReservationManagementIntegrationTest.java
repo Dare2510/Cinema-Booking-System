@@ -30,7 +30,6 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -38,7 +37,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @ActiveProfiles("test")
 @AutoConfigureMockMvc
-public class ReservationIntegrationTest {
+public class ReservationManagementIntegrationTest {
 
 	@Autowired
 	private MockMvc mockMvc;
@@ -98,14 +97,23 @@ public class ReservationIntegrationTest {
 	private static final int ROW_CAPACITY = 20;
 
 	private static final BigDecimal SCREENING_PRICE = BigDecimal.valueOf(10.00);
-	private static final String SCREENING_DATE = LocalDate.now().toString();
-	private static final String SCREENING_SLOT = TimeSlot.PRIME.name();
 
 	private static final PaymentMethod RESERVATION_PAYMENT_METHOD = PaymentMethod.ONLINE;
-	private static final BigDecimal RESERVATION_AMOUNT = BigDecimal.valueOf(20.0);
 
 	@Test
-	public void getReservationById_whenReservationExists_returnsOK() throws Exception {
+	public void getPageOfReservations_withPageableDefaults_returnIsOK() throws Exception {
+		mockMvc.perform(get("/api/management/reservation")
+						.param("page", "0")
+						.param("size", "10")
+						.param("sort", "reservationStatus")
+						.param("direction", "ASC"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.content").isArray())
+				.andExpect(jsonPath("$.size").value(10));
+	}
+
+	@Test
+	public void completePayment_whenReservationStatusIsCreated_returnsIsOK() throws Exception {
 		MovieRequest movie = movieRequest();
 		Long movieId = createMovieAndGetId(movie);
 
@@ -120,106 +128,13 @@ public class ReservationIntegrationTest {
 		ReservationRequest reservation = reservationRequest(screeningId, seatIdsToReserve);
 		Long reservationId = createReservationAndGetId(reservation);
 
-		mockMvc.perform(get("/api/reservation/" + reservationId))
-				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.reservationId").value(reservationId))
-				.andExpect(jsonPath("$.paymentResponse.amount").value(RESERVATION_AMOUNT))
-				.andExpect(jsonPath("$.timeSlot").value(SCREENING_SLOT))
-				.andExpect(jsonPath("$.screeningDate").value(SCREENING_DATE))
-				.andExpect(jsonPath("$.ticketNumber").exists());
-	}
-
-
-	@Test
-	public void getReservationById_whenReservationDoesNotExists_returnsNotFound() throws Exception {
-		mockMvc.perform(get("/api/reservation/" + 99))
-				.andExpect(status().isNotFound())
-				.andExpect(jsonPath("$.message")
-						.value("Reservation with id " + 99 + " not found"));
-
-	}
-
-	@Test
-	public void createReservation_screeningExistsAndSeatsAreFree_returnsOK() throws Exception {
-		MovieRequest movie = movieRequest();
-		Long movieId = createMovieAndGetId(movie);
-
-		CinemaRoomRequest room = cinemaRoomRequest();
-		Long roomId = createCinemaRoomAndGetId(room);
-
-		ScreeningRequest screening = screeningRequest(roomId, movieId);
-		Long screeningId = createScreeningAndGetId(screening);
-
-		List<Long> seatIdsToReserve = getFreeSeatIds(screeningId).subList(0, 2);
-
-		ReservationRequest reservation = reservationRequest(screeningId, seatIdsToReserve);
-
-		mockMvc.perform(post("/api/reservation/")
-						.contentType(MediaType.APPLICATION_JSON)
-						.content(objectMapper.writeValueAsString(reservation)))
-				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.reservedSeats.size()").value(seatIdsToReserve.size()))
-				.andExpect(jsonPath("$.paymentResponse.recipient").value("Cinema-Booking System"))
-				.andExpect(jsonPath("$.paymentResponse.amount").value(RESERVATION_AMOUNT))
-				.andExpect(result -> {
-
-					result.getResponse().getContentAsString();
-
-					String ticketNumber = JsonPath.read(result.getResponse().getContentAsString(), "$.ticketNumber");
-					String paymentReference = JsonPath.read(result.getResponse().getContentAsString(),
-							"$.paymentResponse.paymentReference");
-
-					assertEquals(ticketNumber, paymentReference);
-				});
-
-
-	}
-
-	@Test
-	public void createReservation_screeningExistsAndSeatsAreReserved_returnsBadRequest() throws Exception {
-		MovieRequest movie = movieRequest();
-		Long movieId = createMovieAndGetId(movie);
-
-		CinemaRoomRequest room = cinemaRoomRequest();
-		Long roomId = createCinemaRoomAndGetId(room);
-
-		ScreeningRequest screening = screeningRequest(roomId, movieId);
-		Long screeningId = createScreeningAndGetId(screening);
-
-		List<Long> seatIdsToReserve = getFreeSeatIds(screeningId).subList(0, 2);
-
-		ReservationRequest reservation = reservationRequest(screeningId, seatIdsToReserve);
-		postReservation(reservation);
-
-		mockMvc.perform(post("/api/reservation/")
-						.contentType(MediaType.APPLICATION_JSON)
-						.content(objectMapper.writeValueAsString(reservation)))
-				.andExpect(status().isBadRequest())
-				.andExpect(jsonPath("$.message").value("Chosen seats are not available"));
-	}
-
-	@Test
-	public void cancelReservation_whenStatusIsValid_returnsOK() throws Exception {
-		MovieRequest movie = movieRequest();
-		Long movieId = createMovieAndGetId(movie);
-
-		CinemaRoomRequest room = cinemaRoomRequest();
-		Long roomId = createCinemaRoomAndGetId(room);
-
-		ScreeningRequest screening = screeningRequest(roomId, movieId);
-		Long screeningId = createScreeningAndGetId(screening);
-
-		List<Long> seatIdsToReserve = getFreeSeatIds(screeningId).subList(0, 2);
-
-		ReservationRequest reservation = reservationRequest(screeningId, seatIdsToReserve);
-		Long reservationId = createReservationAndGetId(reservation);
-
-		mockMvc.perform(patch("/api/reservation/" + reservationId + "/cancel"))
+		mockMvc.perform(patch("/api/management/reservation/" + reservationId + "/complete/payment"))
 				.andExpect(status().isOk());
+
 	}
 
 	@Test
-	public void cancelReservation_whenStatusIsAlreadyCanceled_returnsBadRequest() throws Exception {
+	public void completePayment_whenReservationStatusIsCancelled_returnsBadRequest() throws Exception {
 		MovieRequest movie = movieRequest();
 		Long movieId = createMovieAndGetId(movie);
 
@@ -236,10 +151,64 @@ public class ReservationIntegrationTest {
 
 		cancelReservation(reservationId);
 
-		mockMvc.perform(patch("/api/reservation/" + reservationId + "/cancel"))
-				.andExpect(status().isBadRequest());
+		mockMvc.perform(patch("/api/management/reservation/" + reservationId + "/complete/payment"))
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.message").value(
+						"Payment for reservation with " + reservationId + " id cannot be completed." +
+								" Check status of reservation and payment"));
 	}
 
+	@Test
+	public void refundPayment_whenReservationStatusIsCancelled_returnsIsOk() throws Exception {
+		MovieRequest movie = movieRequest();
+		Long movieId = createMovieAndGetId(movie);
+
+		CinemaRoomRequest room = cinemaRoomRequest();
+		Long roomId = createCinemaRoomAndGetId(room);
+
+		ScreeningRequest screening = screeningRequest(roomId, movieId);
+		Long screeningId = createScreeningAndGetId(screening);
+
+		List<Long> seatIdsToReserve = getFreeSeatIds(screeningId).subList(0, 2);
+
+		ReservationRequest reservation = reservationRequest(screeningId, seatIdsToReserve);
+		Long reservationId = createReservationAndGetId(reservation);
+
+		completePayment(reservationId);
+		cancelReservation(reservationId);
+
+		mockMvc.perform(patch("/api/management/reservation/" + reservationId + "/refund"))
+				.andExpect(status().isOk());
+	}
+
+	@Test
+	public void refundPayment_whenReservationStatusIsCreated_returnsBadRequest() throws Exception {
+		MovieRequest movie = movieRequest();
+		Long movieId = createMovieAndGetId(movie);
+
+		CinemaRoomRequest room = cinemaRoomRequest();
+		Long roomId = createCinemaRoomAndGetId(room);
+
+		ScreeningRequest screening = screeningRequest(roomId, movieId);
+		Long screeningId = createScreeningAndGetId(screening);
+
+		List<Long> seatIdsToReserve = getFreeSeatIds(screeningId).subList(0, 2);
+
+		ReservationRequest reservation = reservationRequest(screeningId, seatIdsToReserve);
+		Long reservationId = createReservationAndGetId(reservation);
+
+		mockMvc.perform(patch("/api/management/reservation/" + reservationId + "/refund"))
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.message").value(
+						"Reservation with " + reservationId +
+								" id cannot be refunded. Check status of reservation and payment"));
+	}
+
+
+	private void completePayment(Long reservationId) throws Exception {
+		mockMvc.perform(patch("/api/management/reservation/" + reservationId + "/complete/payment"))
+				.andExpect(status().isOk());
+	}
 
 	private void cancelReservation(Long reservationId) throws Exception {
 		mockMvc.perform(patch("/api/reservation/" + reservationId + "/cancel"))
@@ -296,13 +265,6 @@ public class ReservationIntegrationTest {
 		return ((Number) JsonPath.read(roomResponseJson, "$.id")).longValue();
 	}
 
-	private void postReservation(ReservationRequest reservation) throws Exception {
-		mockMvc.perform(post("/api/reservation/")
-						.contentType(MediaType.APPLICATION_JSON)
-						.content(objectMapper.writeValueAsString(reservation)))
-				.andExpect(status().isOk());
-	}
-
 	private Long createReservationAndGetId(ReservationRequest reservation) throws Exception {
 		String reservationJson = mockMvc.perform(post("/api/reservation/")
 						.contentType(MediaType.APPLICATION_JSON)
@@ -324,4 +286,5 @@ public class ReservationIntegrationTest {
 				.toList();
 
 	}
+
 }
