@@ -41,7 +41,6 @@ The application models a cinema booking flow with movies, cinema rooms, seats, s
 ### Customer / Reservation API
 
 ```http
-GET  /api/reservations/screenings/{screeningId}/free-seats
 POST /api/reservations
 GET  /api/reservations/{reservationId}
 POST /api/reservations/{reservationId}/cancel
@@ -91,23 +90,14 @@ Implemented:
 - Reservation cancellation flow
 - Ticket and payment status handling
 - UML documentation
+- Unit tests for reservation and status logic
+- Integration tests for reservation endpoints
 
 Planned before final portfolio version:
 
-- Unit tests for reservation and status logic
-- Integration tests for reservation endpoints
 - JWT authentication
 - Role-based authorization
 - Docker setup with PostgreSQL
-
-## Out of Scope
-
-This project intentionally does not include:
-
-- Frontend application
-- External payment provider
-- Email notifications
-- Advanced reporting
 
 The goal is to keep the scope focused on backend development.
 
