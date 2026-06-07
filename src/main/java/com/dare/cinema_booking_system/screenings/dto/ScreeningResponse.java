@@ -8,6 +8,7 @@ import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalTime;
 
 @Getter
 @Setter
@@ -20,6 +21,7 @@ public class ScreeningResponse {
 	private CinemaRoomResponse cinemaRoomInformation;
 	private MovieResponse movieInformation;
 	private TimeSlot timeSlot;
+	private LocalTime startTime;
 	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "0.00")
 	private BigDecimal price;
 	private LocalDate screeningDate;

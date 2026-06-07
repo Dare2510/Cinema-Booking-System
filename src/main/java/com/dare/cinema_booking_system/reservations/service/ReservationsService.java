@@ -43,7 +43,6 @@ public class ReservationsService {
 	private final PaymentRepository paymentRepository;
 	private final TicketRepository ticketRepository;
 	private final ScreeningService screeningService;
-	private final ModelMapper modelMapper;
 	private final Clock clock;
 
 	public ReservationResponse findReservationById(Long reservationId) {

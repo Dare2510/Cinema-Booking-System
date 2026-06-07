@@ -6,7 +6,6 @@ import com.dare.cinema_booking_system.movie.service.MovieService;
 import com.dare.cinema_booking_system.rooms.dto.CinemaRoomResponse;
 import com.dare.cinema_booking_system.rooms.entity.CinemaRoomEntity;
 import com.dare.cinema_booking_system.rooms.entity.SeatEntity;
-import com.dare.cinema_booking_system.rooms.repository.CinemaRoomRepository;
 import com.dare.cinema_booking_system.rooms.service.CinemaRoomService;
 import com.dare.cinema_booking_system.screenings.dto.ScreeningRequest;
 import com.dare.cinema_booking_system.screenings.dto.ScreeningResponse;
@@ -15,7 +14,6 @@ import com.dare.cinema_booking_system.screenings.entity.ScreeningEntity;
 import com.dare.cinema_booking_system.screenings.entity.ScreeningSeatEntity;
 import com.dare.cinema_booking_system.screenings.entity.TimeSlot;
 import com.dare.cinema_booking_system.screenings.exceptions.ScreeningNotFoundException;
-import com.dare.cinema_booking_system.screenings.exceptions.ScreeningSeatNotAvailableException;
 import com.dare.cinema_booking_system.screenings.exceptions.ScreeningSlotAlreadyBookedException;
 import com.dare.cinema_booking_system.screenings.exceptions.ScreeningUpdateNotPossibleException;
 import com.dare.cinema_booking_system.screenings.repository.ScreeningRepository;
@@ -37,7 +35,6 @@ public class ScreeningService {
 
 	private final ScreeningRepository screeningRepository;
 	private final ScreeningSeatRepository screeningSeatRepository;
-	private final CinemaRoomRepository cinemaRoomRepository;
 	private final MovieService movieService;
 	private final CinemaRoomService cinemaRoomService;
 
@@ -48,6 +45,17 @@ public class ScreeningService {
 					log.info("Getting Page of Screenings");
 					return responseBuilder(screenings);
 				});
+	}
+
+	public List<ScreeningResponse> getUpcomingScreenings() {
+		LocalDate periodOfOneMonth = LocalDate.now().plusMonths(1);
+		return screeningRepository.getUpcomingScreenings(periodOfOneMonth)
+				.stream()
+				.map(screenings ->
+				{
+					log.info("Getting upcoming Screenings");
+					return responseBuilder(screenings);
+				}).toList();
 	}
 
 	public ScreeningResponse getScreeningById(Long screeningId) {
@@ -153,15 +161,6 @@ public class ScreeningService {
 				});
 	}
 
-	public ScreeningSeatEntity getScreeningSeatEntity(Long screeningSeatId) {
-		return screeningSeatRepository.findById(screeningSeatId).orElseThrow(
-				() -> {
-					log.info("Screening seat with ID {} not found or not available", screeningSeatId);
-					return new ScreeningSeatNotAvailableException(screeningSeatId);
-				}
-		);
-	}
-
 	private List<ScreeningSeatEntity> createScreeningSeats(CinemaRoomEntity cinemaRoom, ScreeningEntity screening) {
 		List<SeatEntity> cinemaSeats = cinemaRoom.getSeats();
 		List<ScreeningSeatEntity> screeningSeats = screening.getScreeningSeats();
@@ -231,6 +230,7 @@ public class ScreeningService {
 				.screeningDate(screeningEntity.getScreeningDate())
 				.price(screeningEntity.getPrice())
 				.timeSlot(screeningEntity.getTimeSlot())
+				.startTime(screeningEntity.getStartTime())
 				.movieInformation(MovieResponse.builder()
 						.title(screeningMovie.getTitle())
 						.description(screeningMovie.getDescription())

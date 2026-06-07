@@ -23,8 +23,9 @@ GET: /api/screening                                      | get page screenings
 POST: /api/screening                                     | create a new screening
 GET: /api/screening/{id}                                 | get a screening by id
 GET: /api/screening/{screeningId}/seats/free             | get list of free screening seats for a screening
-PATCH: /api/screenings/{id}                              | update a screening
-DELETE: /api/screenings/{id}                             | delete screening
+PATCH: /api/screening/{id}                               | update a screening
+DELETE: /api/screening/{id}                              | delete screening
+GET: /api/screening/upcoming                             | get a list of upcoming screenings - period = 1 month
 
 Reservation
 GET: /api/reservation/{id}                               | get information about reservation

@@ -34,6 +34,11 @@ public class ScreeningController {
 
 	}
 
+	@GetMapping("/upcoming")
+	public ResponseEntity<List<ScreeningResponse>> getUpcomingScreenings() {
+		return ResponseEntity.ok(screeningService.getUpcomingScreenings());
+	}
+
 	@GetMapping("/{id}")
 	public ResponseEntity<ScreeningResponse> getScreeningById(@PathVariable Long id) {
 		return ResponseEntity.ok(screeningService.getScreeningById(id));
