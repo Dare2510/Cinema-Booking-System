@@ -24,6 +24,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -43,10 +44,11 @@ public class ReservationsService {
 	private final TicketRepository ticketRepository;
 	private final ScreeningService screeningService;
 	private final ModelMapper modelMapper;
+	private final Clock clock;
 
 	public ReservationResponse findReservationById(Long reservationId) {
 		ReservationEntity reservation = getReservationById(reservationId);
-		return responseBuilder(reservation,reservation.getTicket(),reservation.getReservedSeats());
+		return responseBuilder(reservation, reservation.getTicket(), reservation.getReservedSeats());
 	}
 
 	public Page<ReservationResponse> getPageOfReservations(Pageable pageable) {
@@ -187,8 +189,8 @@ public class ReservationsService {
 	}
 
 	public void setStatusOfExpiredTickets() {
-		LocalDate dateNow = LocalDate.now();
-		LocalTime timeNow = LocalTime.now();
+		LocalDate dateNow = LocalDate.now(clock);
+		LocalTime timeNow = LocalTime.now(clock);
 
 		List<TicketEntity> expiredTickets = ticketRepository.getExpiredTickets(dateNow, timeNow);
 		if (!expiredTickets.isEmpty()) {
@@ -197,6 +199,8 @@ public class ReservationsService {
 				ticket.setTicketStatus(TicketStatus.EXPIRED);
 			});
 			ticketRepository.saveAll(expiredTickets);
+		} else {
+			log.info("No expired tickets found");
 		}
 
 	}
@@ -276,7 +280,7 @@ public class ReservationsService {
 		TimeSlot timeSlot = screeningToCancel.getTimeSlot();
 		LocalDate date = screeningToCancel.getScreeningDate();
 
-		LocalDateTime currentDateTime = LocalDateTime.now();
+		LocalDateTime currentDateTime = LocalDateTime.now(clock);
 
 		int time = (timeSlot == TimeSlot.EVENING) ? 17 : (timeSlot == TimeSlot.PRIME) ? 20 : 23;
 		return date.atTime(time, 0).isAfter(currentDateTime.plusMinutes(60));
@@ -330,6 +334,7 @@ public class ReservationsService {
 					.reservationId(newReservation.getId())
 					.reservedSeats(reservedSeats)
 					.screeningDate(newReservation.getScreening().getScreeningDate())
+					.timeSlot(newReservation.getScreening().getTimeSlot())
 					.ticketNumber(tickets.getTicketNumber())
 					.paymentResponse(PaymentResponse.builder()
 							.amount(newReservation.getPayment().getAmount())

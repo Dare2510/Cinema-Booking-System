@@ -23,14 +23,19 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import tools.jackson.databind.ObjectMapper;
 
 import java.math.BigDecimal;
+import java.time.Clock;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -70,6 +75,9 @@ public class ReservationIntegrationTest {
 	@Autowired
 	private SeatRepository seatRepository;
 
+	@MockitoBean
+	private Clock clock;
+
 	@AfterEach
 	void tearDown() {
 		reservationsRepository.deleteAll();
@@ -99,6 +107,7 @@ public class ReservationIntegrationTest {
 
 	private static final BigDecimal SCREENING_PRICE = BigDecimal.valueOf(10.00);
 	private static final String SCREENING_DATE = LocalDate.now().toString();
+	private static final TimeSlot SCREENING_TIMESLOT = TimeSlot.PRIME;
 	private static final String SCREENING_SLOT = TimeSlot.PRIME.name();
 
 	private static final PaymentMethod RESERVATION_PAYMENT_METHOD = PaymentMethod.ONLINE;
@@ -214,6 +223,8 @@ public class ReservationIntegrationTest {
 		ReservationRequest reservation = reservationRequest(screeningId, seatIdsToReserve);
 		Long reservationId = createReservationAndGetId(reservation);
 
+		mockCurrentTime(minutesBeforeScreening(90));
+
 		mockMvc.perform(patch("/api/reservation/" + reservationId + "/cancel"))
 				.andExpect(status().isOk());
 	}
@@ -234,10 +245,37 @@ public class ReservationIntegrationTest {
 		ReservationRequest reservation = reservationRequest(screeningId, seatIdsToReserve);
 		Long reservationId = createReservationAndGetId(reservation);
 
+		mockCurrentTime(minutesBeforeScreening(90));
+
 		cancelReservation(reservationId);
 
 		mockMvc.perform(patch("/api/reservation/" + reservationId + "/cancel"))
 				.andExpect(status().isBadRequest());
+	}
+
+	@Test
+	public void cancelReservation_whenCancelRequestIsToLate_returnsBadRequest() throws Exception {
+		MovieRequest movie = movieRequest();
+		Long movieId = createMovieAndGetId(movie);
+
+		CinemaRoomRequest room = cinemaRoomRequest();
+		Long roomId = createCinemaRoomAndGetId(room);
+
+		ScreeningRequest screening = screeningRequest(roomId, movieId);
+		Long screeningId = createScreeningAndGetId(screening);
+
+		List<Long> seatIdsToReserve = getFreeSeatIds(screeningId).subList(0, 2);
+
+		ReservationRequest reservation = reservationRequest(screeningId, seatIdsToReserve);
+		Long reservationId = createReservationAndGetId(reservation);
+
+		mockCurrentTime(minutesBeforeScreening(30));
+
+		mockMvc.perform(patch("/api/reservation/" + reservationId + "/cancel"))
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.message").
+						value("Reservation with id " + reservationId + " cannot be cancelled." +
+								"Reservation must be cancelled at least 60 min before screening"));
 	}
 
 
@@ -322,6 +360,19 @@ public class ReservationIntegrationTest {
 		return freeSeatIds.stream()
 				.map(Integer::longValue)
 				.toList();
+	}
 
+	private LocalDateTime minutesBeforeScreening(int minutes) {
+		return LocalDateTime.of(
+				LocalDate.parse(SCREENING_DATE),
+				SCREENING_TIMESLOT.getStartTime().minusMinutes(minutes)
+		);
+	}
+
+	private void mockCurrentTime(LocalDateTime currentTime) {
+		ZoneId zone = ZoneId.systemDefault();
+
+		given(clock.instant()).willReturn(currentTime.atZone(zone).toInstant());
+		given(clock.getZone()).willReturn(zone);
 	}
 }

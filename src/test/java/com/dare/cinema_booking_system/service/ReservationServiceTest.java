@@ -29,8 +29,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalTime;
+import java.time.*;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -38,6 +37,7 @@ import java.util.UUID;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -51,6 +51,9 @@ class ReservationServiceTest {
 	private static final List<Long> SEAT_IDS = List.of(1L, 2L);
 	private static final long SEAT_COUNT = 2L;
 	private static final BigDecimal PRICE_PER_SEAT = BigDecimal.valueOf(10);
+
+	private static final String SCREENING_DATE = LocalDate.now().toString();
+	private static final TimeSlot SCREENING_TIMESLOT = TimeSlot.PRIME;
 
 	@InjectMocks
 	private ReservationsService reservationsService;
@@ -72,6 +75,9 @@ class ReservationServiceTest {
 
 	@Mock
 	private ModelMapper modelMapper;
+
+	@Mock
+	private Clock clock;
 
 	@Test
 	void createReservation_whenReservedSeatsAreFree_returnsReservationResponse() {
@@ -150,6 +156,8 @@ class ReservationServiceTest {
 		mockExistingReservation(reservation);
 		when(screeningService.getScreeningEntity(SCREENING_ID)).thenReturn(screening);
 
+		mockCurrentTime(minutesBeforeScreening(90));
+
 		reservationsService.cancelReservation(RESERVATION_ID);
 
 		assertEquals(ReservationStatus.CANCELLED, reservation.getReservationStatus());
@@ -179,6 +187,8 @@ class ReservationServiceTest {
 		mockExistingReservation(reservation);
 		when(screeningService.getScreeningEntity(SCREENING_ID)).thenReturn(screening);
 
+		mockCurrentTime(minutesBeforeScreening(90));
+
 		assertThatThrownBy(() -> reservationsService.cancelReservation(RESERVATION_ID))
 				.isInstanceOf(ReservationCancelNotOnTimeException.class)
 				.hasMessage("Reservation with id " + RESERVATION_ID + " cannot be cancelled." +
@@ -200,6 +210,8 @@ class ReservationServiceTest {
 
 		mockExistingReservation(reservation);
 		when(screeningService.getScreeningEntity(SCREENING_ID)).thenReturn(screening);
+
+		mockCurrentTime(minutesBeforeScreening(90));
 
 		assertThatThrownBy(() -> reservationsService.cancelReservation(RESERVATION_ID))
 				.isInstanceOf(ReservationInvalidStatusFlowException.class)
@@ -324,6 +336,8 @@ class ReservationServiceTest {
 		TicketEntity ticket1 = ticket(TicketStatus.VALID, reservation);
 		TicketEntity ticket2 = ticket(TicketStatus.VALID, reservation);
 
+		mockCurrentTime(minutesAfterScreening(60));
+
 		when(ticketRepository.getExpiredTickets(any(LocalDate.class), any(LocalTime.class)))
 				.thenReturn(List.of(ticket1, ticket2));
 
@@ -339,10 +353,10 @@ class ReservationServiceTest {
 	}
 
 	@Test
-	void setStatusOfExpiredTickets_whenNoExpiredTicketsExist_doesNothing() {
+	void setStatusOfExpiredTickets_whenNoExpiredTicketsExist() {
 		when(ticketRepository.getExpiredTickets(any(LocalDate.class), any(LocalTime.class)))
 				.thenReturn(List.of());
-
+		mockCurrentTime(minutesBeforeScreening(30));
 		reservationsService.setStatusOfExpiredTickets();
 
 		verify(ticketRepository, never()).saveAll(anyList());
@@ -498,5 +512,26 @@ class ReservationServiceTest {
 		verify(paymentRepository, never()).save(any());
 		verify(ticketRepository, never()).save(any());
 		verify(screeningSeatRepository, never()).saveAll(anyList());
+	}
+
+	private LocalDateTime minutesBeforeScreening(int minutes) {
+		return LocalDateTime.of(
+				LocalDate.parse(SCREENING_DATE),
+				SCREENING_TIMESLOT.getStartTime().minusMinutes(minutes)
+		);
+	}
+
+	private LocalDateTime minutesAfterScreening(int minutes) {
+		return LocalDateTime.of(
+				LocalDate.parse(SCREENING_DATE),
+				SCREENING_TIMESLOT.getStartTime().minusMinutes(minutes)
+		);
+	}
+
+	private void mockCurrentTime(LocalDateTime currentTime) {
+		ZoneId zone = ZoneId.systemDefault();
+
+		given(clock.instant()).willReturn(currentTime.atZone(zone).toInstant());
+		given(clock.getZone()).willReturn(zone);
 	}
 }

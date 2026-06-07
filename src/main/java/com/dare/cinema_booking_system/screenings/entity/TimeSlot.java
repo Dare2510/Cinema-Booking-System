@@ -10,8 +10,8 @@ public enum TimeSlot {
 	PRIME(LocalTime.of(20, 0), LocalTime.of(22, 0)),
 	NIGHT(LocalTime.of(23, 0), LocalTime.of(1, 0));
 
-	private final LocalTime startTime;
-	private final LocalTime endTime;
+	public final LocalTime startTime;
+	public final LocalTime endTime;
 
 	TimeSlot(LocalTime startTime, LocalTime endTime) {
 		this.startTime = startTime;
