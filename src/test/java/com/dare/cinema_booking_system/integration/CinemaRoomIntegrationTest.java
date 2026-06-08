@@ -73,7 +73,7 @@ public class CinemaRoomIntegrationTest {
 		CinemaRoomRequest request = cinemaRoomRequest();
 		Long id = createCinemaRoomAndGetId(request);
 
-		mockMvc.perform(get("/api/rooms/" + id))
+		mockMvc.perform(get("/api/management/rooms/" + id))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.id").value(id))
 				.andExpect(jsonPath("$.roomNumber").value(ROOM_NUMBER))
@@ -84,7 +84,7 @@ public class CinemaRoomIntegrationTest {
 	public void createRoom_whenJsonValuesAreInvalid_returnsBadRequest() throws Exception {
 		CinemaRoomRequest request = cinemaRoomRequestWithInvalidRows();
 
-		mockMvc.perform(post("/api/rooms")
+		mockMvc.perform(post("/api/management/rooms")
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(request)))
 				.andExpect(status().isBadRequest())
@@ -94,7 +94,7 @@ public class CinemaRoomIntegrationTest {
 
 	@Test
 	public void getRoomById_whenRoomDoesNotExist_returnNotFound() throws Exception {
-		mockMvc.perform(get("/api/rooms/999"))
+		mockMvc.perform(get("/api/management/rooms/999"))
 				.andExpect(status().isNotFound())
 				.andExpect(jsonPath("$.message").value("Cinema Room with ID 999 not found"));
 	}
@@ -106,7 +106,7 @@ public class CinemaRoomIntegrationTest {
 
 		updatedCinemaRoomRequest(request);
 
-		mockMvc.perform(patch("/api/rooms/update/" + id)
+		mockMvc.perform(patch("/api/management/rooms/update/" + id)
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(request)))
 				.andExpect(status().isOk())
@@ -131,7 +131,7 @@ public class CinemaRoomIntegrationTest {
 
 		updatedCinemaRoomRequest(request);
 
-		mockMvc.perform(patch("/api/rooms/update/" + roomId)
+		mockMvc.perform(patch("/api/management/rooms/update/" + roomId)
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(request)))
 				.andExpect(status().isBadRequest())
@@ -145,13 +145,13 @@ public class CinemaRoomIntegrationTest {
 		CinemaRoomRequest request = cinemaRoomRequest();
 		Long id = createCinemaRoomAndGetId(request);
 
-		mockMvc.perform(delete("/api/rooms/delete/" + id))
+		mockMvc.perform(delete("/api/management/rooms/delete/" + id))
 				.andExpect(status().isNoContent());
 	}
 
 	@Test
 	public void getPageOfRooms_withPageableDefaults_returnIsOK() throws Exception {
-		mockMvc.perform(get("/api/rooms")
+		mockMvc.perform(get("/api/management/rooms")
 						.param("page", "0")
 						.param("size", "10")
 						.param("sort", "roomNumber")
@@ -166,7 +166,7 @@ public class CinemaRoomIntegrationTest {
 
 	private Long createCinemaRoomAndGetId(CinemaRoomRequest cinemaRoomRequest) throws Exception {
 
-		String roomResponseJson = mockMvc.perform(post("/api/rooms")
+		String roomResponseJson = mockMvc.perform(post("/api/management/rooms")
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(cinemaRoomRequest)))
 				.andExpect(status().isCreated())
@@ -176,7 +176,7 @@ public class CinemaRoomIntegrationTest {
 	}
 
 	private Long createMovieAndGetID(MovieRequest movieRequest) throws Exception {
-		String responseJson = mockMvc.perform(post("/api/movies")
+		String responseJson = mockMvc.perform(post("/api/management/movies")
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(movieRequest)))
 				.andExpect(status().isCreated())
@@ -206,7 +206,7 @@ public class CinemaRoomIntegrationTest {
 	}
 
 	private void postScreening(ScreeningRequest screeningRequest) throws Exception {
-		mockMvc.perform(post("/api/screening")
+		mockMvc.perform(post("/api/management/screening")
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(screeningRequest)))
 				.andExpect(status().isOk());

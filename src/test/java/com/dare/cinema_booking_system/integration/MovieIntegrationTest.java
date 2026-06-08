@@ -66,7 +66,7 @@ public class MovieIntegrationTest {
 
 		Long id = createMovieAndReturnId(request);
 
-		mockMvc.perform(get("/api/movies/" + id))
+		mockMvc.perform(get("/api/management/movies/" + id))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.title").value(MOVIE_TITLE));
 	}
@@ -75,7 +75,7 @@ public class MovieIntegrationTest {
 	public void createMovie_whenJsonIsInvalid_returnBadRequest() throws Exception {
 		MovieRequest request = invalidRequest();
 
-		mockMvc.perform(post("/api/movies")
+		mockMvc.perform(post("/api/management/movies")
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(request)))
 				.andExpect(status().isBadRequest())
@@ -84,7 +84,7 @@ public class MovieIntegrationTest {
 
 	@Test
 	public void getMovie_whenMovieNotExists_returnNotFound() throws Exception {
-		mockMvc.perform(get("/api/movies/999"))
+		mockMvc.perform(get("/api/management/movies/999"))
 				.andExpect(status().isNotFound())
 				.andExpect(jsonPath("$.message")
 						.value("Could not find movie with id: 999"));
@@ -96,14 +96,14 @@ public class MovieIntegrationTest {
 
 		postMovie(request);
 
-		mockMvc.perform(get("/api/movies/filter/genre/FANTASY"))
+		mockMvc.perform(get("/api/management/movies/filter/genre/FANTASY"))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$[0].title").value(MOVIE_TITLE));
 	}
 
 	@Test
 	public void getMovieListByGenre_whenMoviesNotExist_returnNotFound() throws Exception {
-		mockMvc.perform(get("/api/movies/filter/genre/FANTASY"))
+		mockMvc.perform(get("/api/management/movies/filter/genre/FANTASY"))
 				.andExpect(status().isNotFound())
 				.andExpect(jsonPath("$.message")
 						.value("No movies with FANTASY as genre were found"));
@@ -115,14 +115,14 @@ public class MovieIntegrationTest {
 
 		postMovie(request);
 
-		mockMvc.perform(get("/api/movies/filter/duration/80"))
+		mockMvc.perform(get("/api/management/movies/filter/duration/80"))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.[0].title").value(MOVIE_TITLE));
 	}
 
 	@Test
 	public void getMovieListByDuration_whenMoviesNotExist_returnNotFound() throws Exception {
-		mockMvc.perform(get("/api/movies/filter/duration/120"))
+		mockMvc.perform(get("/api/management/movies/filter/duration/120"))
 				.andExpect(status().isNotFound())
 				.andExpect(jsonPath("$.message")
 						.value("No movies with greater than 120 min duration found"));
@@ -136,7 +136,7 @@ public class MovieIntegrationTest {
 
 		updateMovieTitle(request);
 
-		mockMvc.perform(patch("/api/movies/" + id)
+		mockMvc.perform(patch("/api/management/movies/" + id)
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(request)))
 				.andExpect(status().isOk())
@@ -158,7 +158,7 @@ public class MovieIntegrationTest {
 
 		updateMovieTitle(request);
 
-		mockMvc.perform(patch("/api/movies/" + movieId)
+		mockMvc.perform(patch("/api/management/movies/" + movieId)
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(request)))
 				.andExpect(status().isBadRequest())
@@ -173,7 +173,7 @@ public class MovieIntegrationTest {
 
 		Long id = createMovieAndReturnId(request);
 
-		mockMvc.perform(delete("/api/movies/" + id))
+		mockMvc.perform(delete("/api/management/movies/" + id))
 				.andExpect(status().isNoContent());
 
 	}
@@ -190,7 +190,7 @@ public class MovieIntegrationTest {
 
 		postScreening(screeningRequest);
 
-		mockMvc.perform(delete("/api/movies/" + movieId))
+		mockMvc.perform(delete("/api/management/movies/" + movieId))
 				.andExpect(status().isBadRequest())
 				.andExpect(jsonPath("$.message")
 						.value("Movie with id " + movieId + " cannot be deleted, screening exits"));
@@ -200,7 +200,7 @@ public class MovieIntegrationTest {
 
 	@Test
 	public void getPageOfMovies_withPageableDefaults_returnIsOK() throws Exception {
-		mockMvc.perform(get("/api/movies")
+		mockMvc.perform(get("/api/management/movies")
 						.param("page", "0")
 						.param("size", "10")
 						.param("sort", "title")
@@ -213,7 +213,7 @@ public class MovieIntegrationTest {
 	//Helper Method
 
 	private Long createMovieAndReturnId(MovieRequest movieRequest) throws Exception {
-		String responseJson = mockMvc.perform(post("/api/movies")
+		String responseJson = mockMvc.perform(post("/api/management/movies")
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(movieRequest)))
 				.andExpect(status().isCreated())
@@ -224,7 +224,7 @@ public class MovieIntegrationTest {
 
 	private Long createCinemaRoomAndReturnId(CinemaRoomRequest cinemaRoomRequest) throws Exception {
 
-		String roomResponseJson = mockMvc.perform(post("/api/rooms")
+		String roomResponseJson = mockMvc.perform(post("/api/management/rooms")
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(cinemaRoomRequest)))
 				.andExpect(status().isCreated())
@@ -254,14 +254,14 @@ public class MovieIntegrationTest {
 	}
 
 	private void postScreening(ScreeningRequest screeningRequest) throws Exception {
-		mockMvc.perform(post("/api/screening")
+		mockMvc.perform(post("/api/management/screening")
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(screeningRequest)))
 				.andExpect(status().isOk());
 	}
 
 	private void postMovie(MovieRequest movieRequest) throws Exception {
-		mockMvc.perform(post("/api/movies")
+		mockMvc.perform(post("/api/management/movies")
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(movieRequest)))
 				.andExpect(status().isCreated());

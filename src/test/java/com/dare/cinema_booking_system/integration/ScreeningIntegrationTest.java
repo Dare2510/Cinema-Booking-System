@@ -83,7 +83,7 @@ public class ScreeningIntegrationTest {
 
 		ScreeningRequest screening = screeningRequest(roomId, movieId);
 
-		mockMvc.perform(post("/api/screening")
+		mockMvc.perform(post("/api/management/screening")
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(screening)))
 				.andExpect(status().isOk())
@@ -105,7 +105,7 @@ public class ScreeningIntegrationTest {
 
 		ScreeningRequest screening = screeningRequest(roomId, 99L);
 
-		mockMvc.perform(post("/api/screening")
+		mockMvc.perform(post("/api/management/screening")
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(screening)))
 				.andExpect(status().isNotFound())
@@ -120,7 +120,7 @@ public class ScreeningIntegrationTest {
 
 		ScreeningRequest screening = screeningRequest(9L, movieId);
 
-		mockMvc.perform(post("/api/screening")
+		mockMvc.perform(post("/api/management/screening")
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(screening)))
 				.andExpect(status().isNotFound())
@@ -132,7 +132,7 @@ public class ScreeningIntegrationTest {
 
 		ScreeningRequest screening = screeningRequestWithInvalidDate();
 
-		mockMvc.perform(post("/api/screening")
+		mockMvc.perform(post("/api/management/screening")
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(screening)))
 				.andExpect(status().isBadRequest())
@@ -141,7 +141,7 @@ public class ScreeningIntegrationTest {
 
 	@Test
 	public void getPageOfScreenings_withPageableDefaults_returnIsOK() throws Exception {
-		mockMvc.perform(get("/api/screening")
+		mockMvc.perform(get("/api/management/screening")
 						.param("page", "0")
 						.param("size", "10")
 						.param("sort", "screeningDate")
@@ -153,7 +153,7 @@ public class ScreeningIntegrationTest {
 
 	@Test
 	public void getScreeningById_whenScreeningDoesNotExist_returnsNotFound() throws Exception {
-		mockMvc.perform(get("/api/screening/" + 1000))
+		mockMvc.perform(get("/api/management/screening/" + 1000))
 				.andExpect(status().isNotFound())
 				.andExpect(jsonPath("$.message").value("Screening with id " + 1000 + " not found"));
 
@@ -170,7 +170,7 @@ public class ScreeningIntegrationTest {
 		ScreeningRequest screening = screeningRequest(roomId, movieId);
 		Long screeningId = createScreeningAndGetId(screening);
 
-		mockMvc.perform(get("/api/screening/" + screeningId))
+		mockMvc.perform(get("/api/management/screening/" + screeningId))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.id").value(screeningId))
 				.andExpect(jsonPath("$.screeningDate").value(SCREENING_DATE))
@@ -195,7 +195,7 @@ public class ScreeningIntegrationTest {
 		ScreeningRequest screening = screeningRequest(roomId, movieId);
 		Long screeningId = createScreeningAndGetId(screening);
 
-		mockMvc.perform(delete("/api/screening/" + screeningId))
+		mockMvc.perform(delete("/api/management/screening/" + screeningId))
 				.andExpect(status().isNoContent());
 	}
 
@@ -212,7 +212,7 @@ public class ScreeningIntegrationTest {
 		Long screeningId = createScreeningAndGetId(screening);
 		ScreeningRequest update = uodatedScreeningRequest(roomId, movieId);
 
-		mockMvc.perform(patch("/api/screening/" + screeningId)
+		mockMvc.perform(patch("/api/management/screening/" + screeningId)
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(update)))
 				.andExpect(status().isOk())
@@ -232,7 +232,7 @@ public class ScreeningIntegrationTest {
 
 	private Long createScreeningAndGetId(ScreeningRequest screeningRequest) throws Exception {
 
-		String screeningResponseJson = mockMvc.perform(post("/api/screening")
+		String screeningResponseJson = mockMvc.perform(post("/api/management/screening")
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(screeningRequest)))
 				.andExpect(status().isOk())
@@ -243,7 +243,7 @@ public class ScreeningIntegrationTest {
 
 	private Long createMovieAndGetId(MovieRequest movieRequest) throws Exception {
 
-		String movieResponseJson = mockMvc.perform(post("/api/movies")
+		String movieResponseJson = mockMvc.perform(post("/api/management/movies")
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(movieRequest)))
 				.andExpect(status().isCreated())
@@ -254,7 +254,7 @@ public class ScreeningIntegrationTest {
 
 	private Long createCinemaRoomAndGetId(CinemaRoomRequest cinemaRoomRequest) throws Exception {
 
-		String roomResponseJson = mockMvc.perform(post("/api/rooms")
+		String roomResponseJson = mockMvc.perform(post("/api/management/rooms")
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(cinemaRoomRequest)))
 				.andExpect(status().isCreated())

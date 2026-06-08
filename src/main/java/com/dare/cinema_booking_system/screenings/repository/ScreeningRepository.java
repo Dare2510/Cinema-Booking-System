@@ -18,6 +18,6 @@ public interface ScreeningRepository extends JpaRepository<ScreeningEntity, Long
 	boolean existsByMovieId(Long movieId);
 
 	@Query("SELECT s FROM ScreeningEntity s WHERE s.screeningDate <= screeningDate")
-	List<ScreeningEntity> getUpcomingScreenings(@Param("screeningDate")  LocalDate screenDate);
+	List<ScreeningEntity> getUpcomingScreenings(@Param("screeningDate") LocalDate screenDate);
 
 }

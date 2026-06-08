@@ -1,7 +1,9 @@
 package com.dare.cinema_booking_system.reservations.controller;
 
+import com.dare.cinema_booking_system.reservations.dto.ReservationRequest;
 import com.dare.cinema_booking_system.reservations.dto.ReservationResponse;
 import com.dare.cinema_booking_system.reservations.service.ReservationsService;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -23,8 +25,13 @@ public class ReservationManagementController {
 		return ResponseEntity.ok().body(reservationsService.getPageOfReservations(pageable));
 	}
 
+	@PostMapping
+	public ResponseEntity<ReservationResponse> createReservations(@Valid @RequestBody ReservationRequest reservationRequest) {
+		return ResponseEntity.ok(reservationsService.createReservation(reservationRequest));
+	}
+
 	@GetMapping("/{reservationId}")
-	public ResponseEntity<ReservationResponse> getScreeningById(@PathVariable Long reservationId) {
+	public ResponseEntity<ReservationResponse> getReservationById(@PathVariable Long reservationId) {
 		return ResponseEntity.ok(reservationsService.findReservationById(reservationId));
 	}
 
@@ -57,6 +64,8 @@ public class ReservationManagementController {
 		reservationsService.setStatusOfExpiredTickets();
 		return ResponseEntity.ok().build();
 	}
+
+
 
 
 }

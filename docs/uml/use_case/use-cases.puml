@@ -10,22 +10,22 @@ admin --|> staff
 rectangle "Cinema Booking System" {
   usecase "Create Account" as UC1
   usecase "Login" as UC2
-  usecase "Browse Movies" as UC3
-  usecase "Filter Movies" as UC4
-  usecase "View Movie Details" as UC5
-  usecase "Browse Screenings" as UC6
-  usecase "View Free Seats" as UC7
-  usecase "Create Reservation" as UC8
-  usecase "View Reservation" as UC9
-  usecase "Cancel Reservation" as UC10
+  usecase "Browse Screenings" as UC3
+  usecase "View Free Seats" as UC4
+  usecase "Create Reservation" as UC5
+  usecase "View Reservation" as UC6
+  usecase "Cancel Reservation" as UC7
 
-  usecase "Manage Movies" as UC11
-  usecase "Manage Screenings" as UC12
-  usecase "Manage Reservations" as UC13
-  usecase "Complete Payment" as UC14
-  usecase "Complete Refund" as UC15
-  usecase "Validate Ticket" as UC16
-  usecase "Expire Tickets" as UC17
+  usecase "Manage Movies" as UC8
+  usecase "Manage Screenings" as UC9
+  usecase "Manage Reservations" as UC10
+  usecase "Complete Payment/Mark as Paid" as UC11
+  usecase "Complete Refund" as UC12
+  usecase "Validate Ticket" as UC13
+  usecase "Expire Tickets" as UC14
+  usecase "Browse Movies" as UC15
+  usecase "Filter Movies" as UC16
+  usecase "View Movie Details" as UC17
 
   usecase "Manage Cinema Rooms" as UC18
 }
@@ -37,14 +37,15 @@ customer --> UC4
 customer --> UC5
 customer --> UC6
 customer --> UC7
-customer --> UC8
-customer --> UC9
-customer --> UC10
 
 staff --> UC3
 staff --> UC4
 staff --> UC5
 staff --> UC6
+staff --> UC7
+staff --> UC8
+staff --> UC9
+staff --> UC10
 staff --> UC11
 staff --> UC12
 staff --> UC13
@@ -55,8 +56,5 @@ staff --> UC17
 
 admin --> UC18
 
-UC8 ..> UC7
-UC8 ..> UC14
-UC10 ..> UC15
 
 @enduml

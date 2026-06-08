@@ -16,21 +16,48 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("api/screening")
+@RequestMapping("api/management/screening")
 @AllArgsConstructor
-public class ScreeningController {
+public class ScreeningManagementController {
 
 	private final ScreeningService screeningService;
 
+	@GetMapping
+	public ResponseEntity<Page<ScreeningResponse>> getPageOfScreenings(@PageableDefault(page = 0, size = 10,
+			sort = "screeningDate", direction = Sort.Direction.ASC) Pageable pageable) {
+		return ResponseEntity.ok(screeningService.getPageOfScreenings(pageable));
+	}
+
+	@PostMapping
+	public ResponseEntity<ScreeningResponse> createScreening(@RequestBody @Valid ScreeningRequest screeningRequest) {
+		return ResponseEntity.ok(screeningService.createScreenings(screeningRequest));
+
+	}
 
 	@GetMapping("/upcoming")
 	public ResponseEntity<List<ScreeningResponse>> getUpcomingScreenings() {
 		return ResponseEntity.ok(screeningService.getUpcomingScreenings());
 	}
 
+	@GetMapping("/{id}")
+	public ResponseEntity<ScreeningResponse> getScreeningById(@PathVariable Long id) {
+		return ResponseEntity.ok(screeningService.getScreeningById(id));
+	}
+
 	@GetMapping("/{screeningId}/seats/free")
 	public ResponseEntity<List<ScreeningSeatResponse>> getFreeSeats(@PathVariable Long screeningId) {
 		return ResponseEntity.ok(screeningService.getFreeScreeningSeatsByScreeningId(screeningId));
+	}
+
+	@PatchMapping("/{id}")
+	public ResponseEntity<ScreeningResponse> updateScreening(@PathVariable Long id, @RequestBody @Valid ScreeningRequest screeningRequest) {
+		return ResponseEntity.ok(screeningService.updateScreenings(id, screeningRequest));
+	}
+
+	@DeleteMapping("{id}")
+	public ResponseEntity<Void> deleteScreeningById(@PathVariable Long id) {
+		screeningService.deleteScreeningById(id);
+		return ResponseEntity.noContent().build();
 	}
 
 

@@ -14,9 +14,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("api/rooms")
+@RequestMapping("api/management/rooms")
 @AllArgsConstructor
-public class CinemaRoomController {
+public class CinemaRoomManagementController {
 	private CinemaRoomService cinemaRoomService;
 
 	@PostMapping
