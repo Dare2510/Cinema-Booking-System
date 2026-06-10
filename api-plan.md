@@ -47,7 +47,7 @@ GET:                                         | get page of reservations
 POST:                                        | create reservation
 GET: /{id}                                   | get information about reservation
 PATCH: /{id}/cancel                          | cancel a reservation
-PATCH: /{reservationId}/refund               | refund payment for an reservation
+PATCH: /{reservationId}/refund               | refund payment for a reservation
 PATCH: /{reservationId}/complete/payment     | complete payment for a reservation
 PATCH: /ticket/{ticketNumber}/used           | set ticket status to used
 PATCH: /ticket/expire                        | set ticket status of all expired ticket to "expired"

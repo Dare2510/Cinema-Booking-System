@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/management/movies")
+@RequestMapping("/api/management/movie")
 @AllArgsConstructor
 public class MovieManagementController {
 
@@ -30,7 +30,7 @@ public class MovieManagementController {
 	}
 
 	@GetMapping("/{id}")
-	public ResponseEntity<MovieResponse> getMoviesById(@PathVariable Long id) {
+	public ResponseEntity<MovieResponse> getMovieById(@PathVariable Long id) {
 		return ResponseEntity.ok(movieService.getMovieResponseById(id));
 	}
 
@@ -40,23 +40,23 @@ public class MovieManagementController {
 	}
 
 	@GetMapping("/filter/genre/{genre}")
-	public ResponseEntity<List<MovieResponse>> getMoviesByDuration(@PathVariable Genre genre) {
+	public ResponseEntity<List<MovieResponse>> getMoviesByGenre(@PathVariable Genre genre) {
 		return ResponseEntity.ok(movieService.getListOfByGenre(genre));
 	}
 
 	@PostMapping
-	public ResponseEntity<MovieResponse> createMovies(@RequestBody @Valid MovieRequest movieRequest) {
-		return ResponseEntity.status(HttpStatus.CREATED).body(movieService.addMovies(movieRequest));
+	public ResponseEntity<MovieResponse> createMovie(@RequestBody @Valid MovieRequest movieRequest) {
+		return ResponseEntity.status(HttpStatus.CREATED).body(movieService.addMovie(movieRequest));
 	}
 
 	@PatchMapping("/{id}")
-	public ResponseEntity<MovieResponse> updateMovies(@RequestBody @Valid MovieRequest movieRequest, @PathVariable Long id) {
-		return ResponseEntity.status(HttpStatus.OK).body(movieService.updateMovies(id, movieRequest));
+	public ResponseEntity<MovieResponse> updateMovie(@RequestBody @Valid MovieRequest movieRequest, @PathVariable Long id) {
+		return ResponseEntity.status(HttpStatus.OK).body(movieService.updateMovie(id, movieRequest));
 	}
 
 	@DeleteMapping("/{id}")
-	public ResponseEntity<Void> deleteMovies(@PathVariable Long id) {
-		movieService.deleteMovies(id);
+	public ResponseEntity<Void> deleteMovie(@PathVariable Long id) {
+		movieService.deleteMovie(id);
 		return ResponseEntity.noContent().build();
 	}
 

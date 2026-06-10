@@ -2,7 +2,9 @@ package com.dare.cinema_booking_system.reservations.controller;
 
 import com.dare.cinema_booking_system.reservations.dto.ReservationRequest;
 import com.dare.cinema_booking_system.reservations.dto.ReservationResponse;
-import com.dare.cinema_booking_system.reservations.service.ReservationsService;
+import com.dare.cinema_booking_system.reservations.service.PaymentService;
+import com.dare.cinema_booking_system.reservations.service.ReservationService;
+import com.dare.cinema_booking_system.reservations.service.TicketService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -17,55 +19,55 @@ import org.springframework.web.bind.annotation.*;
 @AllArgsConstructor
 public class ReservationManagementController {
 
-	private final ReservationsService reservationsService;
+	private final ReservationService reservationService;
+	private final PaymentService paymentService;
+	private final TicketService ticketService;
 
 	@GetMapping
 	public ResponseEntity<Page<ReservationResponse>> getPageOfReservations(@PageableDefault(page = 0, size = 10,
 			sort = "reservationStatus", direction = Sort.Direction.ASC) Pageable pageable) {
-		return ResponseEntity.ok().body(reservationsService.getPageOfReservations(pageable));
+		return ResponseEntity.ok().body(reservationService.getPageOfReservations(pageable));
 	}
 
 	@PostMapping
-	public ResponseEntity<ReservationResponse> createReservations(@Valid @RequestBody ReservationRequest reservationRequest) {
-		return ResponseEntity.ok(reservationsService.createReservation(reservationRequest));
+	public ResponseEntity<ReservationResponse> createReservation(@Valid @RequestBody ReservationRequest reservationRequest) {
+		return ResponseEntity.ok(reservationService.createReservation(reservationRequest));
 	}
 
 	@GetMapping("/{reservationId}")
 	public ResponseEntity<ReservationResponse> getReservationById(@PathVariable Long reservationId) {
-		return ResponseEntity.ok(reservationsService.findReservationById(reservationId));
+		return ResponseEntity.ok(reservationService.findReservationById(reservationId));
 	}
 
 	@PatchMapping("/{reservationId}/cancel")
-	public ResponseEntity<Void> cancelReservations(@PathVariable Long reservationId) {
-		reservationsService.cancelReservation(reservationId);
+	public ResponseEntity<Void> cancelReservation(@PathVariable Long reservationId) {
+		reservationService.cancelReservation(reservationId);
 		return ResponseEntity.ok().build();
 	}
 
 	@PatchMapping("/{reservationId}/refund")
-	public ResponseEntity<Void> refundReservations(@PathVariable Long reservationId) {
-		reservationsService.completeRefund(reservationId);
+	public ResponseEntity<Void> refundReservation(@PathVariable Long reservationId) {
+		paymentService.completeRefund(reservationId);
 		return ResponseEntity.ok().build();
 	}
 
 	@PatchMapping("/{reservationId}/complete/payment")
-	public ResponseEntity<Void> completePaymentReservations(@PathVariable Long reservationId) {
-		reservationsService.completePayment(reservationId);
+	public ResponseEntity<Void> completePaymentForReservation(@PathVariable Long reservationId) {
+		paymentService.completePayment(reservationId);
 		return ResponseEntity.ok().build();
 	}
 
 	@PatchMapping("/ticket/{ticketNumber}/used")
 	public ResponseEntity<Void> setTicketToUsed(@PathVariable String ticketNumber) {
-		reservationsService.setTicketToUsed(ticketNumber);
+		ticketService.setTicketToUsed(ticketNumber);
 		return ResponseEntity.noContent().build();
 	}
 
 	@PatchMapping("/ticket/expire")
 	public ResponseEntity<Void> expireTickets() {
-		reservationsService.setStatusOfExpiredTickets();
+		ticketService.setStatusOfExpiredTickets();
 		return ResponseEntity.ok().build();
 	}
-
-
 
 
 }

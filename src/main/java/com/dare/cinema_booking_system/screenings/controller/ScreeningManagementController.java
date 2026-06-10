@@ -3,6 +3,7 @@ package com.dare.cinema_booking_system.screenings.controller;
 import com.dare.cinema_booking_system.screenings.dto.ScreeningRequest;
 import com.dare.cinema_booking_system.screenings.dto.ScreeningResponse;
 import com.dare.cinema_booking_system.screenings.dto.ScreeningSeatResponse;
+import com.dare.cinema_booking_system.screenings.service.ScreeningSeatService;
 import com.dare.cinema_booking_system.screenings.service.ScreeningService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
@@ -21,6 +22,7 @@ import java.util.List;
 public class ScreeningManagementController {
 
 	private final ScreeningService screeningService;
+	private final ScreeningSeatService screeningSeatService;
 
 	@GetMapping
 	public ResponseEntity<Page<ScreeningResponse>> getPageOfScreenings(@PageableDefault(page = 0, size = 10,
@@ -30,7 +32,7 @@ public class ScreeningManagementController {
 
 	@PostMapping
 	public ResponseEntity<ScreeningResponse> createScreening(@RequestBody @Valid ScreeningRequest screeningRequest) {
-		return ResponseEntity.ok(screeningService.createScreenings(screeningRequest));
+		return ResponseEntity.ok(screeningService.createScreening(screeningRequest));
 
 	}
 
@@ -46,12 +48,12 @@ public class ScreeningManagementController {
 
 	@GetMapping("/{screeningId}/seats/free")
 	public ResponseEntity<List<ScreeningSeatResponse>> getFreeSeats(@PathVariable Long screeningId) {
-		return ResponseEntity.ok(screeningService.getFreeScreeningSeatsByScreeningId(screeningId));
+		return ResponseEntity.ok(screeningSeatService.getFreeScreeningSeatsByScreeningId(screeningId));
 	}
 
 	@PatchMapping("/{id}")
 	public ResponseEntity<ScreeningResponse> updateScreening(@PathVariable Long id, @RequestBody @Valid ScreeningRequest screeningRequest) {
-		return ResponseEntity.ok(screeningService.updateScreenings(id, screeningRequest));
+		return ResponseEntity.ok(screeningService.updateScreening(id, screeningRequest));
 	}
 
 	@DeleteMapping("{id}")

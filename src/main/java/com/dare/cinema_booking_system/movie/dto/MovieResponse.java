@@ -12,9 +12,9 @@ import lombok.*;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class MovieResponse {
 
-	public Long id;
-	public String title;
-	public String description;
-	public int duration;
-	public Genre genre;
+	private Long id;
+	private String title;
+	private String description;
+	private int duration;
+	private Genre genre;
 }

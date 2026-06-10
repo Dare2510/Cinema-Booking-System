@@ -16,17 +16,17 @@ public class MovieRequest {
 
 	@NotBlank(message = "Title is required")
 	@Size(min = 1, max = 100, message = "Title must have between 1 and 100 Characters")
-	public String title;
+	private String title;
 
 	@NotBlank(message = "Description is required")
 	@Size(min = 1, max = 200, message = "Description must have between 1 and 200 Characters")
-	public String description;
+	private String description;
 
 	@NotNull
 	@Min(value = 30, message = "Duration must be at least 30 min")
-	public Integer duration;
+	private Integer duration;
 
 	@NotNull(message = "Genre is required, Available genres : ACTION,COMEDY,FANTASY,MYSTERY,SCIENCE_FICTION,DRAMA")
-	public Genre genre;
+	private Genre genre;
 
 }

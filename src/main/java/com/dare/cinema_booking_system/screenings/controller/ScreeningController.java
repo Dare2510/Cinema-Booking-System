@@ -1,17 +1,15 @@
 package com.dare.cinema_booking_system.screenings.controller;
 
-import com.dare.cinema_booking_system.screenings.dto.ScreeningRequest;
 import com.dare.cinema_booking_system.screenings.dto.ScreeningResponse;
 import com.dare.cinema_booking_system.screenings.dto.ScreeningSeatResponse;
+import com.dare.cinema_booking_system.screenings.service.ScreeningSeatService;
 import com.dare.cinema_booking_system.screenings.service.ScreeningService;
-import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
@@ -21,6 +19,7 @@ import java.util.List;
 public class ScreeningController {
 
 	private final ScreeningService screeningService;
+	private final ScreeningSeatService screeningSeatService;
 
 
 	@GetMapping("/upcoming")
@@ -30,7 +29,7 @@ public class ScreeningController {
 
 	@GetMapping("/{screeningId}/seats/free")
 	public ResponseEntity<List<ScreeningSeatResponse>> getFreeSeats(@PathVariable Long screeningId) {
-		return ResponseEntity.ok(screeningService.getFreeScreeningSeatsByScreeningId(screeningId));
+		return ResponseEntity.ok(screeningSeatService.getFreeScreeningSeatsByScreeningId(screeningId));
 	}
 
 

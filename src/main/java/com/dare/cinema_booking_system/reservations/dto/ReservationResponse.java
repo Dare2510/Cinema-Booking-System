@@ -15,12 +15,12 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ReservationResponse {
 
-	public Long reservationId;
-	public String ticketNumber;
-	public LocalDate screeningDate;
-	public TimeSlot timeSlot;
-	public List<String> reservedSeats;
-	public PaymentResponse paymentResponse;
+	private Long reservationId;
+	private String ticketNumber;
+	private LocalDate screeningDate;
+	private TimeSlot timeSlot;
+	private List<String> reservedSeats;
+	private PaymentResponse paymentResponse;
 
 
 }

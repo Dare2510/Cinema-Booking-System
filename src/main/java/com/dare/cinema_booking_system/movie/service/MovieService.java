@@ -26,6 +26,46 @@ public class MovieService {
 	private final ModelMapper modelMapper;
 	private final ScreeningRepository screeningRepository;
 
+	public MovieResponse addMovie(MovieRequest movieRequest) {
+		MovieEntity newMovie = modelMapper.map(movieRequest, MovieEntity.class);
+
+		newMovie = movieRepository.save(newMovie);
+
+		log.info("Added movie with ID {}", newMovie.getId());
+		return mappingResponse(newMovie);
+	}
+
+	public MovieResponse updateMovie(Long movieId, MovieRequest movieRequest) {
+		MovieEntity toUpdate = getMovieEntityById(movieId);
+
+		boolean screeningExists = screeningRepository.existsByMovieId(movieId);
+
+		if (screeningExists) {
+			log.warn("Movie with ID {} cannot be updated, screening exits", movieId);
+			throw new MovieUpdateNotPossibleException(movieId);
+		} else {
+			modelMapper.map(movieRequest, toUpdate);
+			movieRepository.save(toUpdate);
+
+			log.info("Updated movie with ID {}", toUpdate.getId());
+			return mappingResponse(toUpdate);
+		}
+	}
+
+	public void deleteMovie(Long movieId) {
+		MovieEntity movieEntity = getMovieEntityById(movieId);
+
+		boolean screeningExists = screeningRepository.existsByMovieId(movieId);
+
+		if (screeningExists) {
+			log.warn("Movie with ID {} cannot be deleted, screening exits", movieId);
+			throw new MovieDeletionNotPossibleException(movieId);
+		} else {
+			movieRepository.delete(movieEntity);
+			log.info("Deleted movie with ID {}", movieEntity.getId());
+		}
+	}
+
 	public Page<MovieResponse> getPageOfMovies(Pageable pageable) {
 		return movieRepository.findAll(pageable)
 				.map(movies ->
@@ -62,45 +102,6 @@ public class MovieService {
 		}
 	}
 
-	public MovieResponse addMovies(MovieRequest movieRequest) {
-		MovieEntity newMovie = modelMapper.map(movieRequest, MovieEntity.class);
-
-		newMovie = movieRepository.save(newMovie);
-
-		log.info("Added movie with ID {}", newMovie.getId());
-		return mappingResponse(newMovie);
-	}
-
-	public MovieResponse updateMovies(Long movieId, MovieRequest movieRequest) {
-		MovieEntity toUpdate = getMovieEntityById(movieId);
-
-		boolean screeningExists = screeningRepository.existsByMovieId(movieId);
-
-		if (screeningExists) {
-			log.warn("Movie with ID {} cannot be updated, screening exits", movieId);
-			throw new MovieUpdateNotPossibleException(movieId);
-		} else {
-			modelMapper.map(movieRequest, toUpdate);
-			movieRepository.save(toUpdate);
-
-			log.info("Updated movie with ID {}", toUpdate.getId());
-			return mappingResponse(toUpdate);
-		}
-	}
-
-	public void deleteMovies(Long movieId) {
-		MovieEntity movieEntity = getMovieEntityById(movieId);
-
-		boolean screeningExists = screeningRepository.existsByMovieId(movieId);
-
-		if (screeningExists) {
-			log.warn("Movie with ID {} cannot be deleted, screening exits", movieId);
-			throw new MovieDeletionNotPossibleException(movieId);
-		} else {
-			movieRepository.delete(movieEntity);
-			log.info("Deleted movie with ID {}", movieEntity.getId());
-		}
-	}
 	//Helper Methods
 
 	public MovieEntity getMovieEntityById(Long movieId) {

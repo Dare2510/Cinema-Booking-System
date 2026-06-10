@@ -62,7 +62,7 @@ public class CinemaRoomService {
 	@Transactional
 	public CinemaRoomResponse updateCinemaRoom(CinemaRoomRequest cinemaRoomRequest, Long roomId) {
 		CinemaRoomEntity toUpdate = getRoomEntity(roomId);
-		boolean screeningExists = validateScreeningExists(roomId);
+		boolean screeningExists = screeningRepository.existsByCinemaRoomId(roomId);
 		if (!screeningExists) {
 			setterRoomValues(cinemaRoomRequest, toUpdate);
 			seatsGenerator(toUpdate, toUpdate.getSeats());
@@ -76,7 +76,7 @@ public class CinemaRoomService {
 	@Transactional
 	public void deleteCinemaRoom(Long roomId) {
 		CinemaRoomEntity toDelete = getRoomEntity(roomId);
-		boolean screeningExists = validateScreeningExists(roomId);
+		boolean screeningExists = screeningRepository.existsByCinemaRoomId(roomId);
 
 		if (!screeningExists) {
 			cinemaRoomRepository.delete(toDelete);
@@ -166,8 +166,5 @@ public class CinemaRoomService {
 		return newRoom;
 	}
 
-	private boolean validateScreeningExists(Long roomId) {
 
-		return screeningRepository.existsByCinemaRoomId(roomId);
-	}
 }

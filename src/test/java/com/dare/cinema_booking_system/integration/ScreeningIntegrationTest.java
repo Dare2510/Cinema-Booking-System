@@ -243,7 +243,7 @@ public class ScreeningIntegrationTest {
 
 	private Long createMovieAndGetId(MovieRequest movieRequest) throws Exception {
 
-		String movieResponseJson = mockMvc.perform(post("/api/management/movies")
+		String movieResponseJson = mockMvc.perform(post("/api/management/movie")
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(movieRequest)))
 				.andExpect(status().isCreated())
@@ -254,7 +254,7 @@ public class ScreeningIntegrationTest {
 
 	private Long createCinemaRoomAndGetId(CinemaRoomRequest cinemaRoomRequest) throws Exception {
 
-		String roomResponseJson = mockMvc.perform(post("/api/management/rooms")
+		String roomResponseJson = mockMvc.perform(post("/api/management/room")
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(cinemaRoomRequest)))
 				.andExpect(status().isCreated())

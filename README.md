@@ -79,7 +79,7 @@ A screening seat belongs to a specific screening and represents the availability
 
 This distinction is important because the same physical seat can be free in one screening and reserved in another.
 
-Reservations are linked to their reserved screening seats through a join table, so cancellation only affects the seats that belong to the cancelled reservation.
+Reservations are linked to their reserved screening seats through a join table, so cancellation only affects the seats that belong to the canceled reservation.
 
 ## Current Status
 
