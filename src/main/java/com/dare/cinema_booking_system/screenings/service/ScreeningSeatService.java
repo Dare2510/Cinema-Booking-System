@@ -83,7 +83,7 @@ public class ScreeningSeatService {
 		return screeningSeatRepository.hasReservedOrSoldSeats(screeningId);
 	}
 
-	public boolean seatsAreFree(ScreeningEntity screeningToReserve,  ReservationRequest reservationRequest) {
+	public boolean seatsAreFree(ScreeningEntity screeningToReserve, ReservationRequest reservationRequest) {
 		return screeningSeatRepository.areAllCinemaRoomSeatsFree(screeningToReserve.getId(),
 				reservationRequest.getCinemaRoomSeatIds(), reservationRequest.getCinemaRoomSeatIds().size());
 	}

@@ -2,6 +2,7 @@ package com.dare.cinema_booking_system.reservations.entity;
 
 import com.dare.cinema_booking_system.screenings.entity.ScreeningEntity;
 import com.dare.cinema_booking_system.screenings.entity.ScreeningSeatEntity;
+import com.dare.cinema_booking_system.security.entity.UserEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -44,6 +45,10 @@ public class ReservationEntity {
 			inverseJoinColumns = @JoinColumn(name = "screening_seat_id")
 	)
 	private List<ScreeningSeatEntity> reservedSeats;
+
+	@ManyToOne
+	@JoinColumn(name = "user_id")
+	private UserEntity user;
 
 	public ReservationEntity(PaymentEntity payment, TicketEntity ticket, ScreeningEntity screening) {
 		this.createdAt = LocalDateTime.now();

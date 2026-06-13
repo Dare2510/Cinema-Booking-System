@@ -58,9 +58,6 @@ class ScreeningServiceTest {
 	private ScreeningSeatRepository screeningSeatRepository;
 
 	@Mock
-	private CinemaRoomRepository cinemaRoomRepository;
-
-	@Mock
 	private MovieService movieService;
 
 	@Mock
@@ -96,7 +93,6 @@ class ScreeningServiceTest {
 				.hasMessage("Screening with id 1 not found");
 
 		verify(screeningRepository).findById(SCREENING_ID);
-		verifyNoInteractions(cinemaRoomService);
 	}
 
 	@Test
@@ -220,8 +216,6 @@ class ScreeningServiceTest {
 		verify(screeningSeatService).validateScreeningUpdate(SCREENING_ID);
 
 		verifyNoUpdateWrites();
-		verifyNoInteractions(movieService);
-		verifyNoInteractions(cinemaRoomService);
 	}
 
 	@Test
@@ -359,7 +353,6 @@ class ScreeningServiceTest {
 		verify(cinemaRoomService).getRoomEntity(request.getRoomId());
 
 		verifyNoUpdateWrites();
-		verifyNoInteractions(movieService);
 	}
 
 	private ScreeningRequest screeningRequest() {

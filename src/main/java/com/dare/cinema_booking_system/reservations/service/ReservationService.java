@@ -16,6 +16,11 @@ import com.dare.cinema_booking_system.screenings.exceptions.ScreeningSeatNotAvai
 import com.dare.cinema_booking_system.screenings.repository.ScreeningSeatRepository;
 import com.dare.cinema_booking_system.screenings.service.ScreeningSeatService;
 import com.dare.cinema_booking_system.screenings.service.ScreeningService;
+import com.dare.cinema_booking_system.security.entity.Role;
+import com.dare.cinema_booking_system.security.entity.UserEntity;
+import com.dare.cinema_booking_system.security.exceptions.OwnershipException;
+import com.dare.cinema_booking_system.security.jwt.AuthenticatedUser;
+import com.dare.cinema_booking_system.security.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,9 +45,10 @@ public class ReservationService {
 	private final TicketService ticketService;
 	private final Clock clock;
 	private final ScreeningSeatRepository screeningSeatRepository;
+	private final UserRepository userRepository;
 
-	public ReservationResponse findReservationById(Long reservationId) {
-		ReservationEntity reservation = getReservationById(reservationId);
+	public ReservationResponse findReservationById(AuthenticatedUser authenticatedUser, Long reservationId) {
+		ReservationEntity reservation = getReservationById(authenticatedUser, reservationId);
 		return responseBuilder(reservation, reservation.getTicket(), reservation.getReservedSeats());
 	}
 
@@ -51,6 +57,7 @@ public class ReservationService {
 				.map(reservation -> {
 					log.info("Getting Page of Reservations");
 					return ReservationResponse.builder()
+							.reservationId(reservation.getId())
 							.screeningDate(reservation.getScreening().getScreeningDate())
 							.timeSlot(reservation.getScreening().getTimeSlot())
 							.reservedSeats(reservation.getReservedSeats().stream()
@@ -65,16 +72,16 @@ public class ReservationService {
 	}
 
 	@Transactional
-	public ReservationResponse createReservation(ReservationRequest reservationRequest) {
+	public ReservationResponse createReservation(AuthenticatedUser authenticatedUser, ReservationRequest reservationRequest) {
 		ScreeningEntity screeningToReserve = screeningService.getScreeningEntity(reservationRequest.getScreeningId());
-		boolean seatsAreFree = screeningSeatService.seatsAreFree(screeningToReserve,reservationRequest);
+		boolean seatsAreFree = screeningSeatService.seatsAreFree(screeningToReserve, reservationRequest);
 		if (seatsAreFree) {
 			ReservationEntity newReservation = reservationSaver();
-
+			UserEntity user = getUser(authenticatedUser);
 			PaymentEntity payment = paymentService.createPayment(reservationRequest, screeningToReserve, newReservation);
 			TicketEntity ticket = ticketService.createTicket(newReservation);
 			List<ScreeningSeatEntity> reservedSeats = screeningSeatService.seatStatusUpdater(screeningToReserve, reservationRequest);
-			reservationUpdater(newReservation, payment, ticket, screeningToReserve, reservedSeats);
+			reservationUpdater(newReservation, payment, ticket, screeningToReserve, reservedSeats, user);
 
 			return responseBuilder(newReservation, ticket, reservedSeats);
 
@@ -87,8 +94,8 @@ public class ReservationService {
 	}
 
 	@Transactional
-	public void cancelReservation(Long reservationId) {
-		ReservationEntity toCancel = getReservationById(reservationId);
+	public void cancelReservation(AuthenticatedUser authenticatedUser, Long reservationId) {
+		ReservationEntity toCancel = getReservationById(authenticatedUser, reservationId);
 		PaymentEntity paymentToCancel = paymentService.findPaymentByReservationId(reservationId);
 		TicketEntity ticketToCancel = ticketService.findTicketById(toCancel.getTicket().getId());
 		List<ScreeningSeatEntity> seatsToCancel = toCancel.getReservedSeats();
@@ -120,21 +127,30 @@ public class ReservationService {
 	}
 
 	//Helper Methods
-	private ReservationEntity getReservationById(Long reservationId) {
-		return reservationsRepository.findById(reservationId).orElseThrow(
+	private ReservationEntity getReservationById(AuthenticatedUser authenticatedUser, Long reservationId) {
+		ReservationEntity reservation = reservationsRepository.findById(reservationId).orElseThrow(
 				() -> {
 					log.warn("Could not find reservation with id {}", reservationId);
 					return new ReservationNotFoundException(reservationId);
 				});
+		if (authenticatedUser.getRole() == Role.USER &&
+				!reservation.getUser().getEmail().equals(authenticatedUser.getEmail())) {
+			log.warn("User {} is not the owner of the reservation {}", authenticatedUser.getEmail(), reservationId);
+			throw new OwnershipException(reservationId);
+		} else {
+			return reservation;
+		}
+
 	}
 
 	private void reservationUpdater(ReservationEntity newReservation, PaymentEntity payment, TicketEntity ticket,
-	                                ScreeningEntity screeningToReserve, List<ScreeningSeatEntity> reservedSeats) {
+	                                ScreeningEntity screeningToReserve, List<ScreeningSeatEntity> reservedSeats, UserEntity user) {
 
 		newReservation.setPayment(payment);
 		newReservation.setTicket(ticket);
 		newReservation.setScreening(screeningToReserve);
 		newReservation.setReservedSeats(reservedSeats);
+		newReservation.setUser(user);
 		reservationsRepository.save(newReservation);
 		log.info("Reservation with id {} has been updated", newReservation.getId());
 
@@ -145,6 +161,11 @@ public class ReservationService {
 		reservationsRepository.save(reservationEntity);
 		log.info("Reservation with id {} has been created", reservationEntity.getId());
 		return reservationEntity;
+	}
+
+	private UserEntity getUser(AuthenticatedUser authenticatedUser) {
+		return userRepository.findByEmail(authenticatedUser.getEmail())
+				.orElseThrow(() -> new RuntimeException("User not found"));
 	}
 
 	private boolean cancelIsOnTime(ReservationEntity reservation) {
@@ -158,7 +179,6 @@ public class ReservationService {
 				.isAfter(currentDateTime.plusMinutes(60));
 
 	}
-
 
 
 	private ReservationResponse responseBuilder(ReservationEntity newReservation, TicketEntity tickets, List<ScreeningSeatEntity> listOfReservedSeats) {

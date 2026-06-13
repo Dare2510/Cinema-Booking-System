@@ -11,10 +11,12 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("api/management/room")
+@PreAuthorize("hasAnyRole('ADMIN','STAFF')")
 @AllArgsConstructor
 public class CinemaRoomManagementController {
 	private CinemaRoomService cinemaRoomService;

@@ -118,7 +118,6 @@ class PaymentServiceTest {
 
         PaymentEntity payment = paymentService.createPayment(request, screening, reservation);
 
-        assertNotNull(payment);
         assertEquals(PAYMENT_ID, payment.getId());
         assertSame(reservation, payment.getReservation());
         assertEquals(0, BigDecimal.valueOf(20).compareTo(payment.getAmount()));
