@@ -9,7 +9,6 @@ import com.dare.cinema_booking_system.screenings.exceptions.ScreeningNotFoundExc
 import com.dare.cinema_booking_system.screenings.exceptions.ScreeningSeatNotAvailableException;
 import com.dare.cinema_booking_system.screenings.exceptions.ScreeningSlotAlreadyBookedException;
 import com.dare.cinema_booking_system.screenings.exceptions.ScreeningUpdateNotPossibleException;
-import com.dare.cinema_booking_system.reservations.exceptions.ReservationOwnershipException;
 import com.dare.cinema_booking_system.user.exception.UserDoubleCreationException;
 import com.dare.cinema_booking_system.user.exception.UserNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -161,13 +160,13 @@ public class GlobalExceptionsHandler {
 
 	@ExceptionHandler(UserDoubleCreationException.class)
 	public ResponseEntity<ErrorResponse> handleUserDoubleCreationException(UserDoubleCreationException ex,
-																		   HttpServletRequest request) {
+	                                                                       HttpServletRequest request) {
 		return errorResponseBuilder(ex, request, HttpStatus.BAD_REQUEST);
 	}
 
 	@ExceptionHandler(UserNotFoundException.class)
 	public ResponseEntity<ErrorResponse> handleUserNotFoundException(UserDoubleCreationException ex,
-	                                                                       HttpServletRequest request) {
+	                                                                 HttpServletRequest request) {
 		return errorResponseBuilder(ex, request, HttpStatus.NOT_FOUND);
 	}
 

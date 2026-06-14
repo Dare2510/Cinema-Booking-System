@@ -3,17 +3,13 @@ package com.dare.cinema_booking_system.reservations.controller;
 import com.dare.cinema_booking_system.reservations.dto.ReservationRequest;
 import com.dare.cinema_booking_system.reservations.dto.ReservationResponse;
 import com.dare.cinema_booking_system.reservations.service.ReservationService;
-
 import com.dare.cinema_booking_system.security.principal.AuthenticatedUser;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/reservation")
@@ -37,15 +33,6 @@ public class ReservationController {
 	public ResponseEntity<Void> cancelReservation(@AuthenticationPrincipal AuthenticatedUser authenticatedUser, @PathVariable Long reservationId) {
 		reservationService.cancelReservation(authenticatedUser, reservationId);
 		return ResponseEntity.ok().build();
-	}
-
-	@GetMapping("/debug-auth")
-	public ResponseEntity<?> debugAuth(Authentication authentication) {
-		return ResponseEntity.ok(Map.of(
-				"authenticated", authentication.isAuthenticated(),
-				"principal", authentication.getPrincipal().toString(),
-				"authorities", authentication.getAuthorities().toString()
-		));
 	}
 
 

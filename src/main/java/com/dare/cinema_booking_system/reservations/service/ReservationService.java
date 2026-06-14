@@ -7,6 +7,7 @@ import com.dare.cinema_booking_system.reservations.entity.*;
 import com.dare.cinema_booking_system.reservations.exceptions.ReservationCancelNotOnTimeException;
 import com.dare.cinema_booking_system.reservations.exceptions.ReservationInvalidStatusFlowException;
 import com.dare.cinema_booking_system.reservations.exceptions.ReservationNotFoundException;
+import com.dare.cinema_booking_system.reservations.exceptions.ReservationOwnershipException;
 import com.dare.cinema_booking_system.reservations.repository.ReservationsRepository;
 import com.dare.cinema_booking_system.screenings.entity.ScreeningEntity;
 import com.dare.cinema_booking_system.screenings.entity.ScreeningSeatEntity;
@@ -16,12 +17,10 @@ import com.dare.cinema_booking_system.screenings.exceptions.ScreeningSeatNotAvai
 import com.dare.cinema_booking_system.screenings.repository.ScreeningSeatRepository;
 import com.dare.cinema_booking_system.screenings.service.ScreeningSeatService;
 import com.dare.cinema_booking_system.screenings.service.ScreeningService;
+import com.dare.cinema_booking_system.security.principal.AuthenticatedUser;
 import com.dare.cinema_booking_system.user.entity.Role;
 import com.dare.cinema_booking_system.user.entity.UserEntity;
-import com.dare.cinema_booking_system.reservations.exceptions.ReservationOwnershipException;
-import com.dare.cinema_booking_system.user.exception.UserNotFoundException;
-import com.dare.cinema_booking_system.security.principal.AuthenticatedUser;
-import com.dare.cinema_booking_system.user.repository.UserRepository;
+import com.dare.cinema_booking_system.user.service.UserService;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -41,12 +40,12 @@ public class ReservationService {
 
 	private final ReservationsRepository reservationsRepository;
 	private final ScreeningSeatService screeningSeatService;
+	private final ScreeningSeatRepository screeningSeatRepository;
 	private final ScreeningService screeningService;
 	private final PaymentService paymentService;
 	private final TicketService ticketService;
+	private final UserService userService;
 	private final Clock clock;
-	private final ScreeningSeatRepository screeningSeatRepository;
-	private final UserRepository userRepository;
 
 	public ReservationResponse findReservationById(AuthenticatedUser authenticatedUser, Long reservationId) {
 		ReservationEntity reservation = getReservationById(authenticatedUser, reservationId);
@@ -78,7 +77,7 @@ public class ReservationService {
 		boolean seatsAreFree = screeningSeatService.seatsAreFree(screeningToReserve, reservationRequest);
 		if (seatsAreFree) {
 			ReservationEntity newReservation = reservationSaver();
-			UserEntity user = getUser(authenticatedUser);
+			UserEntity user = userService.getUserByAuthenticatedUser(authenticatedUser);
 			PaymentEntity payment = paymentService.createPayment(reservationRequest, screeningToReserve, newReservation);
 			TicketEntity ticket = ticketService.createTicket(newReservation);
 			List<ScreeningSeatEntity> reservedSeats = screeningSeatService.seatStatusUpdater(screeningToReserve, reservationRequest);
@@ -162,14 +161,6 @@ public class ReservationService {
 		reservationsRepository.save(reservationEntity);
 		log.info("Reservation with id {} has been created", reservationEntity.getId());
 		return reservationEntity;
-	}
-
-	private UserEntity getUser(AuthenticatedUser authenticatedUser) {
-		return userRepository.findById(authenticatedUser.getUserId())
-				.orElseThrow(() ->{
-						log.warn("Could not find user with id {}", authenticatedUser.getUserId());
-						return new UserNotFoundException(authenticatedUser.getUserId());
-				});
 	}
 
 	private boolean cancelIsOnTime(ReservationEntity reservation) {

@@ -5,7 +5,6 @@ import com.dare.cinema_booking_system.movie.entity.MovieEntity;
 import com.dare.cinema_booking_system.movie.service.MovieService;
 import com.dare.cinema_booking_system.rooms.entity.CinemaRoomEntity;
 import com.dare.cinema_booking_system.rooms.entity.SeatEntity;
-import com.dare.cinema_booking_system.rooms.repository.CinemaRoomRepository;
 import com.dare.cinema_booking_system.rooms.service.CinemaRoomService;
 import com.dare.cinema_booking_system.screenings.dto.ScreeningRequest;
 import com.dare.cinema_booking_system.screenings.dto.ScreeningResponse;

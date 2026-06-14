@@ -13,9 +13,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.context.annotation.Import;
-import org.springframework.http.MediaType;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;;
+import org.springframework.http.MediaType;;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -30,8 +29,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @ActiveProfiles("test")
-@AutoConfigureMockMvc
-@WithMockUser
+@AutoConfigureMockMvc(addFilters = false)
+@WithMockUser(username = "admin", roles = "ADMIN")
 public class CinemaRoomIntegrationTest {
 
 	@Autowired
@@ -48,6 +47,7 @@ public class CinemaRoomIntegrationTest {
 
 	@Autowired
 	private ScreeningRepository screeningRepository;
+
 
 	@AfterEach
 	public void tearDown() {

@@ -15,17 +15,25 @@ import com.dare.cinema_booking_system.screenings.dto.ScreeningRequest;
 import com.dare.cinema_booking_system.screenings.entity.TimeSlot;
 import com.dare.cinema_booking_system.screenings.repository.ScreeningRepository;
 import com.dare.cinema_booking_system.screenings.repository.ScreeningSeatRepository;
+import com.dare.cinema_booking_system.security.principal.AuthenticatedUser;
+import com.dare.cinema_booking_system.user.entity.Role;
+import com.dare.cinema_booking_system.user.entity.UserEntity;
+import com.dare.cinema_booking_system.user.repository.UserRepository;
 import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import tools.jackson.databind.ObjectMapper;
 
 import java.math.BigDecimal;
@@ -37,14 +45,14 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.BDDMockito.given;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
 @ActiveProfiles("test")
-@AutoConfigureMockMvc
-@WithMockUser
+@AutoConfigureMockMvc(addFilters = false)
 public class ReservationIntegrationTest {
 
 	@Autowired
@@ -77,27 +85,11 @@ public class ReservationIntegrationTest {
 	@Autowired
 	private SeatRepository seatRepository;
 
+	@Autowired
+	private UserRepository userRepository;
+
 	@MockitoBean
 	private Clock clock;
-
-	@AfterEach
-	void tearDown() {
-		reservationsRepository.deleteAll();
-
-		paymentRepository.deleteAll();
-		ticketRepository.deleteAll();
-
-		screeningSeatRepository.deleteAll();
-		screeningRepository.deleteAll();
-
-
-		cinemaRoomRepository.deleteAll();
-		seatRepository.deleteAll();
-
-		movieRepository.deleteAll();
-
-
-	}
 
 	private static final String MOVIE_TITLE = "testTitle";
 	private static final String MOVIE_DESCRIPTION = "testDescription";
@@ -115,9 +107,34 @@ public class ReservationIntegrationTest {
 	private static final PaymentMethod RESERVATION_PAYMENT_METHOD = PaymentMethod.ONLINE;
 	private static final BigDecimal RESERVATION_AMOUNT = BigDecimal.valueOf(20.0);
 
+	@BeforeEach
+	void setUpSecurityContext() {
+		SecurityContextHolder.getContext().setAuthentication(adminAuthentication());
+	}
+
+	@AfterEach
+	void tearDown() {
+		SecurityContextHolder.clearContext();
+
+		reservationsRepository.deleteAll();
+		paymentRepository.deleteAll();
+		ticketRepository.deleteAll();
+
+		screeningSeatRepository.deleteAll();
+		screeningRepository.deleteAll();
+
+		cinemaRoomRepository.deleteAll();
+		seatRepository.deleteAll();
+
+		movieRepository.deleteAll();
+
+		userRepository.deleteAll();
+	}
+
 	@Test
 	public void getPageOfReservations_withPageableDefaults_returnIsOK() throws Exception {
 		mockMvc.perform(get("/api/management/reservation")
+						.with(adminAuth())
 						.param("page", "0")
 						.param("size", "10")
 						.param("sort", "reservationStatus")
@@ -143,9 +160,9 @@ public class ReservationIntegrationTest {
 		ReservationRequest reservation = reservationRequest(screeningId, seatIdsToReserve);
 		Long reservationId = createReservationAndGetId(reservation);
 
-		mockMvc.perform(patch("/api/management/reservation/" + reservationId + "/complete/payment"))
+		mockMvc.perform(patch("/api/management/reservation/" + reservationId + "/complete/payment")
+						.with(adminAuth()))
 				.andExpect(status().isOk());
-
 	}
 
 	@Test
@@ -167,7 +184,8 @@ public class ReservationIntegrationTest {
 		mockCurrentTime(minutesBeforeScreening(90));
 		cancelReservation(reservationId);
 
-		mockMvc.perform(patch("/api/management/reservation/" + reservationId + "/complete/payment"))
+		mockMvc.perform(patch("/api/management/reservation/" + reservationId + "/complete/payment")
+						.with(adminAuth()))
 				.andExpect(status().isBadRequest())
 				.andExpect(jsonPath("$.message").value(
 						"Payment for reservation with " + reservationId + " id cannot be completed." +
@@ -194,7 +212,8 @@ public class ReservationIntegrationTest {
 		mockCurrentTime(minutesBeforeScreening(90));
 		cancelReservation(reservationId);
 
-		mockMvc.perform(patch("/api/management/reservation/" + reservationId + "/refund"))
+		mockMvc.perform(patch("/api/management/reservation/" + reservationId + "/refund")
+						.with(adminAuth()))
 				.andExpect(status().isOk());
 	}
 
@@ -214,7 +233,8 @@ public class ReservationIntegrationTest {
 		ReservationRequest reservation = reservationRequest(screeningId, seatIdsToReserve);
 		Long reservationId = createReservationAndGetId(reservation);
 
-		mockMvc.perform(patch("/api/management/reservation/" + reservationId + "/refund"))
+		mockMvc.perform(patch("/api/management/reservation/" + reservationId + "/refund")
+						.with(adminAuth()))
 				.andExpect(status().isBadRequest())
 				.andExpect(jsonPath("$.message").value(
 						"Reservation with " + reservationId +
@@ -237,11 +257,12 @@ public class ReservationIntegrationTest {
 		ReservationRequest reservation = reservationRequest(screeningId, seatIdsToReserve);
 		Long reservationId = createReservationAndGetId(reservation);
 		String ticketNumber = getTicketNumber(reservationId);
+
 		completePayment(reservationId);
 
-		mockMvc.perform(patch("/api/management/reservation/ticket/" + ticketNumber + "/used"))
+		mockMvc.perform(patch("/api/management/reservation/ticket/" + ticketNumber + "/used")
+						.with(adminAuth()))
 				.andExpect(status().isNoContent());
-
 	}
 
 	@Test
@@ -261,22 +282,22 @@ public class ReservationIntegrationTest {
 		Long reservationId = createReservationAndGetId(reservation);
 		String ticketNumber = getTicketNumber(reservationId);
 
-		mockMvc.perform(patch("/api/management/reservation/ticket/" + ticketNumber + "/used"))
+		mockMvc.perform(patch("/api/management/reservation/ticket/" + ticketNumber + "/used")
+						.with(adminAuth()))
 				.andExpect(status().isBadRequest())
 				.andExpect(jsonPath("$.message")
 						.value("Ticket number " + ticketNumber + " cannot check in, check status"));
-
 	}
 
 	@Test
 	public void setTicketToUsed_whenIsNotFound_returnsNotFound() throws Exception {
 		String ticketNumber = "123456789";
 
-		mockMvc.perform(patch("/api/management/reservation/ticket/" + ticketNumber + "/used"))
+		mockMvc.perform(patch("/api/management/reservation/ticket/" + ticketNumber + "/used")
+						.with(adminAuth()))
 				.andExpect(status().isNotFound())
 				.andExpect(jsonPath("$.message")
 						.value("Ticket number " + ticketNumber + " not found"));
-
 	}
 
 	@Test
@@ -295,7 +316,8 @@ public class ReservationIntegrationTest {
 		ReservationRequest reservation = reservationRequest(screeningId, seatIdsToReserve);
 		Long reservationId = createReservationAndGetId(reservation);
 
-		mockMvc.perform(get("/api/management/reservation/" + reservationId))
+		mockMvc.perform(get("/api/management/reservation/" + reservationId)
+						.with(adminAuth()))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.reservationId").value(reservationId))
 				.andExpect(jsonPath("$.paymentResponse.amount").value(RESERVATION_AMOUNT))
@@ -304,14 +326,13 @@ public class ReservationIntegrationTest {
 				.andExpect(jsonPath("$.ticketNumber").exists());
 	}
 
-
 	@Test
 	public void getReservationById_whenReservationDoesNotExists_returnsNotFound() throws Exception {
-		mockMvc.perform(get("/api/management/reservation/" + 99))
+		mockMvc.perform(get("/api/management/reservation/" + 99)
+						.with(adminAuth()))
 				.andExpect(status().isNotFound())
 				.andExpect(jsonPath("$.message")
 						.value("Reservation with id " + 99 + " not found"));
-
 	}
 
 	@Test
@@ -330,6 +351,7 @@ public class ReservationIntegrationTest {
 		ReservationRequest reservation = reservationRequest(screeningId, seatIdsToReserve);
 
 		mockMvc.perform(post("/api/management/reservation")
+						.with(adminAuth())
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(reservation)))
 				.andExpect(status().isOk())
@@ -337,17 +359,13 @@ public class ReservationIntegrationTest {
 				.andExpect(jsonPath("$.paymentResponse.recipient").value("Cinema-Booking System"))
 				.andExpect(jsonPath("$.paymentResponse.amount").value(RESERVATION_AMOUNT))
 				.andExpect(result -> {
+					String response = result.getResponse().getContentAsString();
 
-					result.getResponse().getContentAsString();
-
-					String ticketNumber = JsonPath.read(result.getResponse().getContentAsString(), "$.ticketNumber");
-					String paymentReference = JsonPath.read(result.getResponse().getContentAsString(),
-							"$.paymentResponse.paymentReference");
+					String ticketNumber = JsonPath.read(response, "$.ticketNumber");
+					String paymentReference = JsonPath.read(response, "$.paymentResponse.paymentReference");
 
 					assertEquals(ticketNumber, paymentReference);
 				});
-
-
 	}
 
 	@Test
@@ -367,6 +385,7 @@ public class ReservationIntegrationTest {
 		postReservation(reservation);
 
 		mockMvc.perform(post("/api/management/reservation")
+						.with(adminAuth())
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(reservation)))
 				.andExpect(status().isBadRequest())
@@ -391,7 +410,8 @@ public class ReservationIntegrationTest {
 
 		mockCurrentTime(minutesBeforeScreening(90));
 
-		mockMvc.perform(patch("/api/management/reservation/" + reservationId + "/cancel"))
+		mockMvc.perform(patch("/api/management/reservation/" + reservationId + "/cancel")
+						.with(adminAuth()))
 				.andExpect(status().isOk());
 	}
 
@@ -415,7 +435,8 @@ public class ReservationIntegrationTest {
 
 		cancelReservation(reservationId);
 
-		mockMvc.perform(patch("/api/management/reservation/" + reservationId + "/cancel"))
+		mockMvc.perform(patch("/api/management/reservation/" + reservationId + "/cancel")
+						.with(adminAuth()))
 				.andExpect(status().isBadRequest());
 	}
 
@@ -437,21 +458,23 @@ public class ReservationIntegrationTest {
 
 		mockCurrentTime(minutesBeforeScreening(30));
 
-		mockMvc.perform(patch("/api/management/reservation/" + reservationId + "/cancel"))
+		mockMvc.perform(patch("/api/management/reservation/" + reservationId + "/cancel")
+						.with(adminAuth()))
 				.andExpect(status().isBadRequest())
-				.andExpect(jsonPath("$.message").
-						value("Reservation with id " + reservationId + " cannot be cancelled." +
+				.andExpect(jsonPath("$.message")
+						.value("Reservation with id " + reservationId + " cannot be cancelled." +
 								"Reservation must be cancelled at least 60 min before screening"));
 	}
 
-
 	private void completePayment(Long reservationId) throws Exception {
-		mockMvc.perform(patch("/api/management/reservation/" + reservationId + "/complete/payment"))
+		mockMvc.perform(patch("/api/management/reservation/" + reservationId + "/complete/payment")
+						.with(adminAuth()))
 				.andExpect(status().isOk());
 	}
 
 	private void cancelReservation(Long reservationId) throws Exception {
-		mockMvc.perform(patch("/api/reservation/" + reservationId + "/cancel"))
+		mockMvc.perform(patch("/api/management/reservation/" + reservationId + "/cancel")
+						.with(adminAuth()))
 				.andExpect(status().isOk());
 	}
 
@@ -469,12 +492,11 @@ public class ReservationIntegrationTest {
 
 	private ScreeningRequest screeningRequest(Long roomId, Long movieId) {
 		return new ScreeningRequest(roomId, movieId, LocalDate.now(), TimeSlot.PRIME, SCREENING_PRICE);
-
 	}
 
 	private Long createScreeningAndGetId(ScreeningRequest screeningRequest) throws Exception {
-
 		String screeningResponseJson = mockMvc.perform(post("/api/management/screening")
+						.with(adminAuth())
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(screeningRequest)))
 				.andExpect(status().isOk())
@@ -484,8 +506,8 @@ public class ReservationIntegrationTest {
 	}
 
 	private Long createMovieAndGetId(MovieRequest movieRequest) throws Exception {
-
 		String movieResponseJson = mockMvc.perform(post("/api/management/movie")
+						.with(adminAuth())
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(movieRequest)))
 				.andExpect(status().isCreated())
@@ -495,8 +517,8 @@ public class ReservationIntegrationTest {
 	}
 
 	private Long createCinemaRoomAndGetId(CinemaRoomRequest cinemaRoomRequest) throws Exception {
-
 		String roomResponseJson = mockMvc.perform(post("/api/management/room")
+						.with(adminAuth())
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(cinemaRoomRequest)))
 				.andExpect(status().isCreated())
@@ -507,6 +529,7 @@ public class ReservationIntegrationTest {
 
 	private Long createReservationAndGetId(ReservationRequest reservation) throws Exception {
 		String reservationJson = mockMvc.perform(post("/api/management/reservation")
+						.with(adminAuth())
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(reservation)))
 				.andExpect(status().isOk())
@@ -517,21 +540,24 @@ public class ReservationIntegrationTest {
 
 	private void postReservation(ReservationRequest reservation) throws Exception {
 		mockMvc.perform(post("/api/management/reservation")
+						.with(adminAuth())
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(reservation)))
 				.andExpect(status().isOk());
 	}
 
 	private String getTicketNumber(Long reservationId) throws Exception {
-		String reservationJson = mockMvc.perform(get("/api/management/reservation/" + reservationId))
+		String reservationJson = mockMvc.perform(get("/api/management/reservation/" + reservationId)
+						.with(adminAuth()))
 				.andExpect(status().isOk())
 				.andReturn().getResponse().getContentAsString();
 
-		return (JsonPath.read(reservationJson, "$.ticketNumber")).toString();
+		return JsonPath.read(reservationJson, "$.ticketNumber").toString();
 	}
 
 	private List<Long> getFreeSeatIds(Long screeningId) throws Exception {
-		String jsonResponse = mockMvc.perform(get("/api/management/screening/" + screeningId + "/seats/free"))
+		String jsonResponse = mockMvc.perform(get("/api/management/screening/" + screeningId + "/seats/free")
+						.with(adminAuth()))
 				.andReturn().getResponse().getContentAsString();
 
 		List<Integer> freeSeatIds = JsonPath.read(jsonResponse, "$[*].cinemaRoomSeatId");
@@ -539,7 +565,6 @@ public class ReservationIntegrationTest {
 		return freeSeatIds.stream()
 				.map(Integer::longValue)
 				.toList();
-
 	}
 
 	private LocalDateTime minutesBeforeScreening(int minutes) {
@@ -556,4 +581,38 @@ public class ReservationIntegrationTest {
 		given(clock.getZone()).willReturn(zone);
 	}
 
+	private UsernamePasswordAuthenticationToken adminAuthentication() {
+		UserEntity admin = createAdminUser();
+
+		AuthenticatedUser principal = new AuthenticatedUser(
+				admin.getId(),
+				admin.getEmail(),
+				admin.getRole()
+		);
+
+		return new UsernamePasswordAuthenticationToken(
+				principal,
+				null,
+				List.of(new SimpleGrantedAuthority("ROLE_" + admin.getRole().name()))
+		);
+	}
+
+	private RequestPostProcessor adminAuth() {
+		return authentication(adminAuthentication());
+	}
+
+	private UserEntity createAdminUser() {
+		return userRepository.findByEmail("admin@example.com")
+				.orElseGet(() -> {
+					UserEntity user = new UserEntity();
+					user.setEmail("admin@example.com");
+					user.setUsername("admin");
+					user.setName("Admin");
+					user.setSurname("User");
+					user.setPassword("test-password");
+					user.setRole(Role.ADMIN);
+
+					return userRepository.save(user);
+				});
+	}
 }

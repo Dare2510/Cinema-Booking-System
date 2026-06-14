@@ -1,15 +1,18 @@
-package com.dare.cinema_booking_system.security.dto;
+package com.dare.cinema_booking_system.user.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
 
 @Getter
 @Setter
-@RequiredArgsConstructor
-public class AuthRequest {
+@AllArgsConstructor
+public class UserRequest {
+
 
 	@NotBlank(message = "Email is required")
 	@Email(message = "Invalid email address")
@@ -42,4 +45,6 @@ public class AuthRequest {
 	)
 	@Size(min = 2, max = 20, message = "Surname must be between 2 and 20 characters")
 	private String surname;
+
+
 }
