@@ -1,14 +1,13 @@
 package com.dare.cinema_booking_system.user.controller;
 
+import com.dare.cinema_booking_system.security.principal.AuthenticatedUser;
 import com.dare.cinema_booking_system.user.dto.UserRequest;
+import com.dare.cinema_booking_system.user.dto.UserResponse;
 import com.dare.cinema_booking_system.user.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/user")
@@ -19,9 +18,20 @@ public class UserController {
 	private final UserService userService;
 
 	@PostMapping("/register")
-	public ResponseEntity<String> registerUser(@RequestBody @Valid UserRequest userRequest) {
-		userService.registerUser(userRequest);
-		return ResponseEntity.ok().body("Register successful");
+	public ResponseEntity<UserResponse> registerUser(@RequestBody @Valid UserRequest userRequest) {
+		return ResponseEntity.ok().body(userService.registerUserByCustomer(userRequest));
+	}
+
+	@PatchMapping("/{password}/update")
+	public ResponseEntity<Void> updateUser(@RequestBody @Valid UserRequest userRequest, AuthenticatedUser authenticatedUser, @PathVariable String password) {
+		userService.updateUserByCustomer(authenticatedUser,userRequest,password);
+		return ResponseEntity.ok().build();
+	}
+
+	@DeleteMapping("/{password}/delete")
+	public ResponseEntity<Void> deleteUser(AuthenticatedUser authenticatedUser,@PathVariable String password) {
+		userService.deleteUserByCustomer(authenticatedUser,password);
+		return ResponseEntity.ok().build();
 	}
 
 }
