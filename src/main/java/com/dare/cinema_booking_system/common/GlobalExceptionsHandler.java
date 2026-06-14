@@ -9,6 +9,9 @@ import com.dare.cinema_booking_system.screenings.exceptions.ScreeningNotFoundExc
 import com.dare.cinema_booking_system.screenings.exceptions.ScreeningSeatNotAvailableException;
 import com.dare.cinema_booking_system.screenings.exceptions.ScreeningSlotAlreadyBookedException;
 import com.dare.cinema_booking_system.screenings.exceptions.ScreeningUpdateNotPossibleException;
+import com.dare.cinema_booking_system.reservations.exceptions.ReservationOwnershipException;
+import com.dare.cinema_booking_system.user.exception.UserDoubleCreationException;
+import com.dare.cinema_booking_system.user.exception.UserNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,7 +19,6 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
-import java.nio.file.AccessDeniedException;
 import java.time.LocalDateTime;
 
 @ControllerAdvice
@@ -150,11 +152,23 @@ public class GlobalExceptionsHandler {
 		return errorResponseBuilder(ex, request, HttpStatus.BAD_REQUEST);
 	}
 
-	@ExceptionHandler(AccessDeniedException.class)
-	public ResponseEntity<ErrorResponse> handleAccessDeniedException(AccessDeniedException ex,
+	@ExceptionHandler(ReservationOwnershipException.class)
+	public ResponseEntity<ErrorResponse> handleAccessDeniedException(ReservationOwnershipException ex,
 	                                                                 HttpServletRequest request) {
 
 		return errorResponseBuilder(ex, request, HttpStatus.FORBIDDEN);
+	}
+
+	@ExceptionHandler(UserDoubleCreationException.class)
+	public ResponseEntity<ErrorResponse> handleUserDoubleCreationException(UserDoubleCreationException ex,
+																		   HttpServletRequest request) {
+		return errorResponseBuilder(ex, request, HttpStatus.BAD_REQUEST);
+	}
+
+	@ExceptionHandler(UserNotFoundException.class)
+	public ResponseEntity<ErrorResponse> handleUserNotFoundException(UserDoubleCreationException ex,
+	                                                                       HttpServletRequest request) {
+		return errorResponseBuilder(ex, request, HttpStatus.NOT_FOUND);
 	}
 
 	//Helper Method

@@ -2,7 +2,7 @@ package com.dare.cinema_booking_system.reservations.entity;
 
 import com.dare.cinema_booking_system.screenings.entity.ScreeningEntity;
 import com.dare.cinema_booking_system.screenings.entity.ScreeningSeatEntity;
-import com.dare.cinema_booking_system.security.entity.UserEntity;
+import com.dare.cinema_booking_system.user.entity.UserEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;

@@ -1,6 +1,7 @@
 package com.dare.cinema_booking_system.security.configuration;
 
-import com.dare.cinema_booking_system.security.jwt.CustomAuthenticationEntryPoint;
+import com.dare.cinema_booking_system.security.handler.CustomAccessDeniedHandler;
+import com.dare.cinema_booking_system.security.handler.CustomAuthenticationEntryPoint;
 import com.dare.cinema_booking_system.security.jwt.JwTAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -23,13 +24,15 @@ public class SecurityConfig {
 
 	private final JwTAuthenticationFilter jwtAuthenticationFilter;
 	private final CustomAuthenticationEntryPoint authenticationEntryPoint;
+	private final CustomAccessDeniedHandler accessDeniedHandler;
 
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 		http
 				.csrf(AbstractHttpConfigurer::disable)
 				.exceptionHandling(ex -> ex
-						.authenticationEntryPoint(authenticationEntryPoint))
+						.authenticationEntryPoint(authenticationEntryPoint)
+						.accessDeniedHandler(accessDeniedHandler))
 				.authorizeHttpRequests(auth -> auth
 						.requestMatchers(HttpMethod.GET, "/actuator/health").permitAll()
 						.requestMatchers(HttpMethod.POST, "/api/auth/**").permitAll()

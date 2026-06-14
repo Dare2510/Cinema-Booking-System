@@ -1,4 +1,4 @@
-package com.dare.cinema_booking_system.security.entity;
+package com.dare.cinema_booking_system.user.entity;
 
 import com.dare.cinema_booking_system.reservations.entity.ReservationEntity;
 import jakarta.persistence.*;

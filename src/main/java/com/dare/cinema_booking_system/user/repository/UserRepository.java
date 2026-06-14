@@ -1,6 +1,6 @@
-package com.dare.cinema_booking_system.security.repository;
+package com.dare.cinema_booking_system.user.repository;
 
-import com.dare.cinema_booking_system.security.entity.UserEntity;
+import com.dare.cinema_booking_system.user.entity.UserEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

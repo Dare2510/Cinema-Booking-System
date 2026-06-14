@@ -16,11 +16,12 @@ import com.dare.cinema_booking_system.screenings.exceptions.ScreeningSeatNotAvai
 import com.dare.cinema_booking_system.screenings.repository.ScreeningSeatRepository;
 import com.dare.cinema_booking_system.screenings.service.ScreeningSeatService;
 import com.dare.cinema_booking_system.screenings.service.ScreeningService;
-import com.dare.cinema_booking_system.security.entity.Role;
-import com.dare.cinema_booking_system.security.entity.UserEntity;
-import com.dare.cinema_booking_system.security.exceptions.OwnershipException;
-import com.dare.cinema_booking_system.security.jwt.AuthenticatedUser;
-import com.dare.cinema_booking_system.security.repository.UserRepository;
+import com.dare.cinema_booking_system.user.entity.Role;
+import com.dare.cinema_booking_system.user.entity.UserEntity;
+import com.dare.cinema_booking_system.reservations.exceptions.ReservationOwnershipException;
+import com.dare.cinema_booking_system.user.exception.UserNotFoundException;
+import com.dare.cinema_booking_system.security.principal.AuthenticatedUser;
+import com.dare.cinema_booking_system.user.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -134,9 +135,9 @@ public class ReservationService {
 					return new ReservationNotFoundException(reservationId);
 				});
 		if (authenticatedUser.getRole() == Role.USER &&
-				!reservation.getUser().getEmail().equals(authenticatedUser.getEmail())) {
-			log.warn("User {} is not the owner of the reservation {}", authenticatedUser.getEmail(), reservationId);
-			throw new OwnershipException(reservationId);
+				!reservation.getUser().getId().equals(authenticatedUser.getUserId())) {
+			log.warn("User {} is not the owner of the reservation {}", authenticatedUser.getUserId(), reservationId);
+			throw new ReservationOwnershipException(reservationId);
 		} else {
 			return reservation;
 		}
@@ -164,8 +165,11 @@ public class ReservationService {
 	}
 
 	private UserEntity getUser(AuthenticatedUser authenticatedUser) {
-		return userRepository.findByEmail(authenticatedUser.getEmail())
-				.orElseThrow(() -> new RuntimeException("User not found"));
+		return userRepository.findById(authenticatedUser.getUserId())
+				.orElseThrow(() ->{
+						log.warn("Could not find user with id {}", authenticatedUser.getUserId());
+						return new UserNotFoundException(authenticatedUser.getUserId());
+				});
 	}
 
 	private boolean cancelIsOnTime(ReservationEntity reservation) {

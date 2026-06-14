@@ -1,6 +1,7 @@
 package com.dare.cinema_booking_system.security.jwt;
 
-import com.dare.cinema_booking_system.security.entity.Role;
+import com.dare.cinema_booking_system.security.principal.AuthenticatedUser;
+import com.dare.cinema_booking_system.user.entity.Role;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -40,13 +41,14 @@ public class JwTAuthenticationFilter extends OncePerRequestFilter {
 			return;
 		}
 
-		String token = authorizationHeader.substring(7);
-
 		try {
+			String token = authorizationHeader.substring(7);
+
 			String email = jwtUtil.extractEmail(token);
 			Role role = jwtUtil.extractRole(token);
+			Long  userId = jwtUtil.extractUserId(token);
 
-			AuthenticatedUser principal = new AuthenticatedUser(email, role);
+			AuthenticatedUser principal = new AuthenticatedUser(userId,email,role);
 
 			UsernamePasswordAuthenticationToken authentication =
 					new UsernamePasswordAuthenticationToken(

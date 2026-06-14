@@ -1,6 +1,6 @@
 package com.dare.cinema_booking_system.security.jwt;
 
-import com.dare.cinema_booking_system.security.entity.Role;
+import com.dare.cinema_booking_system.user.entity.Role;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,16 +14,19 @@ public class JwtUtil {
 
 	@Value("${jwt.secret}")
 	String secret;
+	@Value("${jwt.expiration-ms}")
+	Long expirationMs;
 
 	private Key getSigningKey() {
 		return Keys.hmacShaKeyFor(secret.getBytes());
 	}
 
-	public String generateToken(String email, Role role) {
+	public String generateToken(String email, Role role,Long userId) {
 		return Jwts.builder()
 				.subject(email)
 				.claim("role", role)
-				.issuedAt(new Date(System.currentTimeMillis() + 1000 * 60 * 60))
+				.claim("userId", userId)
+				.issuedAt(new Date(System.currentTimeMillis() +expirationMs ))
 				.signWith(getSigningKey())
 				.compact();
 	}
@@ -45,6 +48,17 @@ public class JwtUtil {
 						.parseSignedClaims(token)
 						.getPayload()
 						.get("role")
+						.toString());
+	}
+
+	public Long extractUserId(String token) {
+		return Long.valueOf(
+				Jwts.parser()
+						.setSigningKey(getSigningKey())
+						.build()
+						.parseSignedClaims(token)
+						.getPayload()
+						.get("userId")
 						.toString());
 	}
 

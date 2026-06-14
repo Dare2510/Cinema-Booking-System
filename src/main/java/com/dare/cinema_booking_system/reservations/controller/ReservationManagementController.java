@@ -5,7 +5,7 @@ import com.dare.cinema_booking_system.reservations.dto.ReservationResponse;
 import com.dare.cinema_booking_system.reservations.service.PaymentService;
 import com.dare.cinema_booking_system.reservations.service.ReservationService;
 import com.dare.cinema_booking_system.reservations.service.TicketService;
-import com.dare.cinema_booking_system.security.jwt.AuthenticatedUser;
+import com.dare.cinema_booking_system.security.principal.AuthenticatedUser;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
