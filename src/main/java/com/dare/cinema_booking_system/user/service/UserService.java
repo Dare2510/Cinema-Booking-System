@@ -1,6 +1,5 @@
 package com.dare.cinema_booking_system.user.service;
 
-import com.dare.cinema_booking_system.reservations.entity.ReservationStatus;
 import com.dare.cinema_booking_system.reservations.repository.ReservationsRepository;
 import com.dare.cinema_booking_system.security.principal.AuthenticatedUser;
 import com.dare.cinema_booking_system.user.dto.UserRequest;
@@ -9,6 +8,7 @@ import com.dare.cinema_booking_system.user.entity.Role;
 import com.dare.cinema_booking_system.user.entity.UserEntity;
 import com.dare.cinema_booking_system.user.exception.UserDeletionNotPossibleException;
 import com.dare.cinema_booking_system.user.exception.UserDoubleCreationException;
+import com.dare.cinema_booking_system.user.exception.UserIncorrectCredentialsException;
 import com.dare.cinema_booking_system.user.exception.UserNotFoundException;
 import com.dare.cinema_booking_system.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -16,8 +16,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -51,16 +49,16 @@ public class UserService {
 
 	public void deleteUserByCustomer(AuthenticatedUser authenticatedUser,String password) {
 		UserEntity toDelete = getUserByAuthenticatedUser(authenticatedUser);
-		boolean reservationExists = openReservationsExist(toDelete);
+		boolean canBeDeleted = deleteValid(toDelete);
 
 		boolean passwordMatches = passwordEncoder.matches(password, toDelete.getPassword());
 
 		if (!passwordMatches) {
 			log.info("Wrong password input for user with id {}", toDelete.getId());
-			throw new RuntimeException("Invalid credentials");
+			throw new UserIncorrectCredentialsException();
 		}
 
-		if (reservationExists) {
+		if (!canBeDeleted) {
 			log.warn("User with email {} and id {} tried to delete his account, failed - open reservations exists",
 					toDelete.getEmail(), toDelete.getId());
 			throw new UserDeletionNotPossibleException();
@@ -76,7 +74,7 @@ public class UserService {
 
 		if (!passwordMatches) {
 			log.info("Wrong password input for user with id {}", toUpdate.getId());
-			throw new RuntimeException("Invalid credentials");
+			throw new UserIncorrectCredentialsException();
 		}
 		updateUserEntity(toUpdate, userRequest);
 
@@ -116,9 +114,9 @@ public class UserService {
 
 	public void deleteUserByManagement(Long userId) {
 		UserEntity toDelete = getUserById(userId);
-		boolean reservationExists = openReservationsExist(toDelete);
+		boolean canBeDeleted = deleteValid(toDelete);
 
-		if (reservationExists) {
+		if (!canBeDeleted) {
 			log.warn("User with email {} and id {} has open reservations, deletion not possible",
 					toDelete.getEmail(), toDelete.getId());
 			throw new UserDeletionNotPossibleException(toDelete.getEmail(),toDelete.getId());
@@ -177,9 +175,8 @@ public class UserService {
 		log.info("User with role {} and id {} has been registered successfully", user.getRole(), user.getId());
 	}
 
-	private boolean openReservationsExist(UserEntity user) {
-		return reservationsRepository.existsByUserAndReservationStatusIn(
-				user, List.of(ReservationStatus.CREATED,ReservationStatus.CONFIRMED));
+	private boolean deleteValid(UserEntity user) {
+		return reservationsRepository.userCanBeDeleted(user);
 	}
 
 	private UserResponse responseMapper(UserEntity userEntity) {

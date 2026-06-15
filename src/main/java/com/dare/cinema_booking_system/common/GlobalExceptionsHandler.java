@@ -11,6 +11,7 @@ import com.dare.cinema_booking_system.screenings.exceptions.ScreeningSlotAlready
 import com.dare.cinema_booking_system.screenings.exceptions.ScreeningUpdateNotPossibleException;
 import com.dare.cinema_booking_system.user.exception.UserDeletionNotPossibleException;
 import com.dare.cinema_booking_system.user.exception.UserDoubleCreationException;
+import com.dare.cinema_booking_system.user.exception.UserIncorrectCredentialsException;
 import com.dare.cinema_booking_system.user.exception.UserNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
@@ -174,6 +175,12 @@ public class GlobalExceptionsHandler {
 	@ExceptionHandler(UserDeletionNotPossibleException.class)
 	public ResponseEntity<ErrorResponse> handleUserDeletionNotPossible(UserDeletionNotPossibleException ex,
 																	   HttpServletRequest request) {
+		return errorResponseBuilder(ex, request, HttpStatus.BAD_REQUEST);
+	}
+
+	@ExceptionHandler(UserIncorrectCredentialsException.class)
+	public ResponseEntity<ErrorResponse> handleUserIncorrectCredentialsException(UserIncorrectCredentialsException ex,
+																				 HttpServletRequest request) {
 		return errorResponseBuilder(ex, request, HttpStatus.BAD_REQUEST);
 	}
 

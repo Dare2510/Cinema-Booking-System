@@ -2,6 +2,7 @@ package com.dare.cinema_booking_system.security.auth.service;
 
 import com.dare.cinema_booking_system.security.jwt.JwtUtil;
 import com.dare.cinema_booking_system.user.entity.UserEntity;
+import com.dare.cinema_booking_system.user.exception.UserIncorrectCredentialsException;
 import com.dare.cinema_booking_system.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +25,7 @@ public class AuthService {
 
 		if (!passwordMatches) {
 			log.info("Wrong password input for user with id {}", user.getId());
-			throw new RuntimeException("Invalid credentials");
+			throw new UserIncorrectCredentialsException();
 		}
 
 		return jwtUtil.generateToken(email, user.getRole(), user.getId());
