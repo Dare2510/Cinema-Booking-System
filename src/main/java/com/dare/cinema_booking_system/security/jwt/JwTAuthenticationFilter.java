@@ -32,8 +32,6 @@ public class JwTAuthenticationFilter extends OncePerRequestFilter {
 			FilterChain filterChain
 	) throws ServletException, IOException {
 
-		log.info("JWT filter running");
-
 		String authorizationHeader = request.getHeader("Authorization");
 
 		if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {

@@ -15,7 +15,6 @@ import com.dare.cinema_booking_system.user.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.AdditionalAnswers;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -24,10 +23,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
 
-import static org.mockito.Mockito.when;
-
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -63,7 +60,7 @@ public class UserServiceTest {
 
 	private static final Role USER_ROLE = Role.USER;
 	private static final Role ADMIN_ROLE = Role.ADMIN;
-	private static final Long USER_ID =  1L;
+	private static final Long USER_ID = 1L;
 
 
 	@BeforeEach
@@ -109,8 +106,8 @@ public class UserServiceTest {
 				.hasMessage("User with " + EMAIL + " already exists");
 
 		verify(userRepository).findByEmail(EMAIL);
-		verify(passwordEncoder,never()).encode(PASSWORD);
-		verify(userRepository,never()).save(any(UserEntity.class));
+		verify(passwordEncoder, never()).encode(PASSWORD);
+		verify(userRepository, never()).save(any(UserEntity.class));
 
 	}
 
@@ -123,7 +120,7 @@ public class UserServiceTest {
 		when(reservationsRepository.userCanBeDeleted(existingUser)).thenReturn(true);
 		when(passwordEncoder.matches(PASSWORD, existingUser.getPassword())).thenReturn(true);
 
-		userService.deleteUserByCustomer(authenticatedUser,existingUser.getPassword());
+		userService.deleteUserByCustomer(authenticatedUser, existingUser.getPassword());
 
 		verify(userRepository).delete(existingUser);
 		verify(userRepository).findById(USER_ID);
@@ -141,13 +138,13 @@ public class UserServiceTest {
 		when(reservationsRepository.userCanBeDeleted(existingUser)).thenReturn(false);
 		when(passwordEncoder.matches(PASSWORD, existingUser.getPassword())).thenReturn(true);
 
-		assertThatThrownBy(() -> userService.deleteUserByCustomer(authenticatedUser,PASSWORD))
+		assertThatThrownBy(() -> userService.deleteUserByCustomer(authenticatedUser, PASSWORD))
 				.isInstanceOf(UserDeletionNotPossibleException.class)
 				.hasMessage("Deletion not possible, you have open reservations");
 
 		verify(userRepository).findById(USER_ID);
 		verify(reservationsRepository).userCanBeDeleted(existingUser);
-		verify(userRepository,never()).delete(existingUser);
+		verify(userRepository, never()).delete(existingUser);
 
 	}
 
@@ -161,7 +158,7 @@ public class UserServiceTest {
 		when(userRepository.findById(USER_ID)).thenReturn(Optional.of(existingUser));
 		when(passwordEncoder.matches(PASSWORD, existingUser.getPassword())).thenReturn(true);
 
-		userService.updateUserByCustomer(authenticatedUser,updatedValues,PASSWORD);
+		userService.updateUserByCustomer(authenticatedUser, updatedValues, PASSWORD);
 
 		verify(userRepository).save(existingUser);
 		verify(userRepository).findById(USER_ID);
@@ -184,11 +181,11 @@ public class UserServiceTest {
 		when(userRepository.findById(USER_ID)).thenReturn(Optional.of(existingUser));
 		when(passwordEncoder.matches(WRONG_PASSWORD, existingUser.getPassword())).thenReturn(false);
 
-		assertThatThrownBy(()-> userService.updateUserByCustomer(authenticatedUser,updatedValues,WRONG_PASSWORD))
+		assertThatThrownBy(() -> userService.updateUserByCustomer(authenticatedUser, updatedValues, WRONG_PASSWORD))
 				.isInstanceOf(UserIncorrectCredentialsException.class)
 				.hasMessage("Invalid password");
 
-		verify(userRepository,never()).save(existingUser);
+		verify(userRepository, never()).save(existingUser);
 		verify(userRepository).findById(USER_ID);
 		verify(passwordEncoder).matches(WRONG_PASSWORD, existingUser.getPassword());
 
@@ -208,7 +205,7 @@ public class UserServiceTest {
 			return user;
 		});
 
-		UserResponse response = userService.registerManagement(newUser,ADMIN_ROLE);
+		UserResponse response = userService.registerManagement(newUser, ADMIN_ROLE);
 
 		assertEquals(EMAIL, response.getEmail());
 		assertEquals(NAME, response.getName());
@@ -226,7 +223,7 @@ public class UserServiceTest {
 		UserRequest updatedValues = userRequestUpdatedUser();
 
 		when(userRepository.findById(USER_ID)).thenReturn(Optional.of(existingUser));
-		userService.updateUserByManagement(USER_ID,updatedValues,ADMIN_ROLE);
+		userService.updateUserByManagement(USER_ID, updatedValues, ADMIN_ROLE);
 
 		assertEquals(ADMIN_ROLE, existingUser.getRole());
 		assertEquals(UPDATED_NAME, existingUser.getName());
@@ -245,36 +242,28 @@ public class UserServiceTest {
 
 		when(userRepository.findById(USER_ID)).thenReturn(Optional.empty());
 
-		assertThatThrownBy(() -> userService.updateUserByManagement(USER_ID,updatedValues,ADMIN_ROLE))
+		assertThatThrownBy(() -> userService.updateUserByManagement(USER_ID, updatedValues, ADMIN_ROLE))
 				.isInstanceOf(UserNotFoundException.class)
 				.hasMessage("User with id " + USER_ID + " was not found");
 
 		verify(userRepository).findById(USER_ID);
-		verify(userRepository,never()).save(any(UserEntity.class));
+		verify(userRepository, never()).save(any(UserEntity.class));
 
 	}
 
 	//Helper Methods
 
 	private UserRequest userRequestUser() {
-		return new UserRequest(EMAIL,PASSWORD,USERNAME,NAME,SURNAME);
+		return new UserRequest(EMAIL, PASSWORD, USERNAME, NAME, SURNAME);
 	}
 
 	private UserRequest userRequestUpdatedUser() {
-		return new UserRequest(UPDATED_EMAIL,PASSWORD,UPDATED_USERNAME,UPDATED_NAME,UPDATED_SURNAME);
+		return new UserRequest(UPDATED_EMAIL, PASSWORD, UPDATED_USERNAME, UPDATED_NAME, UPDATED_SURNAME);
 	}
 
 	private AuthenticatedUser authenticatedUser() {
-		return new AuthenticatedUser(USER_ID,EMAIL,USER_ROLE);
+		return new AuthenticatedUser(USER_ID, EMAIL, USER_ROLE);
 	}
-
-
-
-
-
-
-
-
 
 
 }
