@@ -9,11 +9,13 @@ import com.dare.cinema_booking_system.user.entity.UserEntity;
 import com.dare.cinema_booking_system.user.exception.UserDeletionNotPossibleException;
 import com.dare.cinema_booking_system.user.exception.UserDoubleCreationException;
 import com.dare.cinema_booking_system.user.exception.UserIncorrectCredentialsException;
+import com.dare.cinema_booking_system.user.exception.UserNotFoundException;
 import com.dare.cinema_booking_system.user.repository.UserRepository;
 import com.dare.cinema_booking_system.user.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.AdditionalAnswers;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -60,6 +62,7 @@ public class UserServiceTest {
 	private static final String WRONG_PASSWORD = "Wrong password";
 
 	private static final Role USER_ROLE = Role.USER;
+	private static final Role ADMIN_ROLE = Role.ADMIN;
 	private static final Long USER_ID =  1L;
 
 
@@ -68,9 +71,11 @@ public class UserServiceTest {
 		userService = new UserService(userRepository, reservationsRepository, passwordEncoder, modelMapper);
 	}
 
+	//Customer Methods Tests
+
 	@Test
 	public void registerUserByCustomer_whenEmailIsAvailable_returnUserResponse() {
-		UserRequest newUser = userRequestExistingUser();
+		UserRequest newUser = userRequestUser();
 
 		when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.empty());
 		when(passwordEncoder.encode(PASSWORD)).thenReturn(HASHED_PASSWORD);
@@ -94,7 +99,7 @@ public class UserServiceTest {
 
 	@Test
 	public void registerUserByCustomer_whenEmailIsAlreadyRegistered_throwsUserDoubleCreatedException() {
-		UserRequest newUser = userRequestExistingUser();
+		UserRequest newUser = userRequestUser();
 		UserEntity existingUser = new UserEntity();
 
 		when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.of(existingUser));
@@ -188,11 +193,70 @@ public class UserServiceTest {
 		verify(passwordEncoder).matches(WRONG_PASSWORD, existingUser.getPassword());
 
 	}
+	//Management Method Tests
 
+	@Test
+	public void registerManagement_whenEmailIsValid_registersUser() {
+		UserRequest newUser = userRequestUser();
 
+		when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.empty());
+		when(passwordEncoder.encode(PASSWORD)).thenReturn(PASSWORD);
 
+		when(userRepository.save(any(UserEntity.class))).thenAnswer(invocation -> {
+			UserEntity user = invocation.getArgument(0);
+			user.setId(USER_ID);
+			return user;
+		});
 
-	private UserRequest userRequestExistingUser() {
+		UserResponse response = userService.registerManagement(newUser,ADMIN_ROLE);
+
+		assertEquals(EMAIL, response.getEmail());
+		assertEquals(NAME, response.getName());
+		assertEquals(SURNAME, response.getSurname());
+
+		verify(userRepository).findByEmail(EMAIL);
+		verify(passwordEncoder).encode(PASSWORD);
+		verify(userRepository).save(any(UserEntity.class));
+
+	}
+
+	@Test
+	public void updateUserByManagement_whenUserIsFound_updatesUser() {
+		UserEntity existingUser = new UserEntity();
+		UserRequest updatedValues = userRequestUpdatedUser();
+
+		when(userRepository.findById(USER_ID)).thenReturn(Optional.of(existingUser));
+		userService.updateUserByManagement(USER_ID,updatedValues,ADMIN_ROLE);
+
+		assertEquals(ADMIN_ROLE, existingUser.getRole());
+		assertEquals(UPDATED_NAME, existingUser.getName());
+		assertEquals(UPDATED_USERNAME, existingUser.getUsername());
+		assertEquals(UPDATED_EMAIL, existingUser.getEmail());
+		assertEquals(UPDATED_SURNAME, existingUser.getSurname());
+
+		verify(userRepository).findById(USER_ID);
+		verify(userRepository).save(existingUser);
+
+	}
+
+	@Test
+	public void updateUserByManagement_whenUserIsNotFound_throwsUserNotFoundException() {
+		UserRequest updatedValues = userRequestUpdatedUser();
+
+		when(userRepository.findById(USER_ID)).thenReturn(Optional.empty());
+
+		assertThatThrownBy(() -> userService.updateUserByManagement(USER_ID,updatedValues,ADMIN_ROLE))
+				.isInstanceOf(UserNotFoundException.class)
+				.hasMessage("User with id " + USER_ID + " was not found");
+
+		verify(userRepository).findById(USER_ID);
+		verify(userRepository,never()).save(any(UserEntity.class));
+
+	}
+
+	//Helper Methods
+
+	private UserRequest userRequestUser() {
 		return new UserRequest(EMAIL,PASSWORD,USERNAME,NAME,SURNAME);
 	}
 
