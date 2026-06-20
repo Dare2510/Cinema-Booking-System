@@ -354,6 +354,10 @@ class ScreeningServiceTest {
 		verifyNoUpdateWrites();
 	}
 
+	//Helper Methods
+
+	//Requests
+
 	private ScreeningRequest screeningRequest() {
 		return new ScreeningRequest(ROOM_ID, MOVIE_ID, SCREENING_DATE, TIME_SLOT, PRICE);
 	}
@@ -367,6 +371,8 @@ class ScreeningServiceTest {
 				BigDecimal.valueOf(15)
 		);
 	}
+
+	//Entities
 
 	private MovieEntity movie() {
 		return movie(MOVIE_ID, "testTitle", "testDescription", Genre.COMEDY, 10);
@@ -416,6 +422,8 @@ class ScreeningServiceTest {
 		return screening;
 	}
 
+	//Mocks
+
 	private void mockMovieAndRoom(MovieEntity movie, CinemaRoomEntity room) {
 		when(movieService.getMovieEntityById(movie.getId())).thenReturn(movie);
 		when(cinemaRoomService.getRoomEntity(room.getId())).thenReturn(room);
@@ -449,6 +457,8 @@ class ScreeningServiceTest {
 					return seats;
 				});
 	}
+
+	//Verification
 
 	private void verifyNoUpdateWrites() {
 		verify(screeningRepository, never()).save(any());

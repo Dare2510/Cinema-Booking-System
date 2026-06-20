@@ -6,6 +6,10 @@ import com.dare.cinema_booking_system.user.entity.Role;
 import com.dare.cinema_booking_system.user.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -17,6 +21,12 @@ import org.springframework.web.bind.annotation.*;
 public class UserManagementController {
 
 	private final UserService userService;
+
+	@GetMapping
+	public ResponseEntity<Page<UserResponse>> getPageOfUsers(@PageableDefault(page = 0, size = 10,
+			sort = "surname", direction = Sort.Direction.ASC) Pageable pageable){
+		return ResponseEntity.ok().body(userService.getPageOfUsers(pageable));
+	}
 
 	@PostMapping("/register")
 	public ResponseEntity<UserResponse> registerUser(@RequestBody @Valid UserRequest userRequest) {

@@ -238,9 +238,15 @@ class ReservationServiceTest {
 		verifyNoCancelWrites();
 	}
 
+	//Helper Methods
+
+	//Requests
+
 	private ReservationRequest onlineReservationRequest() {
 		return new ReservationRequest(SCREENING_ID, SEAT_IDS, PaymentMethod.ONLINE);
 	}
+
+	//Entities
 
 	private ScreeningEntity screening(LocalDate date, TimeSlot timeSlot) {
 		MovieEntity movie = new MovieEntity("testTitle", "testDescription", Genre.COMEDY, 10);
@@ -314,6 +320,8 @@ class ReservationServiceTest {
 		return new AuthenticatedUser(99L, "Admin@gmail.com", Role.ADMIN);
 	}
 
+	//Mocks
+
 	private void mockReservationSaveAssignsId() {
 		when(reservationsRepository.save(any(ReservationEntity.class)))
 				.thenAnswer(invocation -> {
@@ -323,11 +331,19 @@ class ReservationServiceTest {
 				});
 	}
 
+	private void mockCurrentTime(LocalDateTime currentTime) {
+		ZoneId zone = ZoneId.systemDefault();
+		given(clock.instant()).willReturn(currentTime.atZone(zone).toInstant());
+		given(clock.getZone()).willReturn(zone);
+	}
+
 	private void mockExistingReservationForCancel(ReservationEntity reservation) {
 		when(reservationsRepository.findById(RESERVATION_ID)).thenReturn(Optional.of(reservation));
 		when(paymentService.findPaymentByReservationId(RESERVATION_ID)).thenReturn(reservation.getPayment());
 		when(ticketService.findTicketById(reservation.getTicket().getId())).thenReturn(reservation.getTicket());
 	}
+
+	//Verification
 
 	private void verifyNoReservationCreation() {
 		verify(reservationsRepository, never()).save(any());
@@ -343,9 +359,5 @@ class ReservationServiceTest {
 		verify(paymentService, never()).statusUpdateCancelPayment(any(), any());
 	}
 
-	private void mockCurrentTime(LocalDateTime currentTime) {
-		ZoneId zone = ZoneId.systemDefault();
-		given(clock.instant()).willReturn(currentTime.atZone(zone).toInstant());
-		given(clock.getZone()).willReturn(zone);
-	}
+
 }

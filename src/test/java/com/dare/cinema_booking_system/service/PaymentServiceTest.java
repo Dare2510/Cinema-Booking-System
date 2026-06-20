@@ -147,6 +147,8 @@ class PaymentServiceTest {
 		verify(paymentRepository).save(reservation.getPayment());
 	}
 
+	//Helper Methods
+
 	private ReservationEntity reservation(ReservationStatus reservationStatus, PaymentStatus paymentStatus) {
 		ReservationEntity reservation = new ReservationEntity();
 		reservation.setId(RESERVATION_ID);

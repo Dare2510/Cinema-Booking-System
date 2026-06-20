@@ -144,6 +144,10 @@ class TicketServiceTest {
 				.hasMessage("Ticket with id " + TICKET_ID + " not found");
 	}
 
+	//Helper Methods
+
+	//Entities
+
 	private ReservationEntity reservation(ReservationStatus reservationStatus, PaymentStatus paymentStatus) {
 		ReservationEntity reservation = new ReservationEntity();
 		reservation.setReservationStatus(reservationStatus);
@@ -161,6 +165,8 @@ class TicketServiceTest {
 		reservation.setTicket(ticket);
 		return ticket;
 	}
+
+	//Mocks
 
 	private void mockCurrentTime(LocalDateTime currentTime) {
 		ZoneId zone = ZoneId.systemDefault();

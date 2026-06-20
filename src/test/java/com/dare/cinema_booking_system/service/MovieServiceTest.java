@@ -251,6 +251,10 @@ class MovieServiceTest {
 		verify(movieRepository).findByGenre(Genre.FANTASY);
 	}
 
+	//Helper Methods
+
+	//Requests
+
 	private MovieRequest movieRequest() {
 		return movieRequest(TITLE, DESCRIPTION, DURATION, GENRE);
 	}
@@ -258,6 +262,8 @@ class MovieServiceTest {
 	private MovieRequest movieRequest(String title, String description, int duration, Genre genre) {
 		return new MovieRequest(title, description, duration, genre);
 	}
+
+	//Entities
 
 	private MovieEntity movieEntity() {
 		return movieEntity(MOVIE_ID, TITLE, DESCRIPTION, DURATION, GENRE);
@@ -275,6 +281,8 @@ class MovieServiceTest {
 				movieEntity(2L, "testTitle2", "testDescription2", 120, Genre.DRAMA)
 		);
 	}
+
+	//Asserts
 
 	private void assertMovieResponse(MovieResponse response, String title, String description, int duration, Genre genre) {
 		assertNotNull(response);

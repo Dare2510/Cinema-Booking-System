@@ -132,6 +132,8 @@ public class UserIntegrationTest {
 		userRepository.deleteAll();
 	}
 
+	//Customer Tests
+
 	@Test
 	public void registerUser_whenMailIsAvailable_returnsOK() throws Exception {
 		UserRequest newUser = userRequest();
@@ -244,6 +246,8 @@ public class UserIntegrationTest {
 
 	}
 
+	//Staff/Admin Tests
+
 	@Test
 	public void registerUserByManagement_emailIsAvailable_returnsOK() throws Exception {
 		UserRequest newUser = userRequest();
@@ -281,6 +285,18 @@ public class UserIntegrationTest {
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(updatedUser)))
 				.andExpect(status().isOk());
+	}
+
+	@Test
+	public void getPageOfUsers_withPageableDefaults_returnIsOK() throws Exception {
+		mockMvc.perform(get("/api/management/user")
+						.param("page", "0")
+						.param("size", "10")
+						.param("sort", "surname")
+						.param("direction", "ASC"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.content").isArray())
+				.andExpect(jsonPath("$.size").value(10));
 	}
 
 	//Helper Methods

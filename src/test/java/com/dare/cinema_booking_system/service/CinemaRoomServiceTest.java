@@ -245,6 +245,10 @@ class CinemaRoomServiceTest {
 		verify(cinemaRoomRepository).findById(ROOM_ID);
 	}
 
+	//Helper Methods
+
+	//Requests
+
 	private CinemaRoomRequest roomRequest() {
 		return new CinemaRoomRequest(ROOM_NUMBER, ROWS, ROW_CAPACITY);
 	}
@@ -263,6 +267,8 @@ class CinemaRoomServiceTest {
 		return roomEntity(ROOM_NUMBER, ROWS, ROW_CAPACITY, seats);
 	}
 
+	//Entities
+
 	private CinemaRoomEntity roomEntity(int roomNumber, int rows, int rowCapacity, List<SeatEntity> seats) {
 		CinemaRoomEntity room = new CinemaRoomEntity(roomNumber, rows, rowCapacity, seats);
 		room.setId(ROOM_ID);
@@ -275,6 +281,9 @@ class CinemaRoomServiceTest {
 		seat.setSeatNumber(seatNumber);
 		return seat;
 	}
+
+
+	//Mocks
 
 	private void mockRoomSaveAssignsId() {
 		when(cinemaRoomRepository.save(any(CinemaRoomEntity.class)))

@@ -14,6 +14,8 @@ import com.dare.cinema_booking_system.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -84,6 +86,15 @@ public class UserService {
 	}
 
 	//Management Methods
+
+	public Page<UserResponse> getPageOfUsers(Pageable pageable) {
+		boolean adminRequest = true;
+		return userRepository.findAll(pageable).map(user -> {
+			log.info("Getting Page of Users");
+				return responseMapper(user, adminRequest);
+				});
+
+	}
 
 	public UserResponse registerManagement(UserRequest userRequest, Role role) {
 		boolean adminCreation = true;
