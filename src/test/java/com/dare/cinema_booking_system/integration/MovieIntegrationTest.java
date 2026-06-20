@@ -211,7 +211,9 @@ public class MovieIntegrationTest {
 				.andExpect(jsonPath("$.size").value(10));
 	}
 
-	//Helper Method
+	//Helper Methods
+
+	//Create and get IDs
 
 	private Long createMovieAndReturnId(MovieRequest movieRequest) throws Exception {
 		String responseJson = mockMvc.perform(post("/api/management/movie")
@@ -234,6 +236,24 @@ public class MovieIntegrationTest {
 		return ((Number) JsonPath.read(roomResponseJson, "$.id")).longValue();
 	}
 
+	//Endpoint Helpers
+
+	private void postScreening(ScreeningRequest screeningRequest) throws Exception {
+		mockMvc.perform(post("/api/management/screening")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(screeningRequest)))
+				.andExpect(status().isOk());
+	}
+
+	private void postMovie(MovieRequest movieRequest) throws Exception {
+		mockMvc.perform(post("/api/management/movie")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(movieRequest)))
+				.andExpect(status().isCreated());
+	}
+
+	//Requests
+
 	private MovieRequest movieRequest() {
 		return new MovieRequest(MOVIE_TITLE, MOVIE_DESCRIPTION, MOVIE_DURATION, MOVIE_GENRE);
 	}
@@ -253,20 +273,5 @@ public class MovieIntegrationTest {
 	private ScreeningRequest screeningRequest(Long roomId, Long movieId) {
 		return new ScreeningRequest(roomId, movieId, LocalDate.now(), TimeSlot.PRIME, BigDecimal.TEN);
 	}
-
-	private void postScreening(ScreeningRequest screeningRequest) throws Exception {
-		mockMvc.perform(post("/api/management/screening")
-						.contentType(MediaType.APPLICATION_JSON)
-						.content(objectMapper.writeValueAsString(screeningRequest)))
-				.andExpect(status().isOk());
-	}
-
-	private void postMovie(MovieRequest movieRequest) throws Exception {
-		mockMvc.perform(post("/api/management/movie")
-						.contentType(MediaType.APPLICATION_JSON)
-						.content(objectMapper.writeValueAsString(movieRequest)))
-				.andExpect(status().isCreated());
-	}
-
 
 }

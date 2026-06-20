@@ -13,8 +13,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;;
-import org.springframework.http.MediaType;;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -166,6 +166,8 @@ public class CinemaRoomIntegrationTest {
 
 	//Helper Method
 
+	//Create and get IDs
+
 	private Long createCinemaRoomAndGetId(CinemaRoomRequest cinemaRoomRequest) throws Exception {
 
 		String roomResponseJson = mockMvc.perform(post("/api/management/room")
@@ -187,6 +189,17 @@ public class CinemaRoomIntegrationTest {
 		return ((Number) JsonPath.read(responseJson, "$.id")).longValue();
 	}
 
+	//Endpoint Helper
+
+	private void postScreening(ScreeningRequest screeningRequest) throws Exception {
+		mockMvc.perform(post("/api/management/screening")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(screeningRequest)))
+				.andExpect(status().isOk());
+	}
+
+	//Requests
+
 	private CinemaRoomRequest cinemaRoomRequest() {
 		return new CinemaRoomRequest(ROOM_NUMBER, ROWS, ROW_CAPACITY);
 	}
@@ -205,13 +218,6 @@ public class CinemaRoomIntegrationTest {
 
 	private ScreeningRequest screeningRequest(Long roomId, Long movieId) {
 		return new ScreeningRequest(roomId, movieId, LocalDate.now(), TimeSlot.PRIME, BigDecimal.valueOf(5));
-	}
-
-	private void postScreening(ScreeningRequest screeningRequest) throws Exception {
-		mockMvc.perform(post("/api/management/screening")
-						.contentType(MediaType.APPLICATION_JSON)
-						.content(objectMapper.writeValueAsString(screeningRequest)))
-				.andExpect(status().isOk());
 	}
 
 }

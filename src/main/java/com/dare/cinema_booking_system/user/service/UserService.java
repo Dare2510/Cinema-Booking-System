@@ -29,6 +29,7 @@ public class UserService {
 	//Customer Methods
 
 	public UserResponse registerUserByCustomer(UserRequest userRequest) {
+		boolean adminCreation = false;
 
 		if (emailExists(userRequest)) {
 			log.info("User with email {} already exists", userRequest.getEmail());
@@ -43,7 +44,7 @@ public class UserService {
 
 		saveUser(user);
 
-		return responseMapper(user);
+		return responseMapper(user, adminCreation);
 
 	}
 
@@ -85,6 +86,7 @@ public class UserService {
 	//Management Methods
 
 	public UserResponse registerManagement(UserRequest userRequest, Role role) {
+		boolean adminCreation = true;
 
 		if (emailExists(userRequest)) {
 			log.info("User with email {} already exists", userRequest.getEmail());
@@ -99,7 +101,7 @@ public class UserService {
 
 		saveUser(newManagementUser);
 
-		return responseMapper(newManagementUser);
+		return responseMapper(newManagementUser,adminCreation);
 	}
 
 	public void updateUserByManagement(Long userId, UserRequest userRequest,Role role) {
@@ -143,7 +145,7 @@ public class UserService {
 		user.setName(userRequest.getName());
 		user.setSurname(userRequest.getSurname());
 		user.setUsername(userRequest.getUsername());
-		user.setEmail(userRequest.getEmail());;
+		user.setEmail(userRequest.getEmail());
 	}
 
 	private boolean emailExists(UserRequest userRequest) {
@@ -179,8 +181,18 @@ public class UserService {
 		return reservationsRepository.userCanBeDeleted(user);
 	}
 
-	private UserResponse responseMapper(UserEntity userEntity) {
+	private UserResponse responseMapper(UserEntity userEntity, boolean adminCreation) {
+		if (adminCreation) {
 		return modelMapper.map(userEntity, UserResponse.class);
+		} else {
+			return UserResponse.builder()
+					.userId(userEntity.getId())
+					.email(userEntity.getEmail())
+					.name(userEntity.getName())
+					.surname(userEntity.getSurname())
+					.username(userEntity.getUsername())
+					.build();
+		}
 	}
 
 	public UserEntity getUserByAuthenticatedUser(AuthenticatedUser authenticatedUser) {

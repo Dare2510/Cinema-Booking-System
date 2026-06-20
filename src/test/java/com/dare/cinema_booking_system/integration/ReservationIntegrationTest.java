@@ -16,12 +16,11 @@ import com.dare.cinema_booking_system.screenings.entity.TimeSlot;
 import com.dare.cinema_booking_system.screenings.repository.ScreeningRepository;
 import com.dare.cinema_booking_system.screenings.repository.ScreeningSeatRepository;
 import com.dare.cinema_booking_system.security.principal.AuthenticatedUser;
+import com.dare.cinema_booking_system.user.dto.UserRequest;
 import com.dare.cinema_booking_system.user.entity.Role;
-import com.dare.cinema_booking_system.user.entity.UserEntity;
 import com.dare.cinema_booking_system.user.repository.UserRepository;
 import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -29,7 +28,6 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -52,7 +50,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @ActiveProfiles("test")
-@AutoConfigureMockMvc(addFilters = false)
+@AutoConfigureMockMvc
 public class ReservationIntegrationTest {
 
 	@Autowired
@@ -91,30 +89,15 @@ public class ReservationIntegrationTest {
 	@MockitoBean
 	private Clock clock;
 
-	private static final String MOVIE_TITLE = "testTitle";
-	private static final String MOVIE_DESCRIPTION = "testDescription";
-	private static final int MOVIE_DURATION = 120;
-
-	private static final int ROOM_NUMBER = 5;
-	private static final int ROWS = 10;
-	private static final int ROW_CAPACITY = 20;
-
-	private static final BigDecimal SCREENING_PRICE = BigDecimal.valueOf(10.00);
-	private static final String SCREENING_DATE = LocalDate.now().toString();
-	private static final TimeSlot SCREENING_TIMESLOT = TimeSlot.PRIME;
-	private static final String SCREENING_SLOT = TimeSlot.PRIME.name();
-
 	private static final PaymentMethod RESERVATION_PAYMENT_METHOD = PaymentMethod.ONLINE;
 	private static final BigDecimal RESERVATION_AMOUNT = BigDecimal.valueOf(20.0);
+	private static final String RESERVATION_SCREENING_DATE = LocalDate.now().toString();
+	private static final TimeSlot RESERVATION_TIME_SLOT = TimeSlot.PRIME;
 
-	@BeforeEach
-	void setUpSecurityContext() {
-		SecurityContextHolder.getContext().setAuthentication(adminAuthentication());
-	}
 
 	@AfterEach
 	void tearDown() {
-		SecurityContextHolder.clearContext();
+		//	SecurityContextHolder.clearContext();
 
 		reservationsRepository.deleteAll();
 		paymentRepository.deleteAll();
@@ -155,10 +138,13 @@ public class ReservationIntegrationTest {
 		ScreeningRequest screening = screeningRequest(roomId, movieId);
 		Long screeningId = createScreeningAndGetId(screening);
 
-		List<Long> seatIdsToReserve = getFreeSeatIds(screeningId).subList(0, 2);
+		Long userId = registerUserAndGetId();
+
+		List<Long> seatIdsToReserve = getFreeSeatIds(screeningId, userId).subList(0, 2);
+
 
 		ReservationRequest reservation = reservationRequest(screeningId, seatIdsToReserve);
-		Long reservationId = createReservationAndGetId(reservation);
+		Long reservationId = createReservationAndGetId(reservation, userId);
 
 		mockMvc.perform(patch("/api/management/reservation/" + reservationId + "/complete/payment")
 						.with(adminAuth()))
@@ -176,13 +162,14 @@ public class ReservationIntegrationTest {
 		ScreeningRequest screening = screeningRequest(roomId, movieId);
 		Long screeningId = createScreeningAndGetId(screening);
 
-		List<Long> seatIdsToReserve = getFreeSeatIds(screeningId).subList(0, 2);
+		Long userId = registerUserAndGetId();
 
+		List<Long> seatIdsToReserve = getFreeSeatIds(screeningId, userId).subList(0, 2);
 		ReservationRequest reservation = reservationRequest(screeningId, seatIdsToReserve);
-		Long reservationId = createReservationAndGetId(reservation);
+		Long reservationId = createReservationAndGetId(reservation, userId);
 
 		mockCurrentTime(minutesBeforeScreening(90));
-		cancelReservation(reservationId);
+		cancelReservation(reservationId, userId);
 
 		mockMvc.perform(patch("/api/management/reservation/" + reservationId + "/complete/payment")
 						.with(adminAuth()))
@@ -203,14 +190,16 @@ public class ReservationIntegrationTest {
 		ScreeningRequest screening = screeningRequest(roomId, movieId);
 		Long screeningId = createScreeningAndGetId(screening);
 
-		List<Long> seatIdsToReserve = getFreeSeatIds(screeningId).subList(0, 2);
+		Long userId = registerUserAndGetId();
+
+		List<Long> seatIdsToReserve = getFreeSeatIds(screeningId, userId).subList(0, 2);
 
 		ReservationRequest reservation = reservationRequest(screeningId, seatIdsToReserve);
-		Long reservationId = createReservationAndGetId(reservation);
+		Long reservationId = createReservationAndGetId(reservation, userId);
 
 		completePayment(reservationId);
 		mockCurrentTime(minutesBeforeScreening(90));
-		cancelReservation(reservationId);
+		cancelReservation(reservationId, userId);
 
 		mockMvc.perform(patch("/api/management/reservation/" + reservationId + "/refund")
 						.with(adminAuth()))
@@ -228,10 +217,12 @@ public class ReservationIntegrationTest {
 		ScreeningRequest screening = screeningRequest(roomId, movieId);
 		Long screeningId = createScreeningAndGetId(screening);
 
-		List<Long> seatIdsToReserve = getFreeSeatIds(screeningId).subList(0, 2);
+		Long userId = registerUserAndGetId();
+
+		List<Long> seatIdsToReserve = getFreeSeatIds(screeningId, userId).subList(0, 2);
 
 		ReservationRequest reservation = reservationRequest(screeningId, seatIdsToReserve);
-		Long reservationId = createReservationAndGetId(reservation);
+		Long reservationId = createReservationAndGetId(reservation, userId);
 
 		mockMvc.perform(patch("/api/management/reservation/" + reservationId + "/refund")
 						.with(adminAuth()))
@@ -252,10 +243,12 @@ public class ReservationIntegrationTest {
 		ScreeningRequest screening = screeningRequest(roomId, movieId);
 		Long screeningId = createScreeningAndGetId(screening);
 
-		List<Long> seatIdsToReserve = getFreeSeatIds(screeningId).subList(0, 2);
+		Long userId = registerUserAndGetId();
+
+		List<Long> seatIdsToReserve = getFreeSeatIds(screeningId, userId).subList(0, 2);
 
 		ReservationRequest reservation = reservationRequest(screeningId, seatIdsToReserve);
-		Long reservationId = createReservationAndGetId(reservation);
+		Long reservationId = createReservationAndGetId(reservation, userId);
 		String ticketNumber = getTicketNumber(reservationId);
 
 		completePayment(reservationId);
@@ -276,10 +269,12 @@ public class ReservationIntegrationTest {
 		ScreeningRequest screening = screeningRequest(roomId, movieId);
 		Long screeningId = createScreeningAndGetId(screening);
 
-		List<Long> seatIdsToReserve = getFreeSeatIds(screeningId).subList(0, 2);
+		Long userId = registerUserAndGetId();
+
+		List<Long> seatIdsToReserve = getFreeSeatIds(screeningId, userId).subList(0, 2);
 
 		ReservationRequest reservation = reservationRequest(screeningId, seatIdsToReserve);
-		Long reservationId = createReservationAndGetId(reservation);
+		Long reservationId = createReservationAndGetId(reservation, userId);
 		String ticketNumber = getTicketNumber(reservationId);
 
 		mockMvc.perform(patch("/api/management/reservation/ticket/" + ticketNumber + "/used")
@@ -311,18 +306,20 @@ public class ReservationIntegrationTest {
 		ScreeningRequest screening = screeningRequest(roomId, movieId);
 		Long screeningId = createScreeningAndGetId(screening);
 
-		List<Long> seatIdsToReserve = getFreeSeatIds(screeningId).subList(0, 2);
+		Long userId = registerUserAndGetId();
+
+		List<Long> seatIdsToReserve = getFreeSeatIds(screeningId, userId).subList(0, 2);
 
 		ReservationRequest reservation = reservationRequest(screeningId, seatIdsToReserve);
-		Long reservationId = createReservationAndGetId(reservation);
+		Long reservationId = createReservationAndGetId(reservation, userId);
 
 		mockMvc.perform(get("/api/management/reservation/" + reservationId)
 						.with(adminAuth()))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.reservationId").value(reservationId))
 				.andExpect(jsonPath("$.paymentResponse.amount").value(RESERVATION_AMOUNT))
-				.andExpect(jsonPath("$.timeSlot").value(SCREENING_SLOT))
-				.andExpect(jsonPath("$.screeningDate").value(SCREENING_DATE))
+				.andExpect(jsonPath("$.timeSlot").value(RESERVATION_TIME_SLOT.name()))
+				.andExpect(jsonPath("$.screeningDate").value(RESERVATION_SCREENING_DATE))
 				.andExpect(jsonPath("$.ticketNumber").exists());
 	}
 
@@ -346,12 +343,14 @@ public class ReservationIntegrationTest {
 		ScreeningRequest screening = screeningRequest(roomId, movieId);
 		Long screeningId = createScreeningAndGetId(screening);
 
-		List<Long> seatIdsToReserve = getFreeSeatIds(screeningId).subList(0, 2);
+		Long userId = registerUserAndGetId();
+
+		List<Long> seatIdsToReserve = getFreeSeatIds(screeningId, userId).subList(0, 2);
 
 		ReservationRequest reservation = reservationRequest(screeningId, seatIdsToReserve);
 
-		mockMvc.perform(post("/api/management/reservation")
-						.with(adminAuth())
+		mockMvc.perform(post("/api/reservation")
+						.with(userAuth(userId))
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(reservation)))
 				.andExpect(status().isOk())
@@ -379,13 +378,15 @@ public class ReservationIntegrationTest {
 		ScreeningRequest screening = screeningRequest(roomId, movieId);
 		Long screeningId = createScreeningAndGetId(screening);
 
-		List<Long> seatIdsToReserve = getFreeSeatIds(screeningId).subList(0, 2);
+		Long userId = registerUserAndGetId();
+
+		List<Long> seatIdsToReserve = getFreeSeatIds(screeningId, userId).subList(0, 2);
 
 		ReservationRequest reservation = reservationRequest(screeningId, seatIdsToReserve);
-		postReservation(reservation);
+		postReservation(reservation, userId);
 
-		mockMvc.perform(post("/api/management/reservation")
-						.with(adminAuth())
+		mockMvc.perform(post("/api/reservation")
+						.with(userAuth(userId))
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(reservation)))
 				.andExpect(status().isBadRequest())
@@ -403,15 +404,17 @@ public class ReservationIntegrationTest {
 		ScreeningRequest screening = screeningRequest(roomId, movieId);
 		Long screeningId = createScreeningAndGetId(screening);
 
-		List<Long> seatIdsToReserve = getFreeSeatIds(screeningId).subList(0, 2);
+		Long userId = registerUserAndGetId();
+
+		List<Long> seatIdsToReserve = getFreeSeatIds(screeningId, userId).subList(0, 2);
 
 		ReservationRequest reservation = reservationRequest(screeningId, seatIdsToReserve);
-		Long reservationId = createReservationAndGetId(reservation);
+		Long reservationId = createReservationAndGetId(reservation, userId);
 
 		mockCurrentTime(minutesBeforeScreening(90));
 
-		mockMvc.perform(patch("/api/management/reservation/" + reservationId + "/cancel")
-						.with(adminAuth()))
+		mockMvc.perform(patch("/api/reservation/" + reservationId + "/cancel")
+						.with(userAuth(userId)))
 				.andExpect(status().isOk());
 	}
 
@@ -426,17 +429,19 @@ public class ReservationIntegrationTest {
 		ScreeningRequest screening = screeningRequest(roomId, movieId);
 		Long screeningId = createScreeningAndGetId(screening);
 
-		List<Long> seatIdsToReserve = getFreeSeatIds(screeningId).subList(0, 2);
+		Long userId = registerUserAndGetId();
+
+		List<Long> seatIdsToReserve = getFreeSeatIds(screeningId, userId).subList(0, 2);
 
 		ReservationRequest reservation = reservationRequest(screeningId, seatIdsToReserve);
-		Long reservationId = createReservationAndGetId(reservation);
+		Long reservationId = createReservationAndGetId(reservation, userId);
 
 		mockCurrentTime(minutesBeforeScreening(90));
 
-		cancelReservation(reservationId);
+		cancelReservation(reservationId, userId);
 
-		mockMvc.perform(patch("/api/management/reservation/" + reservationId + "/cancel")
-						.with(adminAuth()))
+		mockMvc.perform(patch("/api/reservation/" + reservationId + "/cancel")
+						.with(userAuth(userId)))
 				.andExpect(status().isBadRequest());
 	}
 
@@ -451,20 +456,26 @@ public class ReservationIntegrationTest {
 		ScreeningRequest screening = screeningRequest(roomId, movieId);
 		Long screeningId = createScreeningAndGetId(screening);
 
-		List<Long> seatIdsToReserve = getFreeSeatIds(screeningId).subList(0, 2);
+		Long userId = registerUserAndGetId();
+
+		List<Long> seatIdsToReserve = getFreeSeatIds(screeningId, userId).subList(0, 2);
 
 		ReservationRequest reservation = reservationRequest(screeningId, seatIdsToReserve);
-		Long reservationId = createReservationAndGetId(reservation);
+		Long reservationId = createReservationAndGetId(reservation, userId);
 
 		mockCurrentTime(minutesBeforeScreening(30));
 
-		mockMvc.perform(patch("/api/management/reservation/" + reservationId + "/cancel")
-						.with(adminAuth()))
+		mockMvc.perform(patch("/api/reservation/" + reservationId + "/cancel")
+						.with(userAuth(userId)))
 				.andExpect(status().isBadRequest())
 				.andExpect(jsonPath("$.message")
 						.value("Reservation with id " + reservationId + " cannot be cancelled." +
 								"Reservation must be cancelled at least 60 min before screening"));
 	}
+
+	//Helper Methods
+
+	//Endpoint helpers
 
 	private void completePayment(Long reservationId) throws Exception {
 		mockMvc.perform(patch("/api/management/reservation/" + reservationId + "/complete/payment")
@@ -472,9 +483,9 @@ public class ReservationIntegrationTest {
 				.andExpect(status().isOk());
 	}
 
-	private void cancelReservation(Long reservationId) throws Exception {
-		mockMvc.perform(patch("/api/management/reservation/" + reservationId + "/cancel")
-						.with(adminAuth()))
+	private void cancelReservation(Long reservationId, Long userId) throws Exception {
+		mockMvc.perform(patch("/api/reservation/" + reservationId + "/cancel")
+						.with(userAuth(userId)))
 				.andExpect(status().isOk());
 	}
 
@@ -482,17 +493,15 @@ public class ReservationIntegrationTest {
 		return new ReservationRequest(screeningId, seatsToReserve, RESERVATION_PAYMENT_METHOD);
 	}
 
-	private MovieRequest movieRequest() {
-		return new MovieRequest(MOVIE_TITLE, MOVIE_DESCRIPTION, MOVIE_DURATION, Genre.FANTASY);
+	private void postReservation(ReservationRequest reservation, Long userId) throws Exception {
+		mockMvc.perform(post("/api/reservation")
+						.with(userAuth(userId))
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(reservation)))
+				.andExpect(status().isOk());
 	}
 
-	private CinemaRoomRequest cinemaRoomRequest() {
-		return new CinemaRoomRequest(ROOM_NUMBER, ROWS, ROW_CAPACITY);
-	}
-
-	private ScreeningRequest screeningRequest(Long roomId, Long movieId) {
-		return new ScreeningRequest(roomId, movieId, LocalDate.now(), TimeSlot.PRIME, SCREENING_PRICE);
-	}
+	//Create and get IDs
 
 	private Long createScreeningAndGetId(ScreeningRequest screeningRequest) throws Exception {
 		String screeningResponseJson = mockMvc.perform(post("/api/management/screening")
@@ -527,9 +536,9 @@ public class ReservationIntegrationTest {
 		return ((Number) JsonPath.read(roomResponseJson, "$.id")).longValue();
 	}
 
-	private Long createReservationAndGetId(ReservationRequest reservation) throws Exception {
-		String reservationJson = mockMvc.perform(post("/api/management/reservation")
-						.with(adminAuth())
+	private Long createReservationAndGetId(ReservationRequest reservation, Long userId) throws Exception {
+		String reservationJson = mockMvc.perform(post("/api/reservation")
+						.with(userAuth(userId))
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(reservation)))
 				.andExpect(status().isOk())
@@ -538,12 +547,20 @@ public class ReservationIntegrationTest {
 		return ((Number) JsonPath.read(reservationJson, "$.reservationId")).longValue();
 	}
 
-	private void postReservation(ReservationRequest reservation) throws Exception {
-		mockMvc.perform(post("/api/management/reservation")
-						.with(adminAuth())
+	private Long registerUserAndGetId() throws Exception {
+		UserRequest request = new UserRequest(
+				"testuser@mail.com",
+				"password",
+				"testUser",
+				"testUserFirstName",
+				"testUserLastName");
+		String userJson = mockMvc.perform(post("/api/user/register")
 						.contentType(MediaType.APPLICATION_JSON)
-						.content(objectMapper.writeValueAsString(reservation)))
-				.andExpect(status().isOk());
+						.content(objectMapper.writeValueAsString(request)))
+				.andExpect(status().isOk())
+				.andReturn().getResponse().getContentAsString();
+
+		return ((Number) JsonPath.read(userJson, "$.userId")).longValue();
 	}
 
 	private String getTicketNumber(Long reservationId) throws Exception {
@@ -555,9 +572,9 @@ public class ReservationIntegrationTest {
 		return JsonPath.read(reservationJson, "$.ticketNumber").toString();
 	}
 
-	private List<Long> getFreeSeatIds(Long screeningId) throws Exception {
-		String jsonResponse = mockMvc.perform(get("/api/management/screening/" + screeningId + "/seats/free")
-						.with(adminAuth()))
+	private List<Long> getFreeSeatIds(Long screeningId, Long userId) throws Exception {
+		String jsonResponse = mockMvc.perform(get("/api/screening/" + screeningId + "/seats/free")
+						.with(userAuth(userId)))
 				.andReturn().getResponse().getContentAsString();
 
 		List<Integer> freeSeatIds = JsonPath.read(jsonResponse, "$[*].cinemaRoomSeatId");
@@ -567,10 +584,26 @@ public class ReservationIntegrationTest {
 				.toList();
 	}
 
+	//Requests
+
+	private MovieRequest movieRequest() {
+		return new MovieRequest("testTitle", "testDescription", 120, Genre.FANTASY);
+	}
+
+	private CinemaRoomRequest cinemaRoomRequest() {
+		return new CinemaRoomRequest(5, 10, 20);
+	}
+
+	private ScreeningRequest screeningRequest(Long roomId, Long movieId) {
+		return new ScreeningRequest(roomId, movieId, LocalDate.now(), TimeSlot.PRIME, BigDecimal.valueOf(10.00));
+	}
+
+	//Validator Helpers
+
 	private LocalDateTime minutesBeforeScreening(int minutes) {
 		return LocalDateTime.of(
-				LocalDate.parse(SCREENING_DATE),
-				SCREENING_TIMESLOT.getStartTime().minusMinutes(minutes)
+				LocalDate.parse(RESERVATION_SCREENING_DATE),
+				RESERVATION_TIME_SLOT.getStartTime().minusMinutes(minutes)
 		);
 	}
 
@@ -581,38 +614,41 @@ public class ReservationIntegrationTest {
 		given(clock.getZone()).willReturn(zone);
 	}
 
-	private UsernamePasswordAuthenticationToken adminAuthentication() {
-		UserEntity admin = createAdminUser();
+	//User Authenticator
 
-		AuthenticatedUser principal = new AuthenticatedUser(
-				admin.getId(),
-				admin.getEmail(),
-				admin.getRole()
-		);
+	public RequestPostProcessor userAuth(Long userId) {
+		AuthenticatedUser principal =
+				new AuthenticatedUser(userId,
+						"testuser@mail.com",
+						Role.USER);
 
-		return new UsernamePasswordAuthenticationToken(
-				principal,
-				null,
-				List.of(new SimpleGrantedAuthority("ROLE_" + admin.getRole().name()))
-		);
+
+		UsernamePasswordAuthenticationToken auth =
+				new UsernamePasswordAuthenticationToken(
+						principal,
+						null,
+						List.of(new SimpleGrantedAuthority("ROLE_" + Role.USER.name())));
+
+		return authentication(auth);
+
 	}
+
+	//Admin Authenticator
 
 	private RequestPostProcessor adminAuth() {
-		return authentication(adminAuthentication());
-	}
+		AuthenticatedUser principal = new AuthenticatedUser(
+				999L,
+				"admin@example.com",
+				Role.ADMIN
+		);
 
-	private UserEntity createAdminUser() {
-		return userRepository.findByEmail("admin@example.com")
-				.orElseGet(() -> {
-					UserEntity user = new UserEntity();
-					user.setEmail("admin@example.com");
-					user.setUsername("admin");
-					user.setName("Admin");
-					user.setSurname("User");
-					user.setPassword("test-password");
-					user.setRole(Role.ADMIN);
+		UsernamePasswordAuthenticationToken auth =
+				new UsernamePasswordAuthenticationToken(
+						principal,
+						null,
+						List.of(new SimpleGrantedAuthority("ROLE_ADMIN"))
+				);
 
-					return userRepository.save(user);
-				});
+		return authentication(auth);
 	}
 }

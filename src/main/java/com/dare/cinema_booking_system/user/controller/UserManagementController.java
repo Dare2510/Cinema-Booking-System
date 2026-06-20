@@ -20,14 +20,12 @@ public class UserManagementController {
 
 	@PostMapping("/register")
 	public ResponseEntity<UserResponse> registerUser(@RequestBody @Valid UserRequest userRequest) {
-		userService.registerUserByCustomer(userRequest);
 		return ResponseEntity.ok().body(userService.registerUserByCustomer(userRequest));
 	}
 
 	@PreAuthorize("hasRole('ADMIN')")
 	@PostMapping("/register/{role}")
 	public ResponseEntity<UserResponse> registerManagement(@RequestBody @Valid UserRequest userRequest, @PathVariable Role role) {
-		userService.registerManagement(userRequest, role);
 		return ResponseEntity.ok().body(userService.registerManagement(userRequest, role));
 	}
 

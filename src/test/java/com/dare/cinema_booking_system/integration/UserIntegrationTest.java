@@ -40,11 +40,10 @@ import java.time.Clock;
 import java.time.LocalDate;
 import java.util.List;
 
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -97,34 +96,26 @@ public class UserIntegrationTest {
 	private static final int ROW_CAPACITY = 20;
 
 	private static final BigDecimal SCREENING_PRICE = BigDecimal.valueOf(10.00);
-	private static final String SCREENING_DATE = LocalDate.now().toString();
-	private static final TimeSlot SCREENING_TIMESLOT = TimeSlot.PRIME;
-	private static final String SCREENING_SLOT = TimeSlot.PRIME.name();
 
 	private static final PaymentMethod RESERVATION_PAYMENT_METHOD = PaymentMethod.ONLINE;
-	private static final BigDecimal RESERVATION_AMOUNT = BigDecimal.valueOf(20.0);
 
-	private static final String EMAIL = "testuser@mail.com";
+	private static final String USER_MAIL = "testuser@mail.com";
+	private static final String USER_USERNAME = "testUser";
+	private static final String USER_FIRST_NAME = "testUserFirstName";
+	private static final String USER_SURNAME = "testUserSurname";
+
+	private static final String UPDATED_USER_MAIL = "updatedtestuser@mail.com";
+	private static final String UPDATED_USER_FIRST_NAME = "updateName";
+	private static final String UPDATED_USER_USERNAME = "updateUser";
+	private static final String UPDATED_USER_SURNAME = "updatedTestUserName";
+
 	private static final String PASSWORD = "password";
-	private static final String HASHED_PASSWORD = "hashedPassword";
-	private static final String USERNAME = "tester";
-	private static final String NAME = "testName";
-	private static final String SURNAME = "testSurname";
-
-	private static final String UPDATED_EMAIL = "newtestuser@mail.com";
-	private static final String UPDATED_USERNAME = "newTester";
-	private static final String UPDATED_NAME = "newTestName";
-	private static final String UPDATED_SURNAME = "newTestSurname";
-
 	private static final String WRONG_PASSWORD = "Wrong password";
 
 	private static final Role USER_ROLE = Role.USER;
-	private static final Role ADMIN_ROLE = Role.ADMIN;
-	private static final Long USER_ID = 1L;
 
 	@AfterEach
 	void tearDown() {
-		SecurityContextHolder.clearContext();
 
 		reservationsRepository.deleteAll();
 		paymentRepository.deleteAll();
@@ -149,10 +140,12 @@ public class UserIntegrationTest {
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(newUser)))
 				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.email").value(EMAIL))
-				.andExpect(jsonPath("$.username").value(USERNAME))
-				.andExpect(jsonPath("$.name").value(NAME))
-				.andExpect(jsonPath("$.surname").value(SURNAME));
+				.andExpect(jsonPath("$.email").value(USER_MAIL))
+				.andExpect(jsonPath("$.username").value(USER_USERNAME))
+				.andExpect(jsonPath("$.name").value(USER_FIRST_NAME))
+				.andExpect(jsonPath("$.surname").value(USER_SURNAME))
+				.andExpect(jsonPath("$.role").doesNotExist());
+
 
 	}
 
@@ -167,7 +160,7 @@ public class UserIntegrationTest {
 						.content(objectMapper.writeValueAsString(newUser)))
 				.andExpect(status().isBadRequest())
 				.andExpect(jsonPath("$.message")
-						.value("User with " + EMAIL + " already exists"));
+						.value("User with " + USER_MAIL + " already exists"));
 
 	}
 
@@ -177,37 +170,191 @@ public class UserIntegrationTest {
 
 		Long userId = registerUserAndGetId(newUser);
 
-		AuthenticatedUser principal = new AuthenticatedUser(userId, EMAIL, USER_ROLE);
-
-		UsernamePasswordAuthenticationToken authentication =
-				new UsernamePasswordAuthenticationToken(
-						principal,
-						null,
-						List.of(new SimpleGrantedAuthority("ROLE_" + USER_ROLE.name()))
-				);
-
-		SecurityContextHolder.getContext().setAuthentication(authentication);
+		UsernamePasswordAuthenticationToken authentication = authenticationToken(userId);
+		setAuthentication(authentication);
 
 		UserRequest updatedUser = updateUserRequest();
 
 		mockMvc.perform(patch("/api/user/" + PASSWORD + "/update")
-						.with(authentication(authentication))
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(updatedUser)))
 				.andExpect(status().isOk());
+	}
 
+	@Test
+	public void updateUser_whenPasswordIsIncorrect_returnsOK() throws Exception {
+		UserRequest newUser = userRequest();
+
+		Long userId = registerUserAndGetId(newUser);
+
+		UsernamePasswordAuthenticationToken authentication = authenticationToken(userId);
+		setAuthentication(authentication);
+
+		UserRequest updatedUser = updateUserRequest();
+
+		mockMvc.perform(patch("/api/user/" + WRONG_PASSWORD + "/update")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(updatedUser)))
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.message").value("Invalid password"));
 
 	}
 
-	private void completePayment(Long reservationId) throws Exception {
-		mockMvc.perform(patch("/api/management/reservation/" + reservationId + "/complete/payment"))
+	@Test
+	public void deleteUser_whenThereAreNoOpenReservations_returnsOK() throws Exception {
+		UserRequest newUser = userRequest();
+
+		Long userId = registerUserAndGetId(newUser);
+
+		UsernamePasswordAuthenticationToken authentication = authenticationToken(userId);
+		setAuthentication(authentication);
+
+		mockMvc.perform(delete("/api/user/" + PASSWORD + "/delete"))
+				.andExpect(status().isOk());
+
+	}
+
+	@Test
+	public void deleteUser_whenThereAreOpenReservations_returnsBadRequest() throws Exception {
+		UserRequest newUser = userRequest();
+
+		Long userId = registerUserAndGetId(newUser);
+		UsernamePasswordAuthenticationToken authentication = authenticationToken(userId);
+		MovieRequest movieRequest = movieRequest();
+
+		CinemaRoomRequest roomRequest = cinemaRoomRequest();
+		Long movieId = createMovieAndGetId(movieRequest);
+		Long roomId = createCinemaRoomAndGetId(roomRequest);
+		ScreeningRequest screeningRequest = screeningRequest(roomId, movieId);
+
+		Long screeningId = createScreeningAndGetId(screeningRequest);
+		setAuthentication(authentication);
+
+		List<Long> seatIdsToReserve = getFreeSeatIds(screeningId).subList(0, 2);
+
+		setAuthentication(authentication);
+		ReservationRequest reservation = reservationRequest(screeningId, seatIdsToReserve);
+		postReservation(reservation);
+
+
+		mockMvc.perform(delete("/api/user/" + PASSWORD + "/delete"))
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.message")
+						.value("Deletion not possible, you have open reservations"));
+
+	}
+
+	@Test
+	public void registerUserByManagement_emailIsAvailable_returnsOK() throws Exception {
+		UserRequest newUser = userRequest();
+
+		mockMvc.perform(post("/api/management/user/register/" + USER_ROLE.name())
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(newUser)))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.email").value(USER_MAIL))
+				.andExpect(jsonPath("$.username").value(USER_USERNAME))
+				.andExpect(jsonPath("$.name").value(USER_FIRST_NAME))
+				.andExpect(jsonPath("$.surname").value(USER_SURNAME))
+				.andExpect(jsonPath("$.role").value(USER_ROLE.name()));
+	}
+
+	@Test
+	public void deleteUserByManagement_whenThereAreNoOpenReservations_returnsOK() throws Exception {
+		UserRequest newUser = userRequest();
+
+		Long userId = registerUserAndGetId(newUser);
+
+		mockMvc.perform(delete("/api/management/user/" + userId + "/delete"))
 				.andExpect(status().isOk());
 	}
 
-	private void cancelReservation(Long reservationId) throws Exception {
-		mockMvc.perform(patch("/api/management/reservation/" + reservationId + "/cancel"))
+	@Test
+	public void updateUserByManagement_whenPasswordIsCorrect_returnsOK() throws Exception {
+		UserRequest newUser = userRequest();
+
+		Long userId = registerUserAndGetId(newUser);
+
+		UserRequest updatedUser = updateUserRequest();
+
+		mockMvc.perform(patch("/api/management/user/" + userId + "/" + USER_ROLE.name() + "/update")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(updatedUser)))
 				.andExpect(status().isOk());
 	}
+
+	//Helper Methods
+
+	//Create and get IDs
+
+	private Long createScreeningAndGetId(ScreeningRequest screeningRequest) throws Exception {
+		String screeningResponseJson = mockMvc.perform(post("/api/management/screening")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(screeningRequest)))
+				.andExpect(status().isOk())
+				.andReturn().getResponse().getContentAsString();
+
+		return ((Number) JsonPath.read(screeningResponseJson, "$.id")).longValue();
+	}
+
+		private List<Long> getFreeSeatIds(Long screeningId) throws Exception {
+			String jsonResponse = mockMvc.perform(get("/api/screening/" + screeningId + "/seats/free"))
+					.andReturn().getResponse().getContentAsString();
+
+			List<Integer> freeSeatIds = JsonPath.read(jsonResponse, "$[*].cinemaRoomSeatId");
+
+			return freeSeatIds.stream()
+					.map(Integer::longValue)
+					.toList();
+		}
+
+		private Long createMovieAndGetId(MovieRequest movieRequest) throws Exception {
+			String movieResponseJson = mockMvc.perform(post("/api/management/movie")
+							.contentType(MediaType.APPLICATION_JSON)
+							.content(objectMapper.writeValueAsString(movieRequest)))
+					.andExpect(status().isCreated())
+					.andReturn().getResponse().getContentAsString();
+
+			return ((Number) JsonPath.read(movieResponseJson, "$.id")).longValue();
+		}
+
+		private Long createCinemaRoomAndGetId(CinemaRoomRequest cinemaRoomRequest) throws Exception {
+			String roomResponseJson = mockMvc.perform(post("/api/management/room")
+							.contentType(MediaType.APPLICATION_JSON)
+							.content(objectMapper.writeValueAsString(cinemaRoomRequest)))
+					.andExpect(status().isCreated())
+					.andReturn().getResponse().getContentAsString();
+
+			return ((Number) JsonPath.read(roomResponseJson, "$.id")).longValue();
+		}
+
+		private Long registerUserAndGetId(UserRequest userRequest) throws Exception {
+			String userJson = mockMvc.perform(post("/api/user/register")
+							.contentType(MediaType.APPLICATION_JSON)
+							.content(objectMapper.writeValueAsString(userRequest)))
+					.andExpect(status().isOk())
+					.andReturn().getResponse().getContentAsString();
+
+			return ((Number) JsonPath.read(userJson, "$.userId")).longValue();
+		}
+
+	//Endpoint helpers
+
+	private void postReservation(ReservationRequest reservation) throws Exception {
+		mockMvc.perform(post("/api/reservation")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(reservation)))
+				.andExpect(status().isOk());
+	}
+
+	private void postUserRegistration(UserRequest registrationRequest) throws Exception {
+		mockMvc.perform(post("/api/user/register")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(registrationRequest)))
+				.andExpect(status().isOk());
+	}
+
+	//Requests
 
 	private ReservationRequest reservationRequest(Long screeningId, List<Long> seatsToReserve) {
 		return new ReservationRequest(screeningId, seatsToReserve, RESERVATION_PAYMENT_METHOD);
@@ -226,77 +373,29 @@ public class UserIntegrationTest {
 	}
 
 	private UserRequest userRequest() {
-		return new UserRequest(EMAIL, PASSWORD, USERNAME, NAME, SURNAME);
+		return new UserRequest(USER_MAIL, PASSWORD, USER_USERNAME, USER_FIRST_NAME, USER_SURNAME);
 	}
 
 	private UserRequest updateUserRequest() {
-		return new UserRequest(UPDATED_EMAIL, PASSWORD, UPDATED_USERNAME, UPDATED_NAME, SURNAME);
+		return new UserRequest(UPDATED_USER_MAIL, PASSWORD, UPDATED_USER_USERNAME, UPDATED_USER_FIRST_NAME, UPDATED_USER_SURNAME);
 	}
 
-	private Long createScreeningAndGetId(ScreeningRequest screeningRequest) throws Exception {
-		String screeningResponseJson = mockMvc.perform(post("/api/management/screening")
-						.contentType(MediaType.APPLICATION_JSON)
-						.content(objectMapper.writeValueAsString(screeningRequest)))
-				.andExpect(status().isOk())
-				.andReturn().getResponse().getContentAsString();
+	//User Authenticator
 
-		return ((Number) JsonPath.read(screeningResponseJson, "$.id")).longValue();
+	public UsernamePasswordAuthenticationToken authenticationToken(Long userId) {
+		AuthenticatedUser principal = new AuthenticatedUser(userId, USER_MAIL, USER_ROLE);
+
+
+		return new UsernamePasswordAuthenticationToken(
+				principal,
+				null,
+				List.of(new SimpleGrantedAuthority("ROLE_" + USER_ROLE.name())));
+
 	}
 
-	private Long createMovieAndGetId(MovieRequest movieRequest) throws Exception {
-		String movieResponseJson = mockMvc.perform(post("/api/management/movie")
-						.contentType(MediaType.APPLICATION_JSON)
-						.content(objectMapper.writeValueAsString(movieRequest)))
-				.andExpect(status().isCreated())
-				.andReturn().getResponse().getContentAsString();
-
-		return ((Number) JsonPath.read(movieResponseJson, "$.id")).longValue();
-	}
-
-	private Long createCinemaRoomAndGetId(CinemaRoomRequest cinemaRoomRequest) throws Exception {
-		String roomResponseJson = mockMvc.perform(post("/api/management/room")
-						.contentType(MediaType.APPLICATION_JSON)
-						.content(objectMapper.writeValueAsString(cinemaRoomRequest)))
-				.andExpect(status().isCreated())
-				.andReturn().getResponse().getContentAsString();
-
-		return ((Number) JsonPath.read(roomResponseJson, "$.id")).longValue();
-	}
-
-	private Long createReservationAndGetId(ReservationRequest reservation) throws Exception {
-		String reservationJson = mockMvc.perform(post("/api/management/reservation")
-						.contentType(MediaType.APPLICATION_JSON)
-						.content(objectMapper.writeValueAsString(reservation)))
-				.andExpect(status().isOk())
-				.andReturn().getResponse().getContentAsString();
-
-		return ((Number) JsonPath.read(reservationJson, "$.reservationId")).longValue();
-	}
-
-	private Long registerUserAndGetId(UserRequest userRequest) throws Exception {
-		String userJson = mockMvc.perform(post("/api/user/register")
-						.contentType(MediaType.APPLICATION_JSON)
-						.content(objectMapper.writeValueAsString(userRequest)))
-				.andExpect(status().isOk())
-				.andReturn().getResponse().getContentAsString();
-
-		System.out.println(userJson);
-
-		return ((Number) JsonPath.read(userJson, "$.userId")).longValue();
-	}
-
-	private void postReservation(ReservationRequest reservation) throws Exception {
-		mockMvc.perform(post("/api/management/reservation")
-						.contentType(MediaType.APPLICATION_JSON)
-						.content(objectMapper.writeValueAsString(reservation)))
-				.andExpect(status().isOk());
-	}
-
-	private void postUserRegistration(UserRequest registrationRequest) throws Exception {
-		mockMvc.perform(post("/api/user/register")
-						.contentType(MediaType.APPLICATION_JSON)
-						.content(objectMapper.writeValueAsString(registrationRequest)))
-				.andExpect(status().isOk());
+	public void setAuthentication(UsernamePasswordAuthenticationToken authentication) {
+		SecurityContextHolder.getContext().setAuthentication(authentication);
 	}
 
 }
+

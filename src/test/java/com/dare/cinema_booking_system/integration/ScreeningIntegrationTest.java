@@ -232,6 +232,8 @@ public class ScreeningIntegrationTest {
 
 	//Helper Methods
 
+	//Create and get IDs
+
 	private Long createScreeningAndGetId(ScreeningRequest screeningRequest) throws Exception {
 
 		String screeningResponseJson = mockMvc.perform(post("/api/management/screening")
@@ -264,6 +266,8 @@ public class ScreeningIntegrationTest {
 
 		return ((Number) JsonPath.read(roomResponseJson, "$.id")).longValue();
 	}
+
+	//Requests
 
 	private MovieRequest movieRequest() {
 		return new MovieRequest(MOVIE_TITLE, MOVIE_DESCRIPTION, MOVIE_DURATION, Genre.FANTASY);
