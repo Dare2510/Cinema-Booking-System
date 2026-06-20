@@ -28,6 +28,7 @@ rectangle "Cinema Booking System" {
   usecase "View Movie Details" as UC17
 
   usecase "Manage Cinema Rooms" as UC18
+  usecase "Create Account with any Role" as UC19
 }
 
 customer --> UC1
@@ -38,6 +39,8 @@ customer --> UC5
 customer --> UC6
 customer --> UC7
 
+staff --> UC1
+staff --> UC2
 staff --> UC3
 staff --> UC4
 staff --> UC5
@@ -55,6 +58,7 @@ staff --> UC16
 staff --> UC17
 
 admin --> UC18
+admin --> UC19
 
 
 @enduml

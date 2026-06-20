@@ -12,7 +12,7 @@ The application models a cinema booking flow with movies, cinema rooms, seats, s
 - PostgreSQL
 - Maven
 - JUnit / Mockito
-- JWT Security planned
+- JWT Security 
 - Docker planned
 
 ## Features
@@ -91,12 +91,12 @@ Implemented:
 - Ticket and payment status handling
 - UML documentation
 - Unit tests for reservation and status logic
-- Integration tests for reservation endpoints
+- Integration tests for reservation endpoints 
+- JWT authentication
+- Role-based authorization
 
 Planned before final portfolio version:
 
-- JWT authentication
-- Role-based authorization
 - Docker setup with PostgreSQL
 
 The goal is to keep the scope focused on backend development.

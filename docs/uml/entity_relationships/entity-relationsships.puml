@@ -1,7 +1,18 @@
 @startchen
 
+entity users{
+   id <<key>>
+   email
+   username
+   name
+   surname
+   password
+   role
+}
+
 entity reservation{
     id <<key>>
+    user_id <<FK>>
     screening_id <<FK>>
     created_at
     reservation_status
@@ -23,7 +34,7 @@ entity movies{
 entity screening{
     id <<key>>
     movies_id <<FK>>
-    cinema_room_id
+    cinema_room_id <<FK>>
     screening_date
     price
     time_slot
@@ -69,19 +80,21 @@ entity screening_seats{
     screeningSeatStatus
 }
 
-relationship reservationSeats{
-}
+users =(1,n)= reservation
 
 reservation =(n,1)= screening
 reservation =1= payment
 reservation =1= tickets
 reservation =(1,n)= reservation_screening_seats
+
 screening_seats =(1,n)= reservation_screening_seats
 
 screening =(n,1)= movies
 screening =(1,n)= screening_seats
 
 cinemaRoom =(1,n)= seats
+cinemaRoom =(1,n)= screening
+
 seats =(1,n)= screening_seats
 
 @endchen
