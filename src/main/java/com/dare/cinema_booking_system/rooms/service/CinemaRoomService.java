@@ -34,6 +34,8 @@ public class CinemaRoomService {
 	@Transactional
 	public CinemaRoomResponse createCinemaRoom(CinemaRoomRequest cinemaRoomRequest) {
 		int roomNumber = cinemaRoomRequest.getRoomNumber();
+
+		//Room number must be unique
 		boolean roomExists = validateRoomNumber(roomNumber);
 
 		if (!roomExists) {
@@ -62,7 +64,10 @@ public class CinemaRoomService {
 	@Transactional
 	public CinemaRoomResponse updateCinemaRoom(CinemaRoomRequest cinemaRoomRequest, Long roomId) {
 		CinemaRoomEntity toUpdate = getRoomEntity(roomId);
+
+		//If screening exists rooms cannot be updated
 		boolean screeningExists = screeningRepository.existsByCinemaRoomId(roomId);
+
 		if (!screeningExists) {
 			setterRoomValues(cinemaRoomRequest, toUpdate);
 			seatsGenerator(toUpdate, toUpdate.getSeats());
@@ -76,6 +81,8 @@ public class CinemaRoomService {
 	@Transactional
 	public void deleteCinemaRoom(Long roomId) {
 		CinemaRoomEntity toDelete = getRoomEntity(roomId);
+
+		//If screening exists rooms cannot be deleted
 		boolean screeningExists = screeningRepository.existsByCinemaRoomId(roomId);
 
 		if (!screeningExists) {
@@ -104,7 +111,8 @@ public class CinemaRoomService {
 		});
 	}
 
-
+	//Creates new cinema seats for a room , if a room already exists and is updated
+	//old seats are deleted and replaced with new seats
 	private void seatsGenerator(CinemaRoomEntity cinemaRoomEntity, List<SeatEntity> seatEntityList) {
 		if (!seatEntityList.isEmpty()) {
 			List<SeatEntity> oldSeats = seatRepository.findByCinemaRoom(cinemaRoomEntity);

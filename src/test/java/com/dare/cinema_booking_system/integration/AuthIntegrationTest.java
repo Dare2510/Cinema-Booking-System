@@ -60,11 +60,11 @@ public class AuthIntegrationTest {
 		Long userId = createUserAndGetId(newUser);
 
 		LoginRequest loginRequest = validRequest();
-		String token = generateToken(USER_MAIL,Role.USER,userId);
+		String token = generateToken(USER_MAIL, Role.USER, userId);
 
 		String response = mockMvc.perform(post("/api/auth/login")
-				.contentType(MediaType.APPLICATION_JSON)
-				.content(objectMapper.writeValueAsString(loginRequest)))
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(loginRequest)))
 				.andExpect(status().isOk())
 				.andReturn().getResponse().getContentAsString();
 
@@ -107,19 +107,19 @@ public class AuthIntegrationTest {
 
 	//Requests
 
-	private UserRequest newUser(){
+	private UserRequest newUser() {
 		return new UserRequest(USER_MAIL, PASSWORD, USER_USERNAME, USER_FIRST_NAME, USER_SURNAME);
 	}
 
-	private LoginRequest validRequest(){
+	private LoginRequest validRequest() {
 		return new LoginRequest(USER_MAIL, PASSWORD);
 	}
 
-	private LoginRequest invalidRequestWrongPassword(){
+	private LoginRequest invalidRequestWrongPassword() {
 		return new LoginRequest(USER_MAIL, "wrongPassword");
 	}
 
-	private LoginRequest invalidRequestWrongEmail(){
+	private LoginRequest invalidRequestWrongEmail() {
 		return new LoginRequest("wrongemail@mail.com", PASSWORD);
 	}
 
@@ -144,7 +144,7 @@ public class AuthIntegrationTest {
 
 	//JWT
 
-	private String generateToken(String email, Role role, Long userId){
+	private String generateToken(String email, Role role, Long userId) {
 		return jwtUtil.generateToken(email, role, userId);
 	}
 

@@ -31,6 +31,7 @@ public class UserService {
 	//Customer Methods
 
 	public UserResponse registerUserByCustomer(UserRequest userRequest) {
+		//For differentiation between customer and management request
 		boolean adminCreation = false;
 
 		if (emailExists(userRequest)) {
@@ -41,7 +42,9 @@ public class UserService {
 		String hashedPassword = passwordEncoder.encode(userRequest.getPassword());
 
 		UserEntity user = new UserEntity();
-		updateUserEntity(user,userRequest,hashedPassword);
+		updateUserEntity(user, userRequest, hashedPassword);
+
+		//Customer cannot choose role
 		user.setRole(Role.USER);
 
 		saveUser(user);
@@ -50,8 +53,10 @@ public class UserService {
 
 	}
 
-	public void deleteUserByCustomer(AuthenticatedUser authenticatedUser,String password) {
+	public void deleteUserByCustomer(AuthenticatedUser authenticatedUser, String password) {
 		UserEntity toDelete = getUserByAuthenticatedUser(authenticatedUser);
+
+		//User can only be deleted if there are no open reservations
 		boolean canBeDeleted = deleteValid(toDelete);
 
 		boolean passwordMatches = passwordEncoder.matches(password, toDelete.getPassword());
@@ -88,15 +93,19 @@ public class UserService {
 	//Management Methods
 
 	public Page<UserResponse> getPageOfUsers(Pageable pageable) {
+		//For differentiation between customer and management request
 		boolean adminRequest = true;
+
 		return userRepository.findAll(pageable).map(user -> {
 			log.info("Getting Page of Users");
-				return responseMapper(user, adminRequest);
-				});
+			return responseMapper(user, adminRequest);
+		});
 
 	}
 
+	//Only for admin
 	public UserResponse registerManagement(UserRequest userRequest, Role role) {
+		//For differentiation between customer and management request
 		boolean adminCreation = true;
 
 		if (emailExists(userRequest)) {
@@ -108,14 +117,16 @@ public class UserService {
 
 		UserEntity newManagementUser = new UserEntity();
 		updateUserEntity(newManagementUser, userRequest, hashedPassword);
+
+		//Admin can freely choose role
 		newManagementUser.setRole(role);
 
 		saveUser(newManagementUser);
 
-		return responseMapper(newManagementUser,adminCreation);
+		return responseMapper(newManagementUser, adminCreation);
 	}
 
-	public void updateUserByManagement(Long userId, UserRequest userRequest,Role role) {
+	public void updateUserByManagement(Long userId, UserRequest userRequest, Role role) {
 		UserEntity toUpdate = getUserById(userId);
 
 		updateUserEntity(toUpdate, userRequest);
@@ -127,12 +138,14 @@ public class UserService {
 
 	public void deleteUserByManagement(Long userId) {
 		UserEntity toDelete = getUserById(userId);
+
+		//User can only be deleted if there are no open reservations
 		boolean canBeDeleted = deleteValid(toDelete);
 
 		if (!canBeDeleted) {
 			log.warn("User with email {} and id {} has open reservations, deletion not possible",
 					toDelete.getEmail(), toDelete.getId());
-			throw new UserDeletionNotPossibleException(toDelete.getEmail(),toDelete.getId());
+			throw new UserDeletionNotPossibleException(toDelete.getEmail(), toDelete.getId());
 		}
 		log.info("User with id {} deleted", toDelete.getId());
 		userRepository.delete(toDelete);
@@ -142,7 +155,7 @@ public class UserService {
 
 	//Helper Methods
 
-	private void updateUserEntity(UserEntity user,UserRequest userRequest, String hashedPassword) {
+	private void updateUserEntity(UserEntity user, UserRequest userRequest, String hashedPassword) {
 		user.setEmail(userRequest.getEmail());
 		user.setName(userRequest.getName());
 		user.setSurname(userRequest.getSurname());
@@ -151,7 +164,7 @@ public class UserService {
 		user.setPassword(hashedPassword);
 	}
 
-	private void updateUserEntity(UserEntity user,UserRequest userRequest) {
+	private void updateUserEntity(UserEntity user, UserRequest userRequest) {
 		user.setEmail(userRequest.getEmail());
 		user.setName(userRequest.getName());
 		user.setSurname(userRequest.getSurname());
@@ -194,7 +207,7 @@ public class UserService {
 
 	private UserResponse responseMapper(UserEntity userEntity, boolean adminCreation) {
 		if (adminCreation) {
-		return modelMapper.map(userEntity, UserResponse.class);
+			return modelMapper.map(userEntity, UserResponse.class);
 		} else {
 			return UserResponse.builder()
 					.userId(userEntity.getId())

@@ -24,7 +24,7 @@ public class UserManagementController {
 
 	@GetMapping
 	public ResponseEntity<Page<UserResponse>> getPageOfUsers(@PageableDefault(page = 0, size = 10,
-			sort = "surname", direction = Sort.Direction.ASC) Pageable pageable){
+			sort = "surname", direction = Sort.Direction.ASC) Pageable pageable) {
 		return ResponseEntity.ok().body(userService.getPageOfUsers(pageable));
 	}
 
@@ -40,8 +40,8 @@ public class UserManagementController {
 	}
 
 	@PatchMapping("/{userId}/{role}/update")
-	public ResponseEntity<Void> updateUser(@RequestBody @Valid UserRequest userRequest, @PathVariable Long userId,@PathVariable Role role) {
-		userService.updateUserByManagement(userId,userRequest,role);
+	public ResponseEntity<Void> updateUser(@RequestBody @Valid UserRequest userRequest, @PathVariable Long userId, @PathVariable Role role) {
+		userService.updateUserByManagement(userId, userRequest, role);
 		return ResponseEntity.ok().build();
 	}
 

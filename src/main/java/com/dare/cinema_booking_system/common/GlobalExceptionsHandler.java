@@ -174,13 +174,13 @@ public class GlobalExceptionsHandler {
 
 	@ExceptionHandler(UserDeletionNotPossibleException.class)
 	public ResponseEntity<ErrorResponse> handleUserDeletionNotPossible(UserDeletionNotPossibleException ex,
-																	   HttpServletRequest request) {
+	                                                                   HttpServletRequest request) {
 		return errorResponseBuilder(ex, request, HttpStatus.BAD_REQUEST);
 	}
 
 	@ExceptionHandler(UserIncorrectCredentialsException.class)
 	public ResponseEntity<ErrorResponse> handleUserIncorrectCredentialsException(UserIncorrectCredentialsException ex,
-																				 HttpServletRequest request) {
+	                                                                             HttpServletRequest request) {
 		return errorResponseBuilder(ex, request, HttpStatus.BAD_REQUEST);
 	}
 

@@ -30,6 +30,8 @@ public class TicketService {
 		TicketEntity ticket = getTicketByNumber(ticketNumber);
 		TicketStatus ticketStatus = ticket.getTicketStatus();
 		PaymentStatus paymentStatus = ticket.getReservation().getPayment().getPaymentStatus();
+
+		//Validator to check if the ticket can be used, ticket status must be valid and payment status paid
 		boolean validStatus = ticketStatus.validatorForUsed(ticketStatus, paymentStatus);
 
 		if (validStatus) {
@@ -43,7 +45,7 @@ public class TicketService {
 
 	}
 
-
+	//Sets expired tickets to status "expired"
 	public void setStatusOfExpiredTickets() {
 		LocalDate dateNow = LocalDate.now(clock);
 		LocalTime timeNow = LocalTime.now(clock);

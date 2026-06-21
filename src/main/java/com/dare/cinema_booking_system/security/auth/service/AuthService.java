@@ -27,7 +27,7 @@ public class AuthService {
 			log.info("Wrong password input for user with id {}", user.getId());
 			throw new UserIncorrectCredentialsException();
 		}
-
+		log.info("User with id {} logged in successfully", user.getId());
 		return jwtUtil.generateToken(email, user.getRole(), user.getId());
 	}
 

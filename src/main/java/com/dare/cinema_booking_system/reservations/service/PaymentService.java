@@ -30,6 +30,8 @@ public class PaymentService {
 		PaymentEntity payment = paymentRepository.findByReservation_Id(reservationId);
 		PaymentStatus currentPaymentStatus = payment.getPaymentStatus();
 		ReservationStatus currentReservationStatus = toPay.getReservationStatus();
+
+		//Payment can be completed if Payment status = unpaid and reservation status = created
 		boolean validStatus = currentPaymentStatus.validatorToCompletePayment(currentReservationStatus, currentPaymentStatus);
 
 		if (validStatus) {
@@ -49,6 +51,8 @@ public class PaymentService {
 		ReservationEntity toRefund = getReservationById(reservationId);
 		PaymentStatus currentPaymentStatus = toRefund.getPayment().getPaymentStatus();
 		ReservationStatus currentReservationStatus = toRefund.getReservationStatus();
+
+		//Payment can be refunded if Payment status = refund_pending and reservation status = canceled
 		boolean validStatus = currentPaymentStatus.validatorToRefundPayment(currentReservationStatus, currentPaymentStatus);
 
 		if (validStatus) {

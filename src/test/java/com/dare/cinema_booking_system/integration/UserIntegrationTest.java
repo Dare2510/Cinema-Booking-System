@@ -313,46 +313,46 @@ public class UserIntegrationTest {
 		return ((Number) JsonPath.read(screeningResponseJson, "$.id")).longValue();
 	}
 
-		private List<Long> getFreeSeatIds(Long screeningId) throws Exception {
-			String jsonResponse = mockMvc.perform(get("/api/screening/" + screeningId + "/seats/free"))
-					.andReturn().getResponse().getContentAsString();
+	private List<Long> getFreeSeatIds(Long screeningId) throws Exception {
+		String jsonResponse = mockMvc.perform(get("/api/screening/" + screeningId + "/seats/free"))
+				.andReturn().getResponse().getContentAsString();
 
-			List<Integer> freeSeatIds = JsonPath.read(jsonResponse, "$[*].cinemaRoomSeatId");
+		List<Integer> freeSeatIds = JsonPath.read(jsonResponse, "$[*].cinemaRoomSeatId");
 
-			return freeSeatIds.stream()
-					.map(Integer::longValue)
-					.toList();
-		}
+		return freeSeatIds.stream()
+				.map(Integer::longValue)
+				.toList();
+	}
 
-		private Long createMovieAndGetId(MovieRequest movieRequest) throws Exception {
-			String movieResponseJson = mockMvc.perform(post("/api/management/movie")
-							.contentType(MediaType.APPLICATION_JSON)
-							.content(objectMapper.writeValueAsString(movieRequest)))
-					.andExpect(status().isCreated())
-					.andReturn().getResponse().getContentAsString();
+	private Long createMovieAndGetId(MovieRequest movieRequest) throws Exception {
+		String movieResponseJson = mockMvc.perform(post("/api/management/movie")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(movieRequest)))
+				.andExpect(status().isCreated())
+				.andReturn().getResponse().getContentAsString();
 
-			return ((Number) JsonPath.read(movieResponseJson, "$.id")).longValue();
-		}
+		return ((Number) JsonPath.read(movieResponseJson, "$.id")).longValue();
+	}
 
-		private Long createCinemaRoomAndGetId(CinemaRoomRequest cinemaRoomRequest) throws Exception {
-			String roomResponseJson = mockMvc.perform(post("/api/management/room")
-							.contentType(MediaType.APPLICATION_JSON)
-							.content(objectMapper.writeValueAsString(cinemaRoomRequest)))
-					.andExpect(status().isCreated())
-					.andReturn().getResponse().getContentAsString();
+	private Long createCinemaRoomAndGetId(CinemaRoomRequest cinemaRoomRequest) throws Exception {
+		String roomResponseJson = mockMvc.perform(post("/api/management/room")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(cinemaRoomRequest)))
+				.andExpect(status().isCreated())
+				.andReturn().getResponse().getContentAsString();
 
-			return ((Number) JsonPath.read(roomResponseJson, "$.id")).longValue();
-		}
+		return ((Number) JsonPath.read(roomResponseJson, "$.id")).longValue();
+	}
 
-		private Long registerUserAndGetId(UserRequest userRequest) throws Exception {
-			String userJson = mockMvc.perform(post("/api/user/register")
-							.contentType(MediaType.APPLICATION_JSON)
-							.content(objectMapper.writeValueAsString(userRequest)))
-					.andExpect(status().isOk())
-					.andReturn().getResponse().getContentAsString();
+	private Long registerUserAndGetId(UserRequest userRequest) throws Exception {
+		String userJson = mockMvc.perform(post("/api/user/register")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(userRequest)))
+				.andExpect(status().isOk())
+				.andReturn().getResponse().getContentAsString();
 
-			return ((Number) JsonPath.read(userJson, "$.userId")).longValue();
-		}
+		return ((Number) JsonPath.read(userJson, "$.userId")).longValue();
+	}
 
 	//Endpoint helpers
 

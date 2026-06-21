@@ -74,7 +74,10 @@ public class ReservationService {
 	@Transactional
 	public ReservationResponse createReservation(AuthenticatedUser authenticatedUser, ReservationRequest reservationRequest) {
 		ScreeningEntity screeningToReserve = screeningService.getScreeningEntity(reservationRequest.getScreeningId());
+
+		//Check if chosen seats are available
 		boolean seatsAreFree = screeningSeatService.seatsAreFree(screeningToReserve, reservationRequest);
+
 		if (seatsAreFree) {
 			ReservationEntity newReservation = reservationSaver();
 			UserEntity user = userService.getUserByAuthenticatedUser(authenticatedUser);
@@ -100,8 +103,11 @@ public class ReservationService {
 		TicketEntity ticketToCancel = ticketService.findTicketById(toCancel.getTicket().getId());
 		List<ScreeningSeatEntity> seatsToCancel = toCancel.getReservedSeats();
 
+		//Reservation can be canceled until 60min before screening
 		boolean onTime = cancelIsOnTime(toCancel);
+
 		ReservationStatus currentStatus = toCancel.getReservationStatus();
+		//Validator for correct status change
 		boolean newStatusIsValid = currentStatus.correctStatusOrder(toCancel, ReservationStatus.CANCELLED);
 
 
@@ -175,7 +181,7 @@ public class ReservationService {
 
 	}
 
-
+	//Different response depending on payment method
 	private ReservationResponse responseBuilder(ReservationEntity newReservation, TicketEntity tickets, List<ScreeningSeatEntity> listOfReservedSeats) {
 		List<String> reservedSeats = listOfReservedSeats.stream().
 				map(spot -> "Row: " + spot.getCinemaSeats().getRowNumber() + " - "

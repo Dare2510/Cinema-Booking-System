@@ -36,7 +36,7 @@ public class AuthServiceTest {
 
 	@BeforeEach
 	public void setUp() {
-		authService = new AuthService(passwordEncoder,jwtUtil,userService);
+		authService = new AuthService(passwordEncoder, jwtUtil, userService);
 	}
 
 	@Test
@@ -88,15 +88,16 @@ public class AuthServiceTest {
 	}
 
 
-
 	//Helper Methods
 
 	private LoginRequest successfulLoginRequest() {
 		return new LoginRequest("testUser@mail.com", "password");
 	}
+
 	private LoginRequest wrongPasswordLoginRequest() {
 		return new LoginRequest("testUser@mail.com", "wrongPassword");
 	}
+
 	private LoginRequest wrongEmailLoginRequest() {
 		return new LoginRequest("wrongemail@mail.com", "password");
 	}

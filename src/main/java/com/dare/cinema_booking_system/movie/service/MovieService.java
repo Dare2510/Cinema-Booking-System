@@ -38,6 +38,7 @@ public class MovieService {
 	public MovieResponse updateMovie(Long movieId, MovieRequest movieRequest) {
 		MovieEntity toUpdate = getMovieEntityById(movieId);
 
+		//If screening exists movie cannot be updated
 		boolean screeningExists = screeningRepository.existsByMovieId(movieId);
 
 		if (screeningExists) {
@@ -55,6 +56,7 @@ public class MovieService {
 	public void deleteMovie(Long movieId) {
 		MovieEntity movieEntity = getMovieEntityById(movieId);
 
+		//If screening exists movie cannot be deleted
 		boolean screeningExists = screeningRepository.existsByMovieId(movieId);
 
 		if (screeningExists) {
