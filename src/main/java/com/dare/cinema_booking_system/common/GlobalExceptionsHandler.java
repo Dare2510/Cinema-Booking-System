@@ -167,7 +167,7 @@ public class GlobalExceptionsHandler {
 	}
 
 	@ExceptionHandler(UserNotFoundException.class)
-	public ResponseEntity<ErrorResponse> handleUserNotFoundException(UserDoubleCreationException ex,
+	public ResponseEntity<ErrorResponse> handleUserNotFoundException(UserNotFoundException ex,
 	                                                                 HttpServletRequest request) {
 		return errorResponseBuilder(ex, request, HttpStatus.NOT_FOUND);
 	}
