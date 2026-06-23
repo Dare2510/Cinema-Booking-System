@@ -12,7 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import tools.jackson.databind.ObjectMapper;
@@ -32,9 +31,6 @@ public class AuthIntegrationTest {
 
 	@Autowired
 	private UserRepository userRepository;
-
-	@Autowired
-	private PasswordEncoder passwordEncoder;
 
 	@Autowired
 	private ObjectMapper objectMapper;
@@ -60,7 +56,7 @@ public class AuthIntegrationTest {
 		Long userId = createUserAndGetId(newUser);
 
 		LoginRequest loginRequest = validRequest();
-		String token = generateToken(USER_MAIL, Role.USER, userId);
+		String token = generateToken(userId);
 
 		String response = mockMvc.perform(post("/api/auth/login")
 						.contentType(MediaType.APPLICATION_JSON)
@@ -144,8 +140,8 @@ public class AuthIntegrationTest {
 
 	//JWT
 
-	private String generateToken(String email, Role role, Long userId) {
-		return jwtUtil.generateToken(email, role, userId);
+	private String generateToken(Long userId) {
+		return jwtUtil.generateToken(USER_MAIL, Role.USER, userId);
 	}
 
 

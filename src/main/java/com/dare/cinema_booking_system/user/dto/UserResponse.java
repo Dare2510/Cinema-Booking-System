@@ -1,6 +1,7 @@
 package com.dare.cinema_booking_system.user.dto;
 
 import com.dare.cinema_booking_system.user.entity.Role;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
 
 @AllArgsConstructor
@@ -8,6 +9,7 @@ import lombok.*;
 @Getter
 @Setter
 @Builder
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class UserResponse {
 
 	private Long userId;
