@@ -2,7 +2,8 @@
 
 Backend-only project built with **Java** and **Spring Boot**.
 
-The application models a cinema booking flow with movies, cinema rooms, seats, screenings, reservations, tickets and an internal payment status flow. The main focus is backend architecture, domain modeling, reservation consistency, validation, testing and security.
+The application models a cinema booking flow with movies, cinema rooms, seats, screenings, reservations, tickets and an internal payment status flow. 
+The main focus is backend architecture, domain modeling, reservation consistency, validation, testing and security.
 
 ## Tech Stack
 
@@ -13,7 +14,7 @@ The application models a cinema booking flow with movies, cinema rooms, seats, s
 - Maven
 - JUnit / Mockito
 - JWT Security 
-- Docker planned
+- Docker
 
 ## Features
 
@@ -24,6 +25,7 @@ The application models a cinema booking flow with movies, cinema rooms, seats, s
 - Reservation creation and cancellation
 - Ticket generation and ticket validation
 - Internal payment and refund status flow
+- User creation (USER/STAFF/ADMIN, first Admin User is on startup created)
 - Customer and management API structure
 
 ## Core Booking Flow
@@ -94,9 +96,6 @@ Implemented:
 - Integration tests for reservation endpoints 
 - JWT authentication
 - Role-based authorization
-
-Planned before final portfolio version:
-
 - Docker setup with PostgreSQL
 
 The goal is to keep the scope focused on backend development.

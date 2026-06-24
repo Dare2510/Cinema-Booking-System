@@ -1,3 +1,5 @@
+name: cinema-booking-system
+
 services:
   app:
     build:
@@ -24,7 +26,7 @@ services:
     ports:
       - "54431:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - cinema_postgres_data:/var/lib/postgresql/data
 
 volumes:
-  postgres_data:
+  cinema_postgres_data:
