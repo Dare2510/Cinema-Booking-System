@@ -1,9 +1,21 @@
-# Cinema Booking System
+# Cinema Booking System (Spring Boot Backend)
 
-Backend-only project built with **Java** and **Spring Boot**.
+A Spring Boot backend application for cinema booking operations.
 
-The application models a cinema booking flow with movies, cinema rooms, seats, screenings, reservations, tickets and an internal payment status flow. 
-The main focus is backend architecture, domain modeling, reservation consistency, validation, testing and security.
+## Features
+
+### Main Management operations
+
+- Movie management
+- Cinema room and seat management
+- Screening management
+- Reservation management (including ticket and payment)
+- User management (first admin user is created on first start up)
+
+### Main Customer operations
+- User creation and manage own User(automated to be role of USER)
+- Check available seats for specific screenings
+- Reservation creation and cancellation
 
 ## Tech Stack
 
@@ -14,29 +26,27 @@ The main focus is backend architecture, domain modeling, reservation consistency
 - Maven
 - JUnit / Mockito
 - JWT Security 
+- Swagger
 - Docker
-
-## Features
-
-- Movie management
-- Cinema room and seat management
-- Screening management
-- Seat availability per screening
-- Reservation creation and cancellation
-- Ticket generation and ticket validation
-- Internal payment and refund status flow
-- User creation (USER/STAFF/ADMIN, first Admin User is on startup created)
-- Customer and management API structure
 
 ## Core Booking Flow
 
-1. A screening is created for a movie and a cinema room.
-2. Seats for that screening are generated as screening seats.
-3. A customer checks the free seats for a screening.
-4. A customer creates a reservation with selected cinema room seat IDs.
-5. The selected screening seats are marked as reserved.
-6. A ticket and payment record are created for the reservation.
-7. Staff or admin can complete payment, complete refund or validate tickets.
+### Admin/Staff
+  * creates a movie
+  * creates a cinema room - seats are get automatically generated
+  * creates a screening for a specific movie and room - seats for the screening are generated at screening creation.
+
+### User
+  * creates/ logs in
+  * checks upcoming screening
+  * checks free screening seats for the chosen screening
+  * creates a reservation - selected seats get marked as reserved
+  * pays on site or online
+
+### Admin/Staff
+ * marks the reservation as paid
+ * marks ticket as used - when customer uses his ticket at the cinema 
+
 
 ## API Overview
 
@@ -62,7 +72,7 @@ PATCH /api/management/reservations/tickets/{ticketNumber}/used
 ### Movie, Screening and Room APIs
 
 The project also contains endpoints for managing movies, cinema rooms, seats and screenings.
-These endpoints are part of the backend administration flow and will be protected with role-based security.
+These endpoints are part of the backend administration flow and are be protected with role-based security.
 
 ## Example Reservation Request
 
@@ -77,26 +87,110 @@ These endpoints are part of the backend administration flow and will be protecte
 ## Domain Notes
 
 A physical seat belongs to a cinema room.  
+
 A screening seat belongs to a specific screening and represents the availability of that physical seat for that screening.
 
 This distinction is important because the same physical seat can be free in one screening and reserved in another.
 
 Reservations are linked to their reserved screening seats through a join table, so cancellation only affects the seats that belong to the canceled reservation.
 
-## Current Status
+Every user can only manage his own reservations and user.
 
-Implemented:
+## Architecture
 
-- Core movie, room, screening and reservation logic
-- Seat availability handling
-- Reservation cancellation flow
-- Ticket and payment status handling
-- UML documentation
-- Unit tests for reservation and status logic
-- Integration tests for reservation endpoints 
-- JWT authentication
-- Role-based authorization
-- Docker setup with PostgreSQL
+The application follows a layered architecture:
+
+`Controller -> Security -> Service -> Repository -> Database`
+
+### Additional Components
+
+- GlobalExceptionHandler
+- ErrorResponse
+- JWT filter
+- Custom domain exceptions
+- Jakarta Bean Validation
+
+## Security
+
+Authentication is handled using JWT tokens.
+
+### Roles
+
+- `USER` – can create and manage his own user, create manage his reservations  
+- `STAFF` – can manage movies, rooms, screenings, reservations and users with restrictions. 
+- `ADMIN` – full system access
+
+## Database
+
+The application uses PostgreSQL with:
+
+- `spring.jpa.hibernate.ddl-auto=update`
+
+## Configuration
+
+The application uses the following environment variables:
+
+- `DB_HOST`
+- `DB_NAME`
+- `DB_USERNAME`
+- `DB_PASSWORD`
+
+- `JWT_SECRET`
+- `JWT_EXPIRATION_MS`
+
+- `ADMIN_EMAIL`
+- `ADMIN_PASSWORD`
+
+
+### Example `.env`
+
+```env
+DB_HOST=postgres
+DB_NAME=cinema
+DB_USERNAME=cinema
+DB_PASSWORD=cinema
+
+JWT_SECRET=replace-with-a-long-secret
+JWT_EXPIRATION_MS=3600000
+
+ADMIN_EMAIL=admin@example.com
+ADMIN_PASSWORD=change-me-now
+```
+
+**Running locally**
+
+Make sure PostgreSQL is running and that a database named cinema exists.
+
+Create a .env file based on .env.example, then run:
+```
+./mvnw spring-boot:run
+```
+**Running with Docker Compose**
+
+From the docker directory run:
+```
+docker compose --env-file ../.env up --build
+```
+This starts:
+
+PostgreSQL mapped to host port 54431
+Spring Boot application mapped to host port 8080
+
+The application connects to PostgreSQL internally via:
+
+```jdbc:postgresql://postgres:5432/cinema```
+
+## Testing
+
+The project includes:
+* integration tests using MockMvc
+* service layer test
+* security tests
+
+**Run tests with:**
+```
+./mvnw test
+```
 
 The goal is to keep the scope focused on backend development.
 
