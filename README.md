@@ -130,17 +130,18 @@ The application uses PostgreSQL with:
 
 The application uses the following environment variables:
 
-- `DB_HOST`
-- `DB_NAME`
-- `DB_USERNAME`
-- `DB_PASSWORD`
+```
+- DB_HOST
+- DB_NAME
+- DB_USERNAME
+- DB_PASSWORD
 
-- `JWT_SECRET`
-- `JWT_EXPIRATION_MS`
+- JWT_SECRE`
+- JWT_EXPIRATION_MS
 
-- `ADMIN_EMAIL`
-- `ADMIN_PASSWORD`
-
+- ADMIN_EMAIL
+- ADMIN_PASSWORD
+```
 
 ### Example `.env`
 
