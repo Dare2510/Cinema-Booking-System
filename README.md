@@ -136,7 +136,7 @@ The application uses the following environment variables:
 - DB_USERNAME
 - DB_PASSWORD
 
-- JWT_SECRE`
+- JWT_SECRET`
 - JWT_EXPIRATION_MS
 
 - ADMIN_EMAIL
