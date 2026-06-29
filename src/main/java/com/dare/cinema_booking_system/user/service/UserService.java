@@ -2,6 +2,7 @@ package com.dare.cinema_booking_system.user.service;
 
 import com.dare.cinema_booking_system.reservations.repository.ReservationsRepository;
 import com.dare.cinema_booking_system.security.principal.AuthenticatedUser;
+import com.dare.cinema_booking_system.user.dto.UserPasswordValidationRequest;
 import com.dare.cinema_booking_system.user.dto.UserRequest;
 import com.dare.cinema_booking_system.user.dto.UserResponse;
 import com.dare.cinema_booking_system.user.entity.Role;
@@ -53,13 +54,15 @@ public class UserService {
 
 	}
 
-	public void deleteUserByCustomer(AuthenticatedUser authenticatedUser, String password) {
+	public void deleteUserByCustomer(AuthenticatedUser authenticatedUser, UserPasswordValidationRequest passwordValidationRequest) {
 		UserEntity toDelete = getUserByAuthenticatedUser(authenticatedUser);
 
 		//User can only be deleted if there are no open reservations
 		boolean canBeDeleted = deleteValid(toDelete);
 
-		boolean passwordMatches = passwordEncoder.matches(password, toDelete.getPassword());
+		String passwordInput = passwordValidationRequest.getPassword();
+
+		boolean passwordMatches = passwordEncoder.matches(passwordInput, toDelete.getPassword());
 
 		if (!passwordMatches) {
 			log.info("Wrong password input for user with id {}", toDelete.getId());
@@ -75,10 +78,12 @@ public class UserService {
 		userRepository.delete(toDelete);
 	}
 
-	public void updateUserByCustomer(AuthenticatedUser authenticatedUser, UserRequest userRequest, String password) {
+	public void updateUserByCustomer(AuthenticatedUser authenticatedUser, UserRequest userRequest) {
 		UserEntity toUpdate = getUserByAuthenticatedUser(authenticatedUser);
 
-		boolean passwordMatches = passwordEncoder.matches(password, toUpdate.getPassword());
+		String passwordInput = userRequest.getPassword();
+
+		boolean passwordMatches = passwordEncoder.matches(passwordInput, toUpdate.getPassword());
 
 		if (!passwordMatches) {
 			log.info("Wrong password input for user with id {}", toUpdate.getId());

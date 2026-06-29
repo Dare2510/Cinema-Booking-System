@@ -2,6 +2,7 @@ package com.dare.cinema_booking_system.service;
 
 import com.dare.cinema_booking_system.reservations.repository.ReservationsRepository;
 import com.dare.cinema_booking_system.security.principal.AuthenticatedUser;
+import com.dare.cinema_booking_system.user.dto.UserPasswordValidationRequest;
 import com.dare.cinema_booking_system.user.dto.UserRequest;
 import com.dare.cinema_booking_system.user.dto.UserResponse;
 import com.dare.cinema_booking_system.user.entity.Role;
@@ -115,12 +116,13 @@ public class UserServiceTest {
 	public void deleteUserByCustomer_deleteIsValid_deletesUser() {
 		AuthenticatedUser authenticatedUser = authenticatedUser();
 		UserEntity existingUser = new UserEntity();
+		UserPasswordValidationRequest passwordInput = new UserPasswordValidationRequest(PASSWORD);
 		existingUser.setPassword(PASSWORD);
 		when(userRepository.findById(USER_ID)).thenReturn(Optional.of(existingUser));
 		when(reservationsRepository.userCanBeDeleted(existingUser)).thenReturn(true);
 		when(passwordEncoder.matches(PASSWORD, existingUser.getPassword())).thenReturn(true);
 
-		userService.deleteUserByCustomer(authenticatedUser, existingUser.getPassword());
+		userService.deleteUserByCustomer(authenticatedUser, passwordInput);
 
 		verify(userRepository).delete(existingUser);
 		verify(userRepository).findById(USER_ID);
@@ -132,13 +134,14 @@ public class UserServiceTest {
 	public void deleteUserByCustomer_deleteNotValid_throwsUserDeletionNotPossibleException() {
 		AuthenticatedUser authenticatedUser = authenticatedUser();
 		UserEntity existingUser = new UserEntity();
+		UserPasswordValidationRequest passwordInput = new UserPasswordValidationRequest(PASSWORD);
 		existingUser.setPassword(PASSWORD);
 
 		when(userRepository.findById(USER_ID)).thenReturn(Optional.of(existingUser));
 		when(reservationsRepository.userCanBeDeleted(existingUser)).thenReturn(false);
 		when(passwordEncoder.matches(PASSWORD, existingUser.getPassword())).thenReturn(true);
 
-		assertThatThrownBy(() -> userService.deleteUserByCustomer(authenticatedUser, PASSWORD))
+		assertThatThrownBy(() -> userService.deleteUserByCustomer(authenticatedUser, passwordInput))
 				.isInstanceOf(UserDeletionNotPossibleException.class)
 				.hasMessage("Deletion not possible, you have open reservations");
 
@@ -158,7 +161,7 @@ public class UserServiceTest {
 		when(userRepository.findById(USER_ID)).thenReturn(Optional.of(existingUser));
 		when(passwordEncoder.matches(PASSWORD, existingUser.getPassword())).thenReturn(true);
 
-		userService.updateUserByCustomer(authenticatedUser, updatedValues, PASSWORD);
+		userService.updateUserByCustomer(authenticatedUser, updatedValues);
 
 		verify(userRepository).save(existingUser);
 		verify(userRepository).findById(USER_ID);
@@ -179,15 +182,15 @@ public class UserServiceTest {
 
 		existingUser.setPassword(PASSWORD);
 		when(userRepository.findById(USER_ID)).thenReturn(Optional.of(existingUser));
-		when(passwordEncoder.matches(WRONG_PASSWORD, existingUser.getPassword())).thenReturn(false);
+		when(passwordEncoder.matches(updatedValues.getPassword(), existingUser.getPassword())).thenReturn(false);
 
-		assertThatThrownBy(() -> userService.updateUserByCustomer(authenticatedUser, updatedValues, WRONG_PASSWORD))
+		assertThatThrownBy(() -> userService.updateUserByCustomer(authenticatedUser, updatedValues))
 				.isInstanceOf(UserIncorrectCredentialsException.class)
 				.hasMessage("Invalid password");
 
 		verify(userRepository, never()).save(existingUser);
 		verify(userRepository).findById(USER_ID);
-		verify(passwordEncoder).matches(WRONG_PASSWORD, existingUser.getPassword());
+		verify(passwordEncoder).matches(updatedValues.getPassword(), existingUser.getPassword());
 
 	}
 	//Management Method Tests

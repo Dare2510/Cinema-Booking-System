@@ -16,6 +16,7 @@ import com.dare.cinema_booking_system.screenings.entity.TimeSlot;
 import com.dare.cinema_booking_system.screenings.repository.ScreeningRepository;
 import com.dare.cinema_booking_system.screenings.repository.ScreeningSeatRepository;
 import com.dare.cinema_booking_system.security.principal.AuthenticatedUser;
+import com.dare.cinema_booking_system.user.dto.UserPasswordValidationRequest;
 import com.dare.cinema_booking_system.user.dto.UserRequest;
 import com.dare.cinema_booking_system.user.entity.Role;
 import com.dare.cinema_booking_system.user.repository.UserRepository;
@@ -177,7 +178,7 @@ public class UserIntegrationTest {
 
 		UserRequest updatedUser = updateUserRequest();
 
-		mockMvc.perform(patch("/api/user/" + PASSWORD + "/update")
+		mockMvc.perform(patch("/api/user/update")
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(updatedUser)))
 				.andExpect(status().isOk());
@@ -193,8 +194,9 @@ public class UserIntegrationTest {
 		setAuthentication(authentication);
 
 		UserRequest updatedUser = updateUserRequest();
+		updatedUser.setPassword(WRONG_PASSWORD);
 
-		mockMvc.perform(patch("/api/user/" + WRONG_PASSWORD + "/update")
+		mockMvc.perform(patch("/api/user/update")
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(updatedUser)))
 				.andExpect(status().isBadRequest())
@@ -211,7 +213,11 @@ public class UserIntegrationTest {
 		UsernamePasswordAuthenticationToken authentication = authenticationToken(userId);
 		setAuthentication(authentication);
 
-		mockMvc.perform(delete("/api/user/" + PASSWORD + "/delete"))
+		UserPasswordValidationRequest passwordInput = new UserPasswordValidationRequest(PASSWORD);
+
+		mockMvc.perform(delete("/api/user/delete")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(passwordInput)))
 				.andExpect(status().isOk());
 
 	}
@@ -238,8 +244,12 @@ public class UserIntegrationTest {
 		ReservationRequest reservation = reservationRequest(screeningId, seatIdsToReserve);
 		postReservation(reservation);
 
+		UserPasswordValidationRequest passwordInput = new UserPasswordValidationRequest(PASSWORD);
 
-		mockMvc.perform(delete("/api/user/" + PASSWORD + "/delete"))
+
+		mockMvc.perform(delete("/api/user/delete")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(passwordInput)))
 				.andExpect(status().isBadRequest())
 				.andExpect(jsonPath("$.message")
 						.value("Deletion not possible, you have open reservations"));
