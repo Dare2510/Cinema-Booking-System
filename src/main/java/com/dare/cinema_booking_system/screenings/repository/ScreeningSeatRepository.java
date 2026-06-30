@@ -2,7 +2,9 @@ package com.dare.cinema_booking_system.screenings.repository;
 
 import com.dare.cinema_booking_system.screenings.entity.ScreeningEntity;
 import com.dare.cinema_booking_system.screenings.entity.ScreeningSeatEntity;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -31,6 +33,19 @@ public interface ScreeningSeatRepository extends JpaRepository<ScreeningSeatEnti
 			@Param("screeningId") Long screeningId,
 			@Param("seatIds") List<Long> seatIds,
 			@Param("seatCount") long seatCount
+	);
+
+	@Lock(LockModeType.PESSIMISTIC_WRITE)
+	@Query("""
+        SELECT s
+        FROM ScreeningSeatEntity s
+        WHERE s.screening.id = :screeningId
+        AND s.cinemaSeats.id IN :seatIds
+        AND s.screeningSeatStatus = com.dare.cinema_booking_system.screenings.entity.ScreeningSeatStatus.FREE
+        """)
+	List<ScreeningSeatEntity> findFreeSeatsForReservationWithLock(
+			@Param("screeningId") Long screeningId,
+			@Param("seatIds") List<Long> seatIds
 	);
 
 }

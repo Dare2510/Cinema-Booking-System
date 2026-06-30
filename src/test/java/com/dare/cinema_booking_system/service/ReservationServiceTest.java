@@ -101,17 +101,20 @@ class ReservationServiceTest {
 	void createReservation_whenReservedSeatsAreFree_returnsReservationResponse() {
 		ScreeningEntity screening = screening(LocalDate.now(), TimeSlot.PRIME);
 		List<ScreeningSeatEntity> seats = screeningSeats(ScreeningSeatStatus.FREE);
+		List<ScreeningSeatEntity> updatedSeats = screeningSeats(ScreeningSeatStatus.RESERVED);
 		ReservationRequest request = onlineReservationRequest();
 		AuthenticatedUser user = authenticatedAdmin();
 
 		mockReservationSaveAssignsId();
 		when(screeningService.getScreeningEntity(SCREENING_ID)).thenReturn(screening);
-		when(screeningSeatService.seatsAreFree(screening, request)).thenReturn(true);
+
+		when(screeningSeatService.lockAndUpdateSeats(screening, request)).thenReturn(updatedSeats);
+
 		when(paymentService.createPayment(eq(request), eq(screening), any(ReservationEntity.class)))
 				.thenAnswer(invocation -> payment(invocation.getArgument(2), PaymentStatus.UNPAID, PaymentMethod.ONLINE));
 		when(ticketService.createTicket(any(ReservationEntity.class)))
 				.thenAnswer(invocation -> ticket(TicketStatus.VALID, invocation.getArgument(0)));
-		when(screeningSeatService.seatStatusUpdater(screening, request)).thenReturn(seats);
+		when(screeningSeatService.lockAndUpdateSeats(screening, request)).thenReturn(seats);
 
 		ReservationResponse response = reservationService.createReservation(user, request);
 
@@ -129,10 +132,9 @@ class ReservationServiceTest {
 		assertEquals(PaymentStatus.UNPAID, response.getPaymentResponse().getPaymentStatus());
 
 		verify(screeningService).getScreeningEntity(SCREENING_ID);
-		verify(screeningSeatService).seatsAreFree(screening, request);
 		verify(paymentService).createPayment(eq(request), eq(screening), any(ReservationEntity.class));
 		verify(ticketService).createTicket(any(ReservationEntity.class));
-		verify(screeningSeatService).seatStatusUpdater(screening, request);
+		verify(screeningSeatService).lockAndUpdateSeats(screening, request);
 		verify(reservationsRepository, times(2)).save(any(ReservationEntity.class));
 	}
 
@@ -143,14 +145,17 @@ class ReservationServiceTest {
 		AuthenticatedUser user = authenticatedAdmin();
 
 		when(screeningService.getScreeningEntity(SCREENING_ID)).thenReturn(screening);
-		when(screeningSeatService.seatsAreFree(screening, request)).thenReturn(false);
+
+		when(screeningSeatService.lockAndUpdateSeats(screening, request))
+				.thenThrow(new ScreeningSeatNotAvailableException());
 
 		assertThatThrownBy(() -> reservationService.createReservation(user, request))
 				.isInstanceOf(ScreeningSeatNotAvailableException.class)
 				.hasMessage("Chosen seats are not available");
 
 		verify(screeningService).getScreeningEntity(SCREENING_ID);
-		verify(screeningSeatService).seatsAreFree(screening, request);
+		verify(screeningSeatService).lockAndUpdateSeats(screening, request);
+
 		verifyNoReservationCreation();
 	}
 
@@ -349,7 +354,7 @@ class ReservationServiceTest {
 		verify(reservationsRepository, never()).save(any());
 		verify(paymentService, never()).createPayment(any(), any(), any());
 		verify(ticketService, never()).createTicket(any());
-		verify(screeningSeatService, never()).seatStatusUpdater(any(), any());
+		verify(userService, never()).getUserByAuthenticatedUser(any());
 	}
 
 	private void verifyNoCancelWrites() {

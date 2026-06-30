@@ -13,7 +13,6 @@ import com.dare.cinema_booking_system.screenings.entity.ScreeningEntity;
 import com.dare.cinema_booking_system.screenings.entity.ScreeningSeatEntity;
 import com.dare.cinema_booking_system.screenings.entity.ScreeningSeatStatus;
 import com.dare.cinema_booking_system.screenings.entity.TimeSlot;
-import com.dare.cinema_booking_system.screenings.exceptions.ScreeningSeatNotAvailableException;
 import com.dare.cinema_booking_system.screenings.repository.ScreeningSeatRepository;
 import com.dare.cinema_booking_system.screenings.service.ScreeningSeatService;
 import com.dare.cinema_booking_system.screenings.service.ScreeningService;
@@ -75,23 +74,17 @@ public class ReservationService {
 	public ReservationResponse createReservation(AuthenticatedUser authenticatedUser, ReservationRequest reservationRequest) {
 		ScreeningEntity screeningToReserve = screeningService.getScreeningEntity(reservationRequest.getScreeningId());
 
-		//Check if chosen seats are available
-		boolean seatsAreFree = screeningSeatService.seatsAreFree(screeningToReserve, reservationRequest);
+		//Locking chosen seats and validating them
+		List<ScreeningSeatEntity> reservedSeats = screeningSeatService.lockAndUpdateSeats(screeningToReserve,reservationRequest);
 
-		if (seatsAreFree) {
-			ReservationEntity newReservation = reservationSaver();
-			UserEntity user = userService.getUserByAuthenticatedUser(authenticatedUser);
-			PaymentEntity payment = paymentService.createPayment(reservationRequest, screeningToReserve, newReservation);
-			TicketEntity ticket = ticketService.createTicket(newReservation);
-			List<ScreeningSeatEntity> reservedSeats = screeningSeatService.seatStatusUpdater(screeningToReserve, reservationRequest);
-			reservationUpdater(newReservation, payment, ticket, screeningToReserve, reservedSeats, user);
+		ReservationEntity newReservation = reservationSaver();
+		UserEntity user = userService.getUserByAuthenticatedUser(authenticatedUser);
+		PaymentEntity payment = paymentService.createPayment(reservationRequest, screeningToReserve, newReservation);
+		TicketEntity ticket = ticketService.createTicket(newReservation);
+		reservationUpdater(newReservation, payment, ticket, screeningToReserve, reservedSeats, user);
 
 			return responseBuilder(newReservation, ticket, reservedSeats);
 
-		} else {
-			log.warn("Chosen seats are not free , seats {} ", reservationRequest.getCinemaRoomSeatIds().stream().toList());
-			throw new ScreeningSeatNotAvailableException();
-		}
 
 
 	}

@@ -7,14 +7,14 @@ import com.dare.cinema_booking_system.screenings.dto.ScreeningSeatResponse;
 import com.dare.cinema_booking_system.screenings.entity.ScreeningEntity;
 import com.dare.cinema_booking_system.screenings.entity.ScreeningSeatEntity;
 import com.dare.cinema_booking_system.screenings.entity.ScreeningSeatStatus;
+import com.dare.cinema_booking_system.screenings.exceptions.ScreeningSeatNotAvailableException;
 import com.dare.cinema_booking_system.screenings.repository.ScreeningSeatRepository;
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -57,23 +57,23 @@ public class ScreeningSeatService {
 				.toList();
 	}
 
-	public List<ScreeningSeatEntity> seatStatusUpdater(ScreeningEntity screeningToReserve, ReservationRequest reservationRequest) {
-		List<ScreeningSeatEntity> allSeats = screeningSeatRepository.getScreeningSeatsByScreening(screeningToReserve);
+	public List<ScreeningSeatEntity> lockAndUpdateSeats(ScreeningEntity screeningToReserve, ReservationRequest reservationRequest) {
+		List<ScreeningSeatEntity> lockedSeats = screeningSeatRepository.findFreeSeatsForReservationWithLock(screeningToReserve.getId(),reservationRequest.getCinemaRoomSeatIds());
+
 		List<Long> targetSeatIds = reservationRequest.getCinemaRoomSeatIds();
 
-		List<ScreeningSeatEntity> seatsToReserve = allSeats.stream()
-				.filter(seat -> targetSeatIds.contains(seat.getCinemaSeats().getId()))
-				.collect(Collectors.toCollection(ArrayList::new));
+		boolean allSeatsFree = lockedSeats.size() == targetSeatIds.size();
 
-		seatsToReserve.forEach(seat -> {
-			seat.setScreeningSeatStatus(ScreeningSeatStatus.RESERVED);
-		});
+		if (allSeatsFree) {
+			lockedSeats.forEach(seat -> { seat.setScreeningSeatStatus(ScreeningSeatStatus.RESERVED); });
+			screeningSeatRepository.saveAll(lockedSeats);
+			log.info("Seats with id's {} have been updated", targetSeatIds);
+		} else {
+			log.warn("Reservation failed , not all seats are available");
+			throw new ScreeningSeatNotAvailableException();
+		}
 
-		screeningSeatRepository.saveAll(seatsToReserve);
-
-		log.info("Seats with id's {} have been updated", targetSeatIds);
-
-		return seatsToReserve;
+		return lockedSeats;
 
 	}
 

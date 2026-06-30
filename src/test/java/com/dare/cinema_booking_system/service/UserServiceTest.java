@@ -57,8 +57,6 @@ public class UserServiceTest {
 	private static final String UPDATED_NAME = "newTestName";
 	private static final String UPDATED_SURNAME = "newTestSurname";
 
-	private static final String WRONG_PASSWORD = "Wrong password";
-
 	private static final Role USER_ROLE = Role.USER;
 	private static final Role ADMIN_ROLE = Role.ADMIN;
 	private static final Long USER_ID = 1L;
