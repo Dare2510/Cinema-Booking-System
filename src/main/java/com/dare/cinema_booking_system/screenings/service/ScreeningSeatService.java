@@ -9,7 +9,6 @@ import com.dare.cinema_booking_system.screenings.entity.ScreeningSeatEntity;
 import com.dare.cinema_booking_system.screenings.entity.ScreeningSeatStatus;
 import com.dare.cinema_booking_system.screenings.exceptions.ScreeningSeatNotAvailableException;
 import com.dare.cinema_booking_system.screenings.repository.ScreeningSeatRepository;
-import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -67,7 +66,7 @@ public class ScreeningSeatService {
 		if (allSeatsFree) {
 			lockedSeats.forEach(seat -> { seat.setScreeningSeatStatus(ScreeningSeatStatus.RESERVED); });
 			screeningSeatRepository.saveAll(lockedSeats);
-			log.info("Seats with id's {} have been updated", targetSeatIds);
+			log.info("{} seats have been updated", lockedSeats.size());
 		} else {
 			log.warn("Reservation failed , not all seats are available");
 			throw new ScreeningSeatNotAvailableException();
