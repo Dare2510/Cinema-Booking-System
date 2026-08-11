@@ -248,8 +248,8 @@ public class UserIntegrationTest {
 
 
 		mockMvc.perform(delete("/api/user/delete")
-				.contentType(MediaType.APPLICATION_JSON)
-				.content(objectMapper.writeValueAsString(passwordInput)))
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(passwordInput)))
 				.andExpect(status().isBadRequest())
 				.andExpect(jsonPath("$.message")
 						.value("Deletion not possible, you have open reservations"));

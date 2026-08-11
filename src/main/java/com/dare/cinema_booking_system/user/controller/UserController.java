@@ -26,14 +26,14 @@ public class UserController {
 
 	@PatchMapping("/update")
 	public ResponseEntity<Void> updateUser(@RequestBody @Valid UserRequest userRequest,
-										   @AuthenticationPrincipal AuthenticatedUser authenticatedUser) {
+	                                       @AuthenticationPrincipal AuthenticatedUser authenticatedUser) {
 		userService.updateUserByCustomer(authenticatedUser, userRequest);
 		return ResponseEntity.ok().build();
 	}
 
 	@DeleteMapping("/delete")
 	public ResponseEntity<Void> deleteUser(@AuthenticationPrincipal AuthenticatedUser authenticatedUser,
-										   @RequestBody @Valid UserPasswordValidationRequest userPassword) {
+	                                       @RequestBody @Valid UserPasswordValidationRequest userPassword) {
 		userService.deleteUserByCustomer(authenticatedUser, userPassword);
 		return ResponseEntity.ok().build();
 	}

@@ -15,6 +15,7 @@ import com.dare.cinema_booking_system.screenings.exceptions.ScreeningNotFoundExc
 import com.dare.cinema_booking_system.screenings.exceptions.ScreeningSlotAlreadyBookedException;
 import com.dare.cinema_booking_system.screenings.exceptions.ScreeningUpdateNotPossibleException;
 import com.dare.cinema_booking_system.screenings.repository.ScreeningRepository;
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -35,6 +36,7 @@ public class ScreeningService {
 	private final MovieService movieService;
 	private final CinemaRoomService cinemaRoomService;
 
+	@Transactional
 	public ScreeningResponse createScreening(ScreeningRequest screeningRequest) {
 
 		MovieEntity movie = movieService.getMovieEntityById(screeningRequest.getMovieId());
@@ -59,7 +61,7 @@ public class ScreeningService {
 			throw new ScreeningSlotAlreadyBookedException(room.getId(), date, timeSlot);
 		}
 	}
-
+	@Transactional
 	public ScreeningResponse updateScreening(Long screeningId, ScreeningRequest screeningRequest) {
 
 		ScreeningEntity toUpdate = getScreeningEntity(screeningId);

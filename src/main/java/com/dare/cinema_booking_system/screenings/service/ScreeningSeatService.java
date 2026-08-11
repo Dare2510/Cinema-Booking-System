@@ -57,14 +57,16 @@ public class ScreeningSeatService {
 	}
 
 	public List<ScreeningSeatEntity> lockAndUpdateSeats(ScreeningEntity screeningToReserve, ReservationRequest reservationRequest) {
-		List<ScreeningSeatEntity> lockedSeats = screeningSeatRepository.findFreeSeatsForReservationWithLock(screeningToReserve.getId(),reservationRequest.getCinemaRoomSeatIds());
+		List<ScreeningSeatEntity> lockedSeats = screeningSeatRepository.findFreeSeatsForReservationWithLock(screeningToReserve.getId(), reservationRequest.getCinemaRoomSeatIds());
 
 		List<Long> targetSeatIds = reservationRequest.getCinemaRoomSeatIds();
 
 		boolean allSeatsFree = lockedSeats.size() == targetSeatIds.size();
 
 		if (allSeatsFree) {
-			lockedSeats.forEach(seat -> { seat.setScreeningSeatStatus(ScreeningSeatStatus.RESERVED); });
+			lockedSeats.forEach(seat -> {
+				seat.setScreeningSeatStatus(ScreeningSeatStatus.RESERVED);
+			});
 			screeningSeatRepository.saveAll(lockedSeats);
 			log.info("{} seats have been updated", lockedSeats.size());
 		} else {

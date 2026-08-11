@@ -37,12 +37,12 @@ public interface ScreeningSeatRepository extends JpaRepository<ScreeningSeatEnti
 
 	@Lock(LockModeType.PESSIMISTIC_WRITE)
 	@Query("""
-        SELECT s
-        FROM ScreeningSeatEntity s
-        WHERE s.screening.id = :screeningId
-        AND s.cinemaSeats.id IN :seatIds
-        AND s.screeningSeatStatus = com.dare.cinema_booking_system.screenings.entity.ScreeningSeatStatus.FREE
-        """)
+			SELECT s
+			FROM ScreeningSeatEntity s
+			WHERE s.screening.id = :screeningId
+			AND s.cinemaSeats.id IN :seatIds
+			AND s.screeningSeatStatus = com.dare.cinema_booking_system.screenings.entity.ScreeningSeatStatus.FREE
+			""")
 	List<ScreeningSeatEntity> findFreeSeatsForReservationWithLock(
 			@Param("screeningId") Long screeningId,
 			@Param("seatIds") List<Long> seatIds

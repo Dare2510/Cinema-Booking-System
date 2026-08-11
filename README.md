@@ -13,6 +13,7 @@ A Spring Boot backend application for cinema booking operations.
 - User management (first admin user is created on first start up)
 
 ### Main Customer operations
+
 - User creation and manage own User(automated to be role of USER)
 - Check available seats for specific screenings
 - Reservation creation and cancellation
@@ -25,48 +26,50 @@ A Spring Boot backend application for cinema booking operations.
 - PostgreSQL
 - Maven
 - JUnit / Mockito
-- JWT Security 
+- JWT Security
 - Swagger
 - Docker
 
 ## Core Booking Flow
 
 ### Admin/Staff
-  * creates a movie
-  * creates a cinema room - seats are get automatically generated
-  * creates a screening for a specific movie and room - seats for the screening are generated at screening creation.
+
+* creates a movie
+* creates a cinema room - seats are get automatically generated
+* creates a screening for a specific movie and room - seats for the screening are generated at screening creation.
 
 ### User
-  * creates/ logs in
-  * checks upcoming screening
-  * checks free screening seats for the chosen screening
-  * creates a reservation - selected seats get marked as reserved
-  * pays on site or online
+
+* creates/ logs in
+* checks upcoming screening
+* checks free screening seats for the chosen screening
+* creates a reservation - selected seats get marked as reserved
+* pays on site or online
 
 ### Admin/Staff
- * marks the reservation as paid
- * marks ticket as used - when customer uses his ticket at the cinema 
 
+* marks the reservation as paid
+* marks ticket as used - when customer uses his ticket at the cinema
 
 ## API Overview
 
 ### Customer / Reservation API
 
 ```http
-POST /api/reservations
-GET  /api/reservations/{reservationId}
-POST /api/reservations/{reservationId}/cancel
+POST /api/reservation
+GET  /api/reservation/{reservationId}
+PATCH /api/reservation/{reservationId}/cancel
 ```
 
 ### Management API
 
 ```http
-GET   /api/management/reservations
-GET   /api/management/reservations/{reservationId}
-POST  /api/management/reservations/{reservationId}/cancel
-PATCH /api/management/reservations/{reservationId}/payment/complete
-PATCH /api/management/reservations/{reservationId}/refund/complete
-PATCH /api/management/reservations/tickets/{ticketNumber}/used
+GET   /api/management/reservation
+GET   /api/management/reservation/{reservationId}
+PATCH  /api/management/reservation/{reservationId}/cancel
+PATCH /api/management/reservation/{reservationId}/complete/payment
+PATCH /api/management/reservation/{reservationId}/refund
+PATCH /api/management/reservation/tickets/{ticketNumber}/used
 ```
 
 ### Movie, Screening and Room APIs
@@ -86,13 +89,15 @@ These endpoints are part of the backend administration flow and are be protected
 
 ## Domain Notes
 
-A physical seat belongs to a cinema room.  
+A physical seat belongs to a cinema room.
 
-A screening seat belongs to a specific screening and represents the availability of that physical seat for that screening.
+A screening seat belongs to a specific screening and represents the availability of that physical seat for that
+screening.
 
 This distinction is important because the same physical seat can be free in one screening and reserved in another.
 
-Reservations are linked to their reserved screening seats through a join table, so cancellation only affects the seats that belong to the canceled reservation.
+Reservations are linked to their reserved screening seats through a join table, so cancellation only affects the seats
+that belong to the canceled reservation.
 
 Every user can only manage his own reservations and user.
 
@@ -116,8 +121,8 @@ Authentication is handled using JWT tokens.
 
 ### Roles
 
-- `USER` – can create and manage his own user, create manage his reservations  
-- `STAFF` – can manage movies, rooms, screenings, reservations and users with restrictions. 
+- `USER` – can create and manage his own user, create manage his reservations
+- `STAFF` – can manage movies, rooms, screenings, reservations and users with restrictions.
 - `ADMIN` – full system access
 
 ## Database
@@ -133,10 +138,10 @@ The application uses the following environment variables:
 ```
 - DB_HOST
 - DB_NAME
-- DB_USERNAME
+- DB_USER
 - DB_PASSWORD
 
-- JWT_SECRET`
+- JWT_SECRET
 - JWT_EXPIRATION_MS
 
 - ADMIN_EMAIL
@@ -163,15 +168,19 @@ ADMIN_PASSWORD=change-me-now
 Make sure PostgreSQL is running and that a database named cinema exists.
 
 Create a .env file based on .env.example, then run:
+
 ```
 ./mvnw spring-boot:run
 ```
+
 **Running with Docker Compose**
 
 From the docker directory run:
+
 ```
 docker compose --env-file ../.env up --build
 ```
+
 This starts:
 
 PostgreSQL mapped to host port 54431
@@ -184,11 +193,13 @@ The application connects to PostgreSQL internally via:
 ## Testing
 
 The project includes:
+
 * integration tests using MockMvc
 * service layer test
 * security tests
 
 **Run tests with:**
+
 ```
 ./mvnw test
 ```

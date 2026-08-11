@@ -75,7 +75,7 @@ public class ReservationService {
 		ScreeningEntity screeningToReserve = screeningService.getScreeningEntity(reservationRequest.getScreeningId());
 
 		//Locking chosen seats and validating them
-		List<ScreeningSeatEntity> reservedSeats = screeningSeatService.lockAndUpdateSeats(screeningToReserve,reservationRequest);
+		List<ScreeningSeatEntity> reservedSeats = screeningSeatService.lockAndUpdateSeats(screeningToReserve, reservationRequest);
 
 		ReservationEntity newReservation = reservationSaver();
 		UserEntity user = userService.getUserByAuthenticatedUser(authenticatedUser);
@@ -83,8 +83,7 @@ public class ReservationService {
 		TicketEntity ticket = ticketService.createTicket(newReservation);
 		reservationUpdater(newReservation, payment, ticket, screeningToReserve, reservedSeats, user);
 
-			return responseBuilder(newReservation, ticket, reservedSeats);
-
+		return responseBuilder(newReservation, ticket, reservedSeats);
 
 
 	}
