@@ -69,7 +69,7 @@ GET   /api/management/reservation/{reservationId}
 PATCH  /api/management/reservation/{reservationId}/cancel
 PATCH /api/management/reservation/{reservationId}/complete/payment
 PATCH /api/management/reservation/{reservationId}/refund
-PATCH /api/management/reservation/tickets/{ticketNumber}/used
+PATCH /api/management/reservation/ticket/{ticketNumber}/used
 ```
 
 ### Movie, Screening and Room APIs
