@@ -167,7 +167,7 @@ ADMIN_PASSWORD=change-me-now
 
 Make sure PostgreSQL is running and that a database named cinema exists.
 
-Create a .env file based on .env.example, then run:
+Create a .env file based on env.example, load the variables into your environment, then run:
 
 ```
 ./mvnw spring-boot:run
