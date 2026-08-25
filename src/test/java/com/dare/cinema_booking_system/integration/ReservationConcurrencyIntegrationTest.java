@@ -65,6 +65,25 @@ public class ReservationConcurrencyIntegrationTest {
 	private static final String NAME = "testName";
 	private static final String SURNAME = "testSurname";
 
+	private static final Long MOVIE_ID = 1L;
+	private static final String MOVIE_NAME = "testMovieName";
+	private static final String MOVIE_DESCRIPTION = "testMovieDescription";
+	private static final int MOVIE_DURATION = 120;
+	private static final Genre MOVIE_GENRE = Genre.ACTION;
+
+	private static final Long ROOM_ID = 1L;
+	private static final int ROOM_NUMBER = 1;
+	private static final int ROOM_NUMBER_OF_ROWS = 50;
+	private static final int ROOM_ROW_CAPACITY = 50;
+
+	private static final Long SCREENING_ID = 1L;
+	private final LocalDate SCREENING_DATE = LocalDate.now();
+	private final TimeSlot SCREENING_SLOT = TimeSlot.PRIME;
+	private final BigDecimal SCREENING_PRICE = BigDecimal.valueOf(10);
+
+	private final List<Long> SEAT_IDS = List.of(1L, 2L, 3L);
+
+
 	@Test
 	public void concurrentReservations_whenSameScreeningSeatsAreRequested_throwsScreeningSeatNotAvailableException()
 			throws Exception {
@@ -87,7 +106,7 @@ public class ReservationConcurrencyIntegrationTest {
 			start.await();
 
 			try {
-				reservationService.createReservation(createUserAndGetId(), onlineReservationRequest());
+				reservationService.createReservation(createUserAndReturnAuthenticatedUser(), onlineReservationRequest());
 				return true;
 			} catch (ScreeningSeatNotAvailableException e) {
 				return false;
@@ -118,21 +137,21 @@ public class ReservationConcurrencyIntegrationTest {
 
 	private void createScreeningWithBuildUp() {
 
-		MovieRequest movie = new MovieRequest("testTitle", "testDescription", 120, Genre.COMEDY);
+		MovieRequest movie = new MovieRequest(MOVIE_NAME, MOVIE_DESCRIPTION, MOVIE_DURATION, MOVIE_GENRE);
 		movieService.addMovie(movie);
 
-		CinemaRoomRequest cinemaRoomRequest = new CinemaRoomRequest(1, 50, 50);
-		cinemaRoomService.createCinemaRoom(cinemaRoomRequest);
+		CinemaRoomRequest roomRequest = new CinemaRoomRequest(ROOM_NUMBER, ROOM_NUMBER_OF_ROWS, ROOM_ROW_CAPACITY);
+		cinemaRoomService.createCinemaRoom(roomRequest);
 
-		ScreeningRequest screeningRequest = new ScreeningRequest(1L, 1L, LocalDate.now(), TimeSlot.PRIME, BigDecimal.TEN);
-		screeningService.createScreening(screeningRequest);
+		ScreeningRequest screening = new ScreeningRequest(ROOM_ID, MOVIE_ID, SCREENING_DATE, SCREENING_SLOT, SCREENING_PRICE);
+		screeningService.createScreening(screening);
 	}
 
 	private ReservationRequest onlineReservationRequest() {
-		return new ReservationRequest(1L, List.of(1L, 2L), PaymentMethod.ONLINE);
+		return new ReservationRequest(SCREENING_ID, SEAT_IDS, PaymentMethod.ONLINE);
 	}
 
-	private AuthenticatedUser createUserAndGetId() {
+	private AuthenticatedUser createUserAndReturnAuthenticatedUser() {
 		UserRequest userRequest = new UserRequest(EMAIL, PASSWORD, USERNAME, NAME, SURNAME);
 		UserResponse response = userService.registerUserByCustomer(userRequest);
 
