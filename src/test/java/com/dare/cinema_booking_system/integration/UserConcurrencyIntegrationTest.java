@@ -1,15 +1,15 @@
 package com.dare.cinema_booking_system.integration;
 
 import com.dare.cinema_booking_system.user.dto.UserRequest;
-import com.dare.cinema_booking_system.user.entity.UserEntity;
 import com.dare.cinema_booking_system.user.exception.UserDoubleCreationException;
+import com.dare.cinema_booking_system.user.repository.UserRepository;
 import com.dare.cinema_booking_system.user.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.test.context.ActiveProfiles;
-import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.postgresql.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
@@ -36,6 +36,8 @@ public class UserConcurrencyIntegrationTest {
 
 	@Autowired
 	private UserService userService;
+	@Autowired
+	private UserRepository userRepository;
 
 	@Test
 	public void concurrentUserCreation_whenEmailIsTheSame_throwsUserAlreadyExists() throws Exception{
@@ -81,6 +83,7 @@ public class UserConcurrencyIntegrationTest {
 						.count();
 
 		assertEquals(1, successSum);
+		assertEquals(1,userRepository.countByEmail(EMAIL));
 	}
 
 

@@ -59,7 +59,8 @@ public class ReservationConcurrencyIntegrationTest {
 	@Autowired
 	private UserService userService;
 
-	private static final String EMAIL = "testuser@mail.com";
+	private static final String EMAIL_FIRST_USER = "testuser@mail.com";
+	private static final String EMAIL_SECOND_USER = "secondTestuser@mail.com";
 	private static final String PASSWORD = "password";
 	private static final String USERNAME = "tester";
 	private static final String NAME = "testName";
@@ -91,6 +92,9 @@ public class ReservationConcurrencyIntegrationTest {
 		//Build up
 		createScreeningWithBuildUp();
 
+		AuthenticatedUser firstAuthenticatedUser = createUserAndReturnAuthenticatedUser(EMAIL_FIRST_USER);
+		AuthenticatedUser secondAuthenticatedUser = createUserAndReturnAuthenticatedUser(EMAIL_SECOND_USER);
+
 		ExecutorService executorService = Executors.newFixedThreadPool(2);
 
 		CountDownLatch ready =
@@ -99,22 +103,36 @@ public class ReservationConcurrencyIntegrationTest {
 		CountDownLatch start =
 				new CountDownLatch(1);
 
-		Callable<Boolean> task = () -> {
+		Callable<Boolean> firstReservation = () -> {
 
 			ready.countDown();
 
 			start.await();
 
 			try {
-				reservationService.createReservation(createUserAndReturnAuthenticatedUser(), onlineReservationRequest());
+				reservationService.createReservation(firstAuthenticatedUser, onlineReservationRequest());
 				return true;
 			} catch (ScreeningSeatNotAvailableException e) {
 				return false;
 			}
 		};
 
-		Future<Boolean> a = executorService.submit(task);
-		Future<Boolean> b = executorService.submit(task);
+		Callable<Boolean> secondReservation = () -> {
+
+			ready.countDown();
+
+			start.await();
+
+			try {
+				reservationService.createReservation(secondAuthenticatedUser, onlineReservationRequest());
+				return true;
+			} catch (ScreeningSeatNotAvailableException e) {
+				return false;
+			}
+		};
+
+		Future<Boolean> a = executorService.submit(firstReservation);
+		Future<Boolean> b = executorService.submit(secondReservation);
 
 		ready.await();
 
@@ -151,11 +169,11 @@ public class ReservationConcurrencyIntegrationTest {
 		return new ReservationRequest(SCREENING_ID, SEAT_IDS, PaymentMethod.ONLINE);
 	}
 
-	private AuthenticatedUser createUserAndReturnAuthenticatedUser() {
-		UserRequest userRequest = new UserRequest(EMAIL, PASSWORD, USERNAME, NAME, SURNAME);
+	private AuthenticatedUser createUserAndReturnAuthenticatedUser(String email) {
+		UserRequest userRequest = new UserRequest(email, PASSWORD, USERNAME, NAME, SURNAME);
 		UserResponse response = userService.registerUserByCustomer(userRequest);
 
-		return new AuthenticatedUser(response.getUserId(), EMAIL, Role.USER);
+		return new AuthenticatedUser(response.getUserId(), EMAIL_FIRST_USER, Role.USER);
 	}
 
 }
