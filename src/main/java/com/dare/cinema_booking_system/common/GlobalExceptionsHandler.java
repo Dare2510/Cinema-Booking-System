@@ -9,10 +9,7 @@ import com.dare.cinema_booking_system.screenings.exceptions.ScreeningNotFoundExc
 import com.dare.cinema_booking_system.screenings.exceptions.ScreeningSeatNotAvailableException;
 import com.dare.cinema_booking_system.screenings.exceptions.ScreeningSlotAlreadyBookedException;
 import com.dare.cinema_booking_system.screenings.exceptions.ScreeningUpdateNotPossibleException;
-import com.dare.cinema_booking_system.user.exception.UserDeletionNotPossibleException;
-import com.dare.cinema_booking_system.user.exception.UserDoubleCreationException;
-import com.dare.cinema_booking_system.user.exception.UserIncorrectCredentialsException;
-import com.dare.cinema_booking_system.user.exception.UserNotFoundException;
+import com.dare.cinema_booking_system.user.exception.*;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -184,6 +181,11 @@ public class GlobalExceptionsHandler {
 		return errorResponseBuilder(ex, request, HttpStatus.BAD_REQUEST);
 	}
 
+	@ExceptionHandler(UserEmailAlreadyInUseException.class)
+	public ResponseEntity<ErrorResponse> handleUserEmailAlreadyInUseException(UserEmailAlreadyInUseException ex,
+																			  HttpServletRequest request) {
+		return errorResponseBuilder(ex, request, HttpStatus.CONFLICT);
+	}
 	//Helper Method
 	private ResponseEntity<ErrorResponse> errorResponseBuilder(Exception ex, HttpServletRequest request, HttpStatus status) {
 		ErrorResponse error = new ErrorResponse(

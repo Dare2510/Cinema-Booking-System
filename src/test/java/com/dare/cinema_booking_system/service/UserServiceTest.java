@@ -7,10 +7,7 @@ import com.dare.cinema_booking_system.user.dto.UserRequest;
 import com.dare.cinema_booking_system.user.dto.UserResponse;
 import com.dare.cinema_booking_system.user.entity.Role;
 import com.dare.cinema_booking_system.user.entity.UserEntity;
-import com.dare.cinema_booking_system.user.exception.UserDeletionNotPossibleException;
-import com.dare.cinema_booking_system.user.exception.UserDoubleCreationException;
-import com.dare.cinema_booking_system.user.exception.UserIncorrectCredentialsException;
-import com.dare.cinema_booking_system.user.exception.UserNotFoundException;
+import com.dare.cinema_booking_system.user.exception.*;
 import com.dare.cinema_booking_system.user.repository.UserRepository;
 import com.dare.cinema_booking_system.user.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
@@ -191,6 +188,31 @@ public class UserServiceTest {
 		verify(passwordEncoder).matches(updatedValues.getPassword(), existingUser.getPassword());
 
 	}
+
+	@Test
+	public void updateUserByCustomer_whenEmailIsAlreadyInUse_throwsUserEmailAlreadyInUseException() {
+		AuthenticatedUser authenticatedUser = authenticatedUser();
+		UserEntity userToUpdate = new UserEntity();
+		userToUpdate.setId(USER_ID);
+		userToUpdate.setPassword(PASSWORD);
+		userToUpdate.setEmail(EMAIL);
+
+		UserRequest updatedValues = userRequestUpdatedUser();
+
+		when(userRepository.findById(USER_ID)).thenReturn(Optional.of(userToUpdate));
+		when(passwordEncoder.matches(updatedValues.getPassword(), PASSWORD)).thenReturn(true);
+
+		when(userRepository.existsByEmailAndIdNot(UPDATED_EMAIL, USER_ID)).thenReturn(true);
+
+		assertThatThrownBy(() -> userService.updateUserByCustomer(authenticatedUser, updatedValues))
+				.isInstanceOf(UserEmailAlreadyInUseException.class)
+				.hasMessage("User with email " + UPDATED_EMAIL + " already exists");
+
+		verify(userRepository, never()).saveAndFlush(userToUpdate);
+		verify(userRepository).findById(USER_ID);
+		verify(passwordEncoder).matches(updatedValues.getPassword(), PASSWORD);
+
+	}
 	//Management Method Tests
 
 	@Test
@@ -265,6 +287,4 @@ public class UserServiceTest {
 	private AuthenticatedUser authenticatedUser() {
 		return new AuthenticatedUser(USER_ID, EMAIL, USER_ROLE);
 	}
-
-
 }

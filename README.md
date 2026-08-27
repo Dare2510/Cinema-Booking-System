@@ -153,7 +153,7 @@ The application uses the following environment variables:
 ```env
 DB_HOST=postgres
 DB_NAME=cinema
-DB_USERNAME=cinema
+DB_USER=cinema
 DB_PASSWORD=cinema
 
 JWT_SECRET=replace-with-a-long-secret

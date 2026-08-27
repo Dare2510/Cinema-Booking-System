@@ -7,11 +7,9 @@ import com.dare.cinema_booking_system.user.dto.UserRequest;
 import com.dare.cinema_booking_system.user.dto.UserResponse;
 import com.dare.cinema_booking_system.user.entity.Role;
 import com.dare.cinema_booking_system.user.entity.UserEntity;
-import com.dare.cinema_booking_system.user.exception.UserDeletionNotPossibleException;
-import com.dare.cinema_booking_system.user.exception.UserDoubleCreationException;
-import com.dare.cinema_booking_system.user.exception.UserIncorrectCredentialsException;
-import com.dare.cinema_booking_system.user.exception.UserNotFoundException;
+import com.dare.cinema_booking_system.user.exception.*;
 import com.dare.cinema_booking_system.user.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
@@ -83,6 +81,7 @@ public class UserService {
 		userRepository.delete(toDelete);
 	}
 
+	@Transactional
 	public void updateUserByCustomer(AuthenticatedUser authenticatedUser, UserRequest userRequest) {
 		UserEntity toUpdate = getUserByAuthenticatedUser(authenticatedUser);
 
@@ -94,9 +93,24 @@ public class UserService {
 			log.info("Wrong password input for user with id {}", toUpdate.getId());
 			throw new UserIncorrectCredentialsException();
 		}
+
+		boolean emailIsUsed = userRepository.existsByEmailAndIdNot(userRequest.getEmail(), toUpdate.getId());
+
+		if(emailIsUsed) {
+			log.info("User with email {} already exists", toUpdate.getEmail());
+			throw new UserEmailAlreadyInUseException(userRequest.getEmail());
+		}
 		updateUserEntity(toUpdate, userRequest);
 
-		userRepository.save(toUpdate);
+		//Security for Race Condition
+
+		try {
+			userRepository.saveAndFlush(toUpdate);
+		} catch (DataIntegrityViolationException e) {
+			log.info("User with id {} tried to update his email address with already existing mail address ", toUpdate.getId());
+			throw new UserEmailAlreadyInUseException(toUpdate.getEmail());
+		}
+
 		log.info("User with email {} updated", userRequest.getEmail());
 	}
 
@@ -143,13 +157,28 @@ public class UserService {
 
 	}
 
+	@Transactional
 	public void updateUserByManagement(Long userId, UserRequest userRequest, Role role) {
 		UserEntity toUpdate = getUserById(userId);
 
 		updateUserEntity(toUpdate, userRequest);
 		toUpdate.setRole(role);
 
-		userRepository.save(toUpdate);
+		boolean emailIsUsed = userRepository.existsByEmailAndIdNot(userRequest.getEmail(), toUpdate.getId());
+
+		if(emailIsUsed) {
+			log.info("User with email {} already exists", toUpdate.getEmail());
+			throw new UserEmailAlreadyInUseException(userRequest.getEmail());
+		}
+		updateUserEntity(toUpdate, userRequest);
+
+		try {
+			userRepository.saveAndFlush(toUpdate);
+
+		} catch (DataIntegrityViolationException e) {
+			log.info("User with id {} tried to update his email address with already existing mail address ", toUpdate.getId());
+			throw new UserDoubleCreationException(toUpdate.getEmail());
+		}
 		log.info("User with email {} updated", toUpdate.getEmail());
 	}
 
