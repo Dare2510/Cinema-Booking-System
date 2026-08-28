@@ -205,6 +205,27 @@ public class UserIntegrationTest {
 	}
 
 	@Test
+	public void updateUser_whenEmailIsAlreadyInUse_returnsConflict() throws Exception {
+		UserRequest newUser = userRequest();
+
+		Long userId = registerUserAndGetId(newUser);
+
+		UsernamePasswordAuthenticationToken authentication = authenticationToken(userId);
+		setAuthentication(authentication);
+
+		postUserRegistration(updateUserRequest());
+
+		UserRequest updatedUser = updateUserRequest();
+
+		mockMvc.perform(patch("/api/user/update")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(updatedUser)))
+				.andExpect(status().isConflict())
+				.andExpect(jsonPath("$.message")
+						.value("User with email " + UPDATED_USER_MAIL + " already exists"));;
+	}
+
+	@Test
 	public void deleteUser_whenThereAreNoOpenReservations_returnsOK() throws Exception {
 		UserRequest newUser = userRequest();
 

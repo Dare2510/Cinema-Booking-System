@@ -152,7 +152,6 @@ public class UserServiceTest {
 		UserEntity existingUser = new UserEntity();
 		UserRequest updatedValues = userRequestUpdatedUser();
 
-		existingUser.setPassword(PASSWORD);
 		when(userRepository.findById(USER_ID)).thenReturn(Optional.of(existingUser));
 		when(passwordEncoder.matches(PASSWORD, existingUser.getPassword())).thenReturn(true);
 		when(userRepository.existsByEmailAndIdNot(UPDATED_EMAIL, existingUser.getId())).thenReturn(false);
@@ -176,7 +175,6 @@ public class UserServiceTest {
 		UserEntity existingUser = new UserEntity();
 		UserRequest updatedValues = userRequestUpdatedUser();
 
-		existingUser.setPassword(PASSWORD);
 		when(userRepository.findById(USER_ID)).thenReturn(Optional.of(existingUser));
 		when(passwordEncoder.matches(updatedValues.getPassword(), existingUser.getPassword())).thenReturn(false);
 
@@ -194,6 +192,7 @@ public class UserServiceTest {
 	public void updateUserByCustomer_whenEmailIsAlreadyInUse_throwsUserEmailAlreadyInUseException() {
 		AuthenticatedUser authenticatedUser = authenticatedUser();
 		UserEntity userToUpdate = new UserEntity();
+
 		userToUpdate.setId(USER_ID);
 		userToUpdate.setPassword(PASSWORD);
 		userToUpdate.setEmail(EMAIL);
@@ -202,7 +201,6 @@ public class UserServiceTest {
 
 		when(userRepository.findById(USER_ID)).thenReturn(Optional.of(userToUpdate));
 		when(passwordEncoder.matches(updatedValues.getPassword(), PASSWORD)).thenReturn(true);
-
 		when(userRepository.existsByEmailAndIdNot(UPDATED_EMAIL, USER_ID)).thenReturn(true);
 
 		assertThatThrownBy(() -> userService.updateUserByCustomer(authenticatedUser, updatedValues))
@@ -242,7 +240,7 @@ public class UserServiceTest {
 	}
 
 	@Test
-	public void updateUserByManagement_whenUserIsFound_updatesUser() {
+	public void updateUserByManagement_whenUserIsFoundAndEmailIsNotUsed_updatesUser() {
 		UserEntity existingUser = new UserEntity();
 		UserRequest updatedValues = userRequestUpdatedUser();
 
@@ -258,6 +256,26 @@ public class UserServiceTest {
 
 		verify(userRepository).findById(USER_ID);
 		verify(userRepository).saveAndFlush(existingUser);
+
+	}
+
+	@Test
+	public void updateUserByManagement_whenUserIsFoundAndEmailIsUsed_throwsUserEmailAlreadyInUseException() {
+		UserEntity existingUser = new UserEntity();
+		UserRequest updatedValues = userRequestUpdatedUser();
+
+		when(userRepository.findById(USER_ID)).thenReturn(Optional.of(existingUser));
+		when(userRepository.existsByEmailAndIdNot(UPDATED_EMAIL, existingUser.getId())).thenReturn(true);
+
+		assertThatThrownBy(() -> userService.updateUserByManagement(USER_ID, updatedValues, ADMIN_ROLE))
+				.isInstanceOf(UserEmailAlreadyInUseException.class)
+				.hasMessage("User with email " + UPDATED_EMAIL + " already exists");
+
+		verify(userRepository).findById(USER_ID);
+		verify(userRepository).existsByEmailAndIdNot(UPDATED_EMAIL, existingUser.getId());
+		verify(userRepository, never()).saveAndFlush(existingUser);
+		verify(userRepository, never()).saveAndFlush(existingUser);
+
 
 	}
 
