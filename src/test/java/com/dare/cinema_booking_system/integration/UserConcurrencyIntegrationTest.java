@@ -8,6 +8,7 @@ import com.dare.cinema_booking_system.user.exception.UserDoubleCreationException
 import com.dare.cinema_booking_system.user.exception.UserEmailAlreadyInUseException;
 import com.dare.cinema_booking_system.user.repository.UserRepository;
 import com.dare.cinema_booking_system.user.service.UserService;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -40,11 +41,16 @@ public class UserConcurrencyIntegrationTest {
 
 	private static final String UPDATED_EMAIL = "updatedTestuser@mail.com";
 
-
 	@Autowired
 	private UserService userService;
 	@Autowired
 	private UserRepository userRepository;
+
+	@AfterEach
+	public void tearDown() {
+		userRepository.findByEmail(EMAIL)
+				.ifPresent(user -> {userRepository.delete(user);});
+	}
 
 	@Test
 	public void concurrentUserCreation_whenEmailIsTheSame_throwsUserAlreadyExists() throws Exception{
