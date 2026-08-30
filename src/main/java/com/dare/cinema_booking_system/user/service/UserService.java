@@ -161,7 +161,6 @@ public class UserService {
 	public void updateUserByManagement(Long userId, UserRequest userRequest, Role role) {
 		UserEntity toUpdate = getUserById(userId);
 
-		updateUserEntity(toUpdate, userRequest);
 		toUpdate.setRole(role);
 
 		boolean emailIsUsed = userRepository.existsByEmailAndIdNot(userRequest.getEmail(), toUpdate.getId());
@@ -177,7 +176,7 @@ public class UserService {
 
 		} catch (DataIntegrityViolationException e) {
 			log.info("User with id {} tried to update his email address with already existing mail address ", toUpdate.getId());
-			throw new UserDoubleCreationException(toUpdate.getEmail());
+			throw new UserEmailAlreadyInUseException(userRequest.getEmail());
 		}
 		log.info("User with email {} updated", toUpdate.getEmail());
 	}
