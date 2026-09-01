@@ -131,25 +131,30 @@ public class ReservationConcurrencyIntegrationTest {
 			}
 		};
 
-		Future<Boolean> a = executorService.submit(firstReservation);
-		Future<Boolean> b = executorService.submit(secondReservation);
+		try {
 
-		ready.await();
+			Future<Boolean> a = executorService.submit(firstReservation);
+			Future<Boolean> b = executorService.submit(secondReservation);
 
-		start.countDown();
+			ready.await();
 
-		boolean aSucceeded = a.get();
-		boolean bSucceeded = b.get();
+			start.countDown();
 
-		executorService.shutdown();
+			boolean aSucceeded = a.get();
+			boolean bSucceeded = b.get();
 
-		long successCount =
-				Stream.of(aSucceeded, bSucceeded)
-						.filter(Boolean::booleanValue)
-						.count();
 
-		assertEquals(1, successCount);
+			long successCount =
+					Stream.of(aSucceeded, bSucceeded)
+							.filter(Boolean::booleanValue)
+							.count();
 
+			assertEquals(1, successCount);
+
+		} finally {
+			executorService.shutdown();
+
+		}
 
 	}
 

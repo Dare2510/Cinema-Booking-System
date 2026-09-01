@@ -14,14 +14,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.test.context.ActiveProfiles;
-import org.testcontainers.postgresql.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.testcontainers.postgresql.PostgreSQLContainer;
 
 import java.util.concurrent.*;
 import java.util.stream.Stream;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SpringBootTest
 @ActiveProfiles("test-postgres")
@@ -31,7 +31,7 @@ public class UserConcurrencyIntegrationTest {
 	@Container
 	@ServiceConnection
 	public static PostgreSQLContainer postgreSQLContainer =
-				new PostgreSQLContainer("postgres:17-alpine");
+			new PostgreSQLContainer("postgres:17-alpine");
 
 	private static final String EMAIL = "testuser@mail.com";
 	private static final String PASSWORD = "password";
@@ -49,18 +49,25 @@ public class UserConcurrencyIntegrationTest {
 	@AfterEach
 	public void tearDown() {
 		userRepository.findByEmail(EMAIL)
-				.ifPresent(user -> {userRepository.delete(user);});
+				.ifPresent(user -> {
+					userRepository.delete(user);
+				});
+
+		userRepository.findByEmail(UPDATED_EMAIL)
+				.ifPresent(user -> {
+					userRepository.delete(user);
+				});
 	}
 
 	@Test
-	public void concurrentUserCreation_whenEmailIsTheSame_throwsUserAlreadyExists() throws Exception{
-		UserRequest userRequest = new UserRequest(EMAIL,PASSWORD,USERNAME,NAME,SURNAME);
+	public void concurrentUserCreation_whenEmailIsTheSame_throwsUserAlreadyExists() throws Exception {
+		UserRequest userRequest = new UserRequest(EMAIL, PASSWORD, USERNAME, NAME, SURNAME);
 
 		ExecutorService executors = Executors.newFixedThreadPool(2);
 
 		CountDownLatch ready = new CountDownLatch(2);
 
-		CountDownLatch start =  new CountDownLatch(1);
+		CountDownLatch start = new CountDownLatch(1);
 
 		Callable<Boolean> task = () -> {
 
@@ -79,32 +86,36 @@ public class UserConcurrencyIntegrationTest {
 			}
 		};
 
-		Future<Boolean> registerA = executors.submit(task);
-		Future<Boolean> registerB = executors.submit(task);
+		try {
+			Future<Boolean> registerA = executors.submit(task);
+			Future<Boolean> registerB = executors.submit(task);
 
-		ready.await();
-		start.countDown();
+			ready.await();
+			start.countDown();
 
-		boolean successA = registerA.get();
-		boolean successB = registerB.get();
+			boolean successA = registerA.get();
+			boolean successB = registerB.get();
 
-		executors.shutdown();
+			long successSum =
+					Stream.of(successA, successB)
+							.filter(Boolean::booleanValue)
+							.count();
 
-		long successSum =
-				Stream.of(successA, successB)
-						.filter(Boolean::booleanValue)
-						.count();
+			assertEquals(1, successSum);
+			assertEquals(1, userRepository.countByEmail(EMAIL));
 
-		assertEquals(1, successSum);
-		assertEquals(1,userRepository.countByEmail(EMAIL));
+		} finally {
+
+			executors.shutdown();
+		}
 	}
 
 	@Test
 	public void concurrentUserCreationAndUpdate_whenEmailIsUsed_throwsUserEmailAlreadyInUseExceptionORUserDoubleCreationException() throws Exception {
-		UserRequest requestForRegisterThread = new UserRequest(UPDATED_EMAIL,PASSWORD,USERNAME,NAME,SURNAME);
+		UserRequest requestForRegisterThread = new UserRequest(UPDATED_EMAIL, PASSWORD, USERNAME, NAME, SURNAME);
 
-		UserRequest requestForUpdateThreadCreateUser = new UserRequest(EMAIL,PASSWORD,USERNAME,NAME,SURNAME);
-		UserRequest requestForUpdateThreadToUpdateUser = new UserRequest(UPDATED_EMAIL,PASSWORD,USERNAME,NAME,SURNAME);
+		UserRequest requestForUpdateThreadCreateUser = new UserRequest(EMAIL, PASSWORD, USERNAME, NAME, SURNAME);
+		UserRequest requestForUpdateThreadToUpdateUser = new UserRequest(UPDATED_EMAIL, PASSWORD, USERNAME, NAME, SURNAME);
 
 		UserResponse registerResponseForUpdate = userService.registerUserByCustomer(requestForUpdateThreadCreateUser);
 
@@ -113,7 +124,7 @@ public class UserConcurrencyIntegrationTest {
 
 		CountDownLatch ready = new CountDownLatch(2);
 
-		CountDownLatch start =  new CountDownLatch(1);
+		CountDownLatch start = new CountDownLatch(1);
 
 		Callable<Boolean> register = () -> {
 			try {
@@ -130,7 +141,6 @@ public class UserConcurrencyIntegrationTest {
 		};
 
 
-
 		Callable<Boolean> update = () -> {
 			try {
 				ready.countDown();
@@ -145,25 +155,30 @@ public class UserConcurrencyIntegrationTest {
 			}
 		};
 
-		Future<Boolean> userRegistered = executors.submit(register);
-		Future<Boolean> userUpdated = executors.submit(update);
+		try {
 
-		ready.await();
+			Future<Boolean> userRegistered = executors.submit(register);
+			Future<Boolean> userUpdated = executors.submit(update);
 
-		start.countDown();
+			ready.await();
 
-		boolean registerSuccess = userRegistered.get();
-		boolean updateSuccess = userUpdated.get();
+			start.countDown();
 
-		executors.shutdown();
+			boolean registerSuccess = userRegistered.get();
+			boolean updateSuccess = userUpdated.get();
 
-		long successSum =
-				Stream.of(registerSuccess, updateSuccess)
-						.filter(Boolean::booleanValue)
-						.count();
+			long successSum =
+					Stream.of(registerSuccess, updateSuccess)
+							.filter(Boolean::booleanValue)
+							.count();
 
-		assertEquals(1, successSum);
-		assertEquals(1,userRepository.countByEmail(UPDATED_EMAIL));
+			assertEquals(1, successSum);
+			assertEquals(1, userRepository.countByEmail(UPDATED_EMAIL));
+
+		} finally {
+
+			executors.shutdown();
+		}
 
 	}
 
