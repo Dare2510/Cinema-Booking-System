@@ -200,9 +200,12 @@ The application connects to PostgreSQL internally via:
 
 The project includes:
 
-* integration tests using MockMvc
-* service layer test
-* security tests
+- Unit tests with JUnit and Mockito
+- Integration tests with MockMvc
+- PostgreSQL integration tests using Testcontainers
+- Concurrency tests for pessimistic locking and race conditions
+
+  _Concurrent reservation tests verify that the same seats cannot be reserved by multiple users._
 
 **Run tests with:**
 
