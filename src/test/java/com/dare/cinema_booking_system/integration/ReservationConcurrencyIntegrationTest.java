@@ -173,7 +173,7 @@ public class ReservationConcurrencyIntegrationTest {
 		UserRequest userRequest = new UserRequest(email, PASSWORD, USERNAME, NAME, SURNAME);
 		UserResponse response = userService.registerUserByCustomer(userRequest);
 
-		return new AuthenticatedUser(response.getUserId(), EMAIL_FIRST_USER, Role.USER);
+		return new AuthenticatedUser(response.getUserId(), email, Role.USER);
 	}
 
 }
