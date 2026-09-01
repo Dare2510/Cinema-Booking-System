@@ -274,7 +274,6 @@ public class UserServiceTest {
 		verify(userRepository).findById(USER_ID);
 		verify(userRepository).existsByEmailAndIdNot(UPDATED_EMAIL, existingUser.getId());
 		verify(userRepository, never()).saveAndFlush(existingUser);
-		verify(userRepository, never()).saveAndFlush(existingUser);
 
 
 	}

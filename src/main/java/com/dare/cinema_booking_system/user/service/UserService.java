@@ -205,7 +205,6 @@ public class UserService {
 		user.setName(userRequest.getName());
 		user.setSurname(userRequest.getSurname());
 		user.setUsername(userRequest.getUsername());
-		user.setEmail(userRequest.getEmail());
 		user.setPassword(hashedPassword);
 	}
 
@@ -214,7 +213,6 @@ public class UserService {
 		user.setName(userRequest.getName());
 		user.setSurname(userRequest.getSurname());
 		user.setUsername(userRequest.getUsername());
-		user.setEmail(userRequest.getEmail());
 	}
 
 	private boolean emailExists(UserRequest userRequest) {
