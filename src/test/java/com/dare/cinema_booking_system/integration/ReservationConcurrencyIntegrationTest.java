@@ -5,12 +5,15 @@ import com.dare.cinema_booking_system.movie.entity.Genre;
 import com.dare.cinema_booking_system.movie.service.MovieService;
 import com.dare.cinema_booking_system.reservations.dto.ReservationRequest;
 import com.dare.cinema_booking_system.reservations.entity.PaymentMethod;
+import com.dare.cinema_booking_system.reservations.repository.ReservationsRepository;
 import com.dare.cinema_booking_system.reservations.service.ReservationService;
 import com.dare.cinema_booking_system.rooms.dto.CinemaRoomRequest;
 import com.dare.cinema_booking_system.rooms.service.CinemaRoomService;
 import com.dare.cinema_booking_system.screenings.dto.ScreeningRequest;
+import com.dare.cinema_booking_system.screenings.entity.ScreeningSeatStatus;
 import com.dare.cinema_booking_system.screenings.entity.TimeSlot;
 import com.dare.cinema_booking_system.screenings.exceptions.ScreeningSeatNotAvailableException;
+import com.dare.cinema_booking_system.screenings.repository.ScreeningSeatRepository;
 import com.dare.cinema_booking_system.screenings.service.ScreeningService;
 import com.dare.cinema_booking_system.security.principal.AuthenticatedUser;
 import com.dare.cinema_booking_system.user.dto.UserRequest;
@@ -59,6 +62,12 @@ public class ReservationConcurrencyIntegrationTest {
 	@Autowired
 	private UserService userService;
 
+	@Autowired
+	private ScreeningSeatRepository screeningSeatRepository;
+
+	@Autowired
+	private ReservationsRepository reservationsRepository;
+
 	private static final String EMAIL_FIRST_USER = "testuser@mail.com";
 	private static final String EMAIL_SECOND_USER = "secondTestuser@mail.com";
 	private static final String PASSWORD = "password";
@@ -83,7 +92,6 @@ public class ReservationConcurrencyIntegrationTest {
 	private final BigDecimal SCREENING_PRICE = BigDecimal.valueOf(10);
 
 	private final List<Long> SEAT_IDS = List.of(1L, 2L, 3L);
-
 
 	@Test
 	public void concurrentReservations_whenSameScreeningSeatsAreRequested_throwsScreeningSeatNotAvailableException()
@@ -149,7 +157,11 @@ public class ReservationConcurrencyIntegrationTest {
 							.filter(Boolean::booleanValue)
 							.count();
 
+			int numberOfReservedSeats = screeningSeatRepository.countAllByScreeningSeatStatus(ScreeningSeatStatus.RESERVED);
+
 			assertEquals(1, successCount);
+			assertEquals(3, numberOfReservedSeats);
+			assertEquals(1, reservationsRepository.count());
 
 		} finally {
 			executorService.shutdown();

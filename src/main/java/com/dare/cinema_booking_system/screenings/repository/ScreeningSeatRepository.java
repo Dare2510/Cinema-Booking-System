@@ -2,6 +2,7 @@ package com.dare.cinema_booking_system.screenings.repository;
 
 import com.dare.cinema_booking_system.screenings.entity.ScreeningEntity;
 import com.dare.cinema_booking_system.screenings.entity.ScreeningSeatEntity;
+import com.dare.cinema_booking_system.screenings.entity.ScreeningSeatStatus;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
@@ -47,5 +48,7 @@ public interface ScreeningSeatRepository extends JpaRepository<ScreeningSeatEnti
 			@Param("screeningId") Long screeningId,
 			@Param("seatIds") List<Long> seatIds
 	);
+
+	int countAllByScreeningSeatStatus(ScreeningSeatStatus screeningSeatStatus);
 
 }
