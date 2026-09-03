@@ -108,6 +108,7 @@ public class ScreeningService {
 			} else {
 				throw new ScreeningUpdateNotPossibleException(screeningId);
 			}
+
 		}
 
 
@@ -170,18 +171,28 @@ public class ScreeningService {
 		CinemaRoomEntity requestedRoom = cinemaRoomService.getRoomEntity(screeningRequest.getRoomId());
 		TimeSlot requestedTime = screeningRequest.getTimeSlot();
 		BigDecimal price = screeningRequest.getPrice();
-		List<ScreeningSeatEntity> newUpdatedScreeningSeats = screeningSeatService.createScreeningSeats(requestedRoom, toUpdate);
+
 
 		toUpdate.setMovie(requestedMovie);
 		toUpdate.setScreeningDate(requestedDate);
 		toUpdate.setTimeSlot(requestedTime);
 		toUpdate.setCinemaRoomId(requestedRoom.getId());
-		toUpdate.setScreeningSeats(newUpdatedScreeningSeats);
+
 		toUpdate.setPrice(price);
 		toUpdate.setTimes(requestedTime);
 
-		screeningRepository.save(toUpdate);
+		try {
+			screeningRepository.saveAndFlush(toUpdate);
+
+		}catch (DataIntegrityViolationException e) {
+			throw new ScreeningUpdateNotPossibleException(toUpdate.getId());
+		}
+
+		List<ScreeningSeatEntity> newUpdatedScreeningSeats = screeningSeatService.createScreeningSeats(requestedRoom, toUpdate);
+		toUpdate.setScreeningSeats(newUpdatedScreeningSeats);
+
 		log.info("Screening with ID {} updated successfully", toUpdate.getId());
+
 		return responseBuilder(toUpdate);
 	}
 

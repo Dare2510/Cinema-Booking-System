@@ -126,7 +126,7 @@ public class ScreeningConcurrencyIntegrationTest {
 		} catch (ExecutionException e) {
 			throw new RuntimeException(e);
 		} finally {
-			start.countDown();
+			executorService.shutdown();
 
 		}
 
