@@ -17,7 +17,17 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "screening")
+@Table(
+		name = "screening",
+		uniqueConstraints = @UniqueConstraint(
+				name = "uq_screening_room_date_slot",
+				columnNames = {
+						"cinema_room_id",
+						"screening_date",
+						"time_slot"
+				}
+		)
+)
 public class ScreeningEntity {
 
 	@Id

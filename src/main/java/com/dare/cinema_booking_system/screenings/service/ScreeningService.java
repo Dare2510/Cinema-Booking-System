@@ -18,6 +18,7 @@ import com.dare.cinema_booking_system.screenings.repository.ScreeningRepository;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -41,26 +42,42 @@ public class ScreeningService {
 
 		MovieEntity movie = movieService.getMovieEntityById(screeningRequest.getMovieId());
 		CinemaRoomEntity room = cinemaRoomService.getRoomEntity(screeningRequest.getRoomId());
+
 		LocalDate date = screeningRequest.getScreeningDate();
 		TimeSlot timeSlot = screeningRequest.getTimeSlot();
 		BigDecimal price = screeningRequest.getPrice();
 
 		boolean spotReserved = validateScreeningSpot(screeningRequest);
 
-		if (!spotReserved) {
-			ScreeningEntity screening = new ScreeningEntity(room.getId(), movie, date, timeSlot, price);
-			screening.setTimes(timeSlot);
-			screeningRepository.save(screening);
-			screeningSeatService.createScreeningSeats(room, screening);
+		if (spotReserved) {
+			log.warn("Screening spot on {} at {} in room with id {} is already reserved",
+					date, timeSlot, room.getId());
 
-			log.info("Screening with {} id created successfully", screening.getId());
-			return responseBuilder(screening);
-
-		} else {
-			log.warn("Screening spot on {} at {} in room with id {} is already reserved ", date, timeSlot, room.getId());
 			throw new ScreeningSlotAlreadyBookedException(room.getId(), date, timeSlot);
 		}
+
+		ScreeningEntity screening = new ScreeningEntity(room.getId(), movie, date, timeSlot, price);
+		screening.setTimes(timeSlot);
+
+		try {
+			screeningRepository.saveAndFlush(screening);
+
+		} catch (DataIntegrityViolationException e) {
+
+			log.warn("Screening spot on {} at {} in room with id {} was concurrently reserved", date, timeSlot, room.getId());
+
+			throw new ScreeningSlotAlreadyBookedException(room.getId(), date, timeSlot);
+		}
+
+		screeningSeatService.createScreeningSeats(room, screening);
+
+		log.info("Screening with id {} created successfully", screening.getId()
+		);
+
+		return responseBuilder(screening);
+
 	}
+
 	@Transactional
 	public ScreeningResponse updateScreening(Long screeningId, ScreeningRequest screeningRequest) {
 

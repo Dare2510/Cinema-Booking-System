@@ -183,9 +183,10 @@ public class GlobalExceptionsHandler {
 
 	@ExceptionHandler(UserEmailAlreadyInUseException.class)
 	public ResponseEntity<ErrorResponse> handleUserEmailAlreadyInUseException(UserEmailAlreadyInUseException ex,
-																			  HttpServletRequest request) {
+	                                                                          HttpServletRequest request) {
 		return errorResponseBuilder(ex, request, HttpStatus.CONFLICT);
 	}
+
 	//Helper Method
 	private ResponseEntity<ErrorResponse> errorResponseBuilder(Exception ex, HttpServletRequest request, HttpStatus status) {
 		ErrorResponse error = new ErrorResponse(

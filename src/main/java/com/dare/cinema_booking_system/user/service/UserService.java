@@ -96,7 +96,7 @@ public class UserService {
 
 		boolean emailIsUsed = userRepository.existsByEmailAndIdNot(userRequest.getEmail(), toUpdate.getId());
 
-		if(emailIsUsed) {
+		if (emailIsUsed) {
 			log.info("User with email {} already exists", toUpdate.getEmail());
 			throw new UserEmailAlreadyInUseException(userRequest.getEmail());
 		}
@@ -165,7 +165,7 @@ public class UserService {
 
 		boolean emailIsUsed = userRepository.existsByEmailAndIdNot(userRequest.getEmail(), toUpdate.getId());
 
-		if(emailIsUsed) {
+		if (emailIsUsed) {
 			log.info("User with email {} already exists", toUpdate.getEmail());
 			throw new UserEmailAlreadyInUseException(userRequest.getEmail());
 		}

@@ -222,7 +222,8 @@ public class UserIntegrationTest {
 						.content(objectMapper.writeValueAsString(updatedUser)))
 				.andExpect(status().isConflict())
 				.andExpect(jsonPath("$.message")
-						.value("User with email " + UPDATED_USER_MAIL + " already exists"));;
+						.value("User with email " + UPDATED_USER_MAIL + " already exists"));
+		;
 	}
 
 	@Test

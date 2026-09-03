@@ -172,7 +172,7 @@ class ScreeningServiceTest {
 				SCREENING_DATE,
 				TIME_SLOT
 		);
-		verify(screeningRepository).save(any(ScreeningEntity.class));
+		verify(screeningRepository).saveAndFlush(any(ScreeningEntity.class));
 		verify(screeningSeatService).createScreeningSeats(eq(room), any(ScreeningEntity.class));
 	}
 
@@ -196,7 +196,7 @@ class ScreeningServiceTest {
 				SCREENING_DATE,
 				TIME_SLOT
 		);
-		verify(screeningRepository, never()).save(any());
+		verify(screeningRepository, never()).saveAndFlush(any());
 		verify(screeningSeatService, never()).createScreeningSeats(any(), any());
 	}
 
@@ -438,7 +438,7 @@ class ScreeningServiceTest {
 	}
 
 	private void mockScreeningSaveAssignsId() {
-		when(screeningRepository.save(any(ScreeningEntity.class)))
+		when(screeningRepository.saveAndFlush(any(ScreeningEntity.class)))
 				.thenAnswer(invocation -> {
 					ScreeningEntity screening = invocation.getArgument(0);
 					screening.setId(SCREENING_ID);
