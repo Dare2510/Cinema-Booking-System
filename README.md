@@ -35,13 +35,13 @@ A Spring Boot backend application for cinema booking operations.
 ### Admin/Staff
 
 * creates a movie
-* creates a cinema room - seats are get automatically generated
+* creates a cinema room - seats get automatically generated
 * creates a screening for a specific movie and room - seats for the screening are generated at screening creation.
 
 ### User
 
-* creates/ logs in
-* checks upcoming screening
+* registers or logs in 
+* checks upcoming screenings
 * checks free screening seats for the chosen screening
 * creates a reservation - selected seats get marked as reserved
 * pays on site or online
@@ -75,7 +75,7 @@ PATCH /api/management/reservation/ticket/{ticketNumber}/used
 ### Movie, Screening and Room APIs
 
 The project also contains endpoints for managing movies, cinema rooms, seats and screenings.
-These endpoints are part of the backend administration flow and are be protected with role-based security.
+These endpoints are part of the backend administration flow and are protected with role-based security.
 
 ## Example Reservation Request
 
@@ -121,7 +121,7 @@ Authentication is handled using JWT tokens.
 
 ### Roles
 
-- `USER` – can create and manage his own user, create manage his reservations
+- `USER` – can create and manage his own user, create and manage his reservations
 - `STAFF` – can manage movies, rooms, screenings, reservations and users with restrictions.
 - `ADMIN` – full system access
 
@@ -171,7 +171,7 @@ for the application container to use `postgres:5432`.
 
 **Running locally**
 
-Make sure PostgreSQL is running and that a database named cinema exists.
+Make sure PostgreSQL is running and a database named cinema exists.
 
 Create a .env file based on env.example, load the variables into your environment, then run:
 
@@ -204,8 +204,7 @@ The project includes:
 - Integration tests with MockMvc
 - PostgreSQL integration tests using Testcontainers
 - Concurrency tests for pessimistic locking and race conditions
-
-  _Concurrent reservation tests verify that the same seats cannot be reserved by multiple users._
+e.g. _Concurrent reservation tests verify that the same seats cannot be reserved by multiple users._
 
 **Run tests with:**
 
