@@ -21,4 +21,8 @@ public interface ScreeningRepository extends JpaRepository<ScreeningEntity, Long
 			"WHERE s.screeningDate BETWEEN CURRENT DATE AND :screeningDate")
 	List<ScreeningEntity> getUpcomingScreenings(@Param("screeningDate") LocalDate screenDate);
 
+	@Query("SELECT s FROM ScreeningEntity s " +
+			"WHERE s.screeningDate = :screeningDate AND s.timeSlot = :timeSlot")
+	List<ScreeningEntity> screeningsByDateAndTimeSlot(@Param("screeningDate") LocalDate screeningDate, @Param("timeSlot") TimeSlot timeSlot);
+
 }
